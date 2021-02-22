@@ -13,15 +13,3 @@ func badIdentifierDiagnostic(subj *hcl.Range) *hcl.Diagnostic {
 		Subject: subj,
 	}
 }
-
-// badReferenceDiagnostic returns a hcl.Diagnostic which indicates that a block
-// reference is not expressed correctly.
-func badReferenceDiagnostic(expr hcl.Expression) *hcl.Diagnostic {
-	return &hcl.Diagnostic{
-		Severity:   hcl.DiagError,
-		Summary:    "Invalid block reference",
-		Detail:     "A block reference is expressed as a block type separated from an identifier by a dot.",
-		Subject:    expr.Range().Ptr(),
-		Expression: expr,
-	}
-}

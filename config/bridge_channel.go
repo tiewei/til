@@ -22,7 +22,7 @@ type Channel struct {
 	Identifier string
 
 	// Destination of events.
-	To BlockRef
+	To hcl.Traversal
 
 	// Configuration of the channel.
 	Config hcl.Body

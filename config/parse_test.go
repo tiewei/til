@@ -96,7 +96,7 @@ func TestLoadBridge(t *testing.T) {
 		}
 
 		for i := 0; i < expectNumErrDiags; i++ {
-			if errDiags[i].(*hcl.Diagnostic).Summary != "Invalid block reference" {
+			if errDiags[i].(*hcl.Diagnostic).Summary != "Invalid expression" {
 				t.Fatal("Unexpected type of error diagnostic:", errDiags[i])
 			}
 		}

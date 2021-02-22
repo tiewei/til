@@ -20,7 +20,7 @@ type Function struct {
 	Identifier string
 
 	// Destination of event responses.
-	ReplyTo BlockRef
+	ReplyTo hcl.Traversal
 
 	// Configuration of the function.
 	Config hcl.Body

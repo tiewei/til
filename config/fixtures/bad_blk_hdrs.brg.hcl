@@ -1,4 +1,4 @@
-# This file contains a Bridge definition with malformed block headers.
+# This file contains a Bridge description with malformed block headers.
 
 #! this block contains too many labels, it won't be evaluated
 source "some_source" "MySource1" "another_label" {

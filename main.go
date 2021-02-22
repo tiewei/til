@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"bridgedl/bridge"
 	"bridgedl/config"
 )
 
@@ -23,12 +24,21 @@ func main() {
 func run(args []string, stderr io.Writer) error {
 	opts := parseFlags(args, stderr)
 
-	bridge, diags := config.NewParser().LoadBridge(opts.filePath)
+	brg, diags := config.NewParser().LoadBridge(opts.filePath)
 	if diags.HasErrors() {
 		return diags
 	}
 
-	_ = bridge
+	ctx := bridge.Context{
+		Bridge: brg,
+	}
+
+	g, diags := ctx.Graph()
+	if diags.HasErrors() {
+		return diags
+	}
+
+	_ = g
 
 	return nil
 }

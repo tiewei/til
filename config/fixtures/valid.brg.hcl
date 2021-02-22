@@ -1,4 +1,4 @@
-# This file contains a syntactically valid Bridge definition.
+# This file contains a syntactically valid Bridge description.
 #
 # It is used as a "golden file" and should therefore always contain at least
 # one valid occurence of each supported block type and top-level attribute.

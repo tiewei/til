@@ -22,7 +22,7 @@ type Source struct {
 	Identifier string
 
 	// Destination of events.
-	To BlockRef
+	To hcl.Traversal
 
 	// Configuration of the source.
 	Config hcl.Body

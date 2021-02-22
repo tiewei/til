@@ -1,4 +1,4 @@
-# This file contains a Bridge definition with a block of an unknown type.
+# This file contains a Bridge description with a block of an unknown type.
 
 source "some_source" "MySource" {
   some_block { }

@@ -1,4 +1,4 @@
-# This file contains a Bridge definition with blocks that are missing required
+# This file contains a Bridge description with blocks that are missing required
 # attributes.
 
 source "some_source" "MySource" {
