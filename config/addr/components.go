@@ -43,6 +43,17 @@ type Source struct {
 	Identifier string
 }
 
+var _ Referenceable = (*Source)(nil)
+
+// Addr implements Referenceable.
+//
+// Like other Referenceable types, Source implements the interface for the
+// purpose of being identifiable as a configuration block. However, it is
+// invalid to reference a Source as the destination of events within a Bridge.
+func (src Source) Addr() string {
+	return config.BlkSource + "." + src.Identifier
+}
+
 // Target is the address of a "target" block within a Bridge description.
 type Target struct {
 	Identifier string

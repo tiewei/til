@@ -21,6 +21,7 @@ const (
 	bridgeBadBlkRefs   = "bad_blk_refs.brg.hcl"
 	bridgeBadBlkHdrs   = "bad_blk_hdrs.brg.hcl"
 	bridgeMissingAttrs = "missing_attrs.brg.hcl"
+	bridgeDuplIDs      = "dupl_ids.brg.hcl"
 )
 
 func TestLoadBridge(t *testing.T) {
@@ -78,8 +79,8 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Channels) != 0 ||
 			len(brg.Routers) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Functions) != 0 ||
-			len(brg.Targets) != 0 {
+			len(brg.Targets) != 0 ||
+			len(brg.Functions) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -118,8 +119,8 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Channels) != 0 ||
 			len(brg.Routers) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Functions) != 0 ||
-			len(brg.Targets) != 0 {
+			len(brg.Targets) != 0 ||
+			len(brg.Functions) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -166,8 +167,8 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Channels) != 0 ||
 			len(brg.Routers) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Functions) != 0 ||
-			len(brg.Targets) != 0 {
+			len(brg.Targets) != 0 ||
+			len(brg.Functions) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -209,8 +210,39 @@ func TestLoadBridge(t *testing.T) {
 			t.Error("Expected 1 source, got", n)
 		}
 		if len(brg.Routers) != 0 ||
-			len(brg.Functions) != 0 ||
-			len(brg.Targets) != 0 {
+			len(brg.Targets) != 0 ||
+			len(brg.Functions) != 0 {
+
+			t.Errorf("Expected all other components to be empty. Parsed bridge:\n%+v", brg)
+		}
+	})
+
+	t.Run("with duplicated identifiers", func(t *testing.T) {
+		brg, diags := p.LoadBridge(bridgeDuplIDs)
+
+		errDiags := diags.Errs()
+
+		const expectNumErrDiags = 1
+		if len(errDiags) != expectNumErrDiags {
+			t.Fatalf("Expected %d error diagnostic:\n%s", expectNumErrDiags, errDiagsAsString(diags))
+		}
+
+		if errDiags[0].(*hcl.Diagnostic).Summary != "Duplicate block" {
+			t.Fatal("Unexpected type of error diagnostic:", errDiags[0])
+		}
+
+		if errDiags[0].(*hcl.Diagnostic).Subject.Start.Line != 12 {
+			t.Fatal("Unexpected location of error diagnostic:", errDiags[0])
+		}
+
+		if n := len(brg.Sources); n != 1 {
+			t.Error("Expected 1 source, got", n)
+		}
+		if len(brg.Routers) != 0 ||
+			len(brg.Channels) != 0 ||
+			len(brg.Transformers) != 0 ||
+			len(brg.Targets) != 0 ||
+			len(brg.Functions) != 0 {
 
 			t.Errorf("Expected all other components to be empty. Parsed bridge:\n%+v", brg)
 		}

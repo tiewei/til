@@ -21,8 +21,6 @@ var _ GraphTransformer = (*AddComponentsTransformer)(nil)
 func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	// TODO(antoineco): validate that none of the blocks is declared more that once.
-
 	for _, ch := range t.Bridge.Channels {
 		v := &ChannelVertex{
 			Addr: addr.Channel{

@@ -50,11 +50,12 @@ var BridgeSchema = &hcl.BodySchema{
 
 // Bridge represents the body of a Bridge Description File.
 type Bridge struct {
-	// Messaging components
-	Channels     []*Channel
-	Routers      []*Router
-	Transformers []*Transformer
-	Sources      []*Source
-	Targets      []*Target
-	Functions    []*Function
+	// Indexed lists of messaging components.
+	// Parsers should index each component with a key that uniquely identifies a block.
+	Channels     map[interface{}]*Channel
+	Routers      map[interface{}]*Router
+	Transformers map[interface{}]*Transformer
+	Sources      map[interface{}]*Source
+	Targets      map[interface{}]*Target
+	Functions    map[interface{}]*Function
 }
