@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 
 	"bridgedl/bridge"
-	"bridgedl/config"
+	"bridgedl/config/file"
 )
 
 const defaultFilePath = "config.brg.hcl"
@@ -24,7 +24,7 @@ func main() {
 func run(args []string, stderr io.Writer) error {
 	opts := parseFlags(args, stderr)
 
-	brg, diags := config.NewParser().LoadBridge(opts.filePath)
+	brg, diags := file.NewParser().LoadBridge(opts.filePath)
 	if diags.HasErrors() {
 		return diags
 	}

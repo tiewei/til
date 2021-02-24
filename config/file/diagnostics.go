@@ -1,4 +1,4 @@
-package config
+package file
 
 import "github.com/hashicorp/hcl/v2"
 

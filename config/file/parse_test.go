@@ -1,4 +1,4 @@
-package config_test
+package file_test
 
 import (
 	"os"
@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 
-	. "bridgedl/config"
+	. "bridgedl/config/file"
 	"bridgedl/fs"
 )
 

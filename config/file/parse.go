@@ -1,4 +1,4 @@
-package config
+package file
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 
+	"bridgedl/config"
 	"bridgedl/fs"
 )
 
@@ -27,13 +28,13 @@ func NewParser() *Parser {
 
 // LoadBridge parses the Bridge Description File at the given path and decodes
 // it into a Bridge struct.
-func (p *Parser) LoadBridge(filePath string) (*Bridge, hcl.Diagnostics) {
+func (p *Parser) LoadBridge(filePath string) (*config.Bridge, hcl.Diagnostics) {
 	hclFile, diags := p.ParseHCLFile(filePath)
 	if diags.HasErrors() {
 		return nil, diags
 	}
 
-	brg := &Bridge{}
+	brg := &config.Bridge{}
 	diags = decodeBridge(hclFile.Body, brg)
 
 	return brg, diags
