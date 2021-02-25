@@ -9,19 +9,20 @@ import (
 
 	"bridgedl/bridge"
 	"bridgedl/config/file"
+	"bridgedl/graph/dot"
 )
 
 const defaultFilePath = "config.brg.hcl"
 
 func main() {
-	if err := run(os.Args, os.Stderr); err != nil {
+	if err := run(os.Args, os.Stdin, os.Stderr); err != nil {
 		fmt.Fprintf(os.Stderr, "Error running command: %s\n", err)
 		os.Exit(1)
 	}
 }
 
 // run executes the command.
-func run(args []string, stderr io.Writer) error {
+func run(args []string, stdin, stderr io.Writer) error {
 	opts := parseFlags(args, stderr)
 
 	brg, diags := file.NewParser().LoadBridge(opts.filePath)
@@ -38,7 +39,12 @@ func run(args []string, stderr io.Writer) error {
 		return diags
 	}
 
-	_ = g
+	dg, err := dot.Marshal(g)
+	if err != nil {
+		return fmt.Errorf("marshaling graph to DOT: %w", err)
+	}
+
+	stdin.Write(dg)
 
 	return nil
 }
