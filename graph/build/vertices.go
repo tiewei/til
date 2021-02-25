@@ -5,6 +5,17 @@ import (
 	"bridgedl/config/addr"
 )
 
+// TODO(antoineco): implement DOTableVertex for all *Vertex types in this
+// package, using the color codes below taken from the set26 palette
+// (https://www.graphviz.org/doc/info/colors.html)
+//
+// #66c2a5
+// #fc8d62
+// #8da0cb
+// #e78ac3
+// #a6d854
+// #ffd92f
+
 // ChannelVertex is an abstract representation of a Channel component within a graph.
 type ChannelVertex struct {
 	// Address of the Channel component in the Bridge description.
