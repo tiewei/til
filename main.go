@@ -6,66 +6,48 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-
-	"bridgedl/bridge"
-	"bridgedl/config/file"
-	"bridgedl/graph/dot"
 )
 
-const defaultFilePath = "config.brg.hcl"
-
 func main() {
-	if err := run(os.Args, os.Stdin, os.Stderr); err != nil {
+	if err := run(os.Args, os.Stdout, os.Stderr); err != nil {
 		fmt.Fprintf(os.Stderr, "Error running command: %s\n", err)
 		os.Exit(1)
 	}
 }
 
 // run executes the command.
-func run(args []string, stdin, stderr io.Writer) error {
-	opts := parseFlags(args, stderr)
-
-	brg, diags := file.NewParser().LoadBridge(opts.filePath)
-	if diags.HasErrors() {
-		return diags
-	}
-
-	ctx := bridge.Context{
-		Bridge: brg,
-	}
-
-	g, diags := ctx.Graph()
-	if diags.HasErrors() {
-		return diags
-	}
-
-	dg, err := dot.Marshal(g)
-	if err != nil {
-		return fmt.Errorf("marshaling graph to DOT: %w", err)
-	}
-
-	stdin.Write(dg)
-
-	return nil
-}
-
-// cmdOpts are the options that can be passed to the command.
-type cmdOpts struct {
-	filePath string
-}
-
-// parseFlags parses the given command line arguments and returns the values
-// associated with the supported flags.
-func parseFlags(args []string, output io.Writer) *cmdOpts {
+func run(args []string, stdout, stderr io.Writer) error {
 	cmdName := filepath.Base(args[0])
-	flags := flag.NewFlagSet(cmdName, flag.ExitOnError)
-	flags.SetOutput(output)
 
-	opts := &cmdOpts{}
+	if len(args) == 1 {
+		return fmt.Errorf("no subcommand provided.\n\n%s", usage(cmdName))
+	}
 
-	flags.StringVar(&opts.filePath, "f", defaultFilePath, "Path of the config file to parse")
+	flagSet := flag.NewFlagSet(cmdName, flag.ExitOnError)
+	flagSet.SetOutput(stderr)
+	setUsageFn(flagSet, usage)
 
-	_ = flags.Parse(args[1:]) // ignore err; the FlagSet uses ExitOnError
+	_ = flagSet.Parse(args[1:]) // ignore err; the FlagSet uses ExitOnError
 
-	return opts
+	common := GenericCommand{
+		stdout:  stdout,
+		flagSet: flagSet,
+	}
+
+	switch subcommand := args[1]; subcommand {
+	case cmdValidate:
+		cmd := &ValidateCommand{
+			GenericCommand: common,
+		}
+		return cmd.Run(args[2:]...)
+
+	case cmdGraph:
+		cmd := &GraphCommand{
+			GenericCommand: common,
+		}
+		return cmd.Run(args[2:]...)
+
+	default:
+		return fmt.Errorf("unknow subcommand %q.\n\n%s", subcommand, usage(cmdName))
+	}
 }
