@@ -2,5 +2,5 @@
 //
 // It is responsible for configuration parsing and static validation, but not
 // for the runtime aspects of the Bridge Description Language, such as
-// evaluating expressions.
+// evaluating expressions, which is the responsibility of the "lang" package.
 package file

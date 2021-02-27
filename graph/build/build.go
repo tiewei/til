@@ -5,12 +5,14 @@ import (
 
 	"bridgedl/config"
 	"bridgedl/graph"
+	"bridgedl/translate"
 )
 
 // GraphBuilder builds a graph by applying a series of sequential
 // transformation steps.
 type GraphBuilder struct {
-	Bridge *config.Bridge
+	Bridge      *config.Bridge
+	Translators *translate.TranslatorProviders
 }
 
 // Build iterates over the transformation steps of the GraphBuilder to build a graph.
@@ -22,6 +24,12 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 		&AddComponentsTransformer{
 			Bridge: b.Bridge,
 		},
+
+		// Attach block translators
+		&AttachTranslatorsTransformer{
+			Translators: b.Translators,
+		},
+
 		// Resolve references and connect vertices
 		&ConnectReferencesTransformer{},
 	}

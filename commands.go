@@ -8,10 +8,13 @@ import (
 	"bridgedl/bridge"
 	"bridgedl/config/file"
 	"bridgedl/graph/dot"
+	"bridgedl/translate"
+	"bridgedl/translate/router"
 )
 
 // CLI subcommands
 const (
+	cmdGenerate = "generate"
 	cmdValidate = "validate"
 	cmdGraph    = "graph"
 )
@@ -21,8 +24,16 @@ func usage(cmdName string) string {
 	return "Usage: " + cmdName + " <command>\n" +
 		"\n" +
 		"Commands:\n" +
+		"  " + cmdGenerate + "     generate Kubernetes manifests for deploying a Bridge\n" +
 		"  " + cmdValidate + "     validate the syntax of a Bridge Description File\n" +
 		"  " + cmdGraph + "        represent a Bridge as a directed graph in DOT format\n"
+}
+
+// usageGenerate is a usageFn for the "generate" subcommand.
+func usageGenerate(cmdName string) string {
+	return "Usage: " + cmdName + " " + cmdGenerate + " FILE\n\n" +
+		"Generates the Kubernetes manifests that allow the Bridge to be deployed " +
+		"to TriggerMesh, and writes them to standard output.\n"
 }
 
 // usageValidate is a usageFn for the "validate" subcommand.
@@ -63,7 +74,32 @@ type GenericCommand struct {
 	flagSet *flag.FlagSet
 }
 
-// ValidateCommand
+type GenerateCommand struct {
+	GenericCommand
+}
+
+// Run implements command.
+func (c *GenerateCommand) Run(args ...string) error {
+	setUsageFn(c.flagSet, usageGenerate)
+
+	pos, flags := splitArgs(1, args)
+	_ = c.flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
+
+	if len(pos) != 1 {
+		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageGenerate(c.flagSet.Name()))
+	}
+	filePath := pos[0]
+
+	_, diags := file.NewParser().LoadBridge(filePath)
+	if diags.HasErrors() {
+		return diags
+	}
+
+	fmt.Fprintln(c.stdout, "Not implemented")
+
+	return nil
+}
+
 type ValidateCommand struct {
 	GenericCommand
 }
@@ -109,8 +145,13 @@ func (c *GraphCommand) Run(args ...string) error {
 		return diags
 	}
 
+	tp := &translate.TranslatorProviders{
+		Routers: router.AllRouters,
+	}
+
 	ctx := bridge.Context{
-		Bridge: brg,
+		Bridge:      brg,
+		Translators: tp,
 	}
 
 	g, diags := ctx.Graph()

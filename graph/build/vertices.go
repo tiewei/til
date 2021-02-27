@@ -1,9 +1,13 @@
 package build
 
 import (
+	"github.com/hashicorp/hcl/v2/gohcl"
+
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
+	"bridgedl/lang"
+	"bridgedl/translate"
 )
 
 // Color codes from the set26 palette at https://www.graphviz.org/doc/info/colors.html.
@@ -45,7 +49,7 @@ func (ch *ChannelVertex) References() []*addr.Reference {
 
 	// only return parseable references, errors should be caught in a
 	// validation step
-	if to, _ := addr.ParseBlockRef(ch.Channel.To); to != nil {
+	if to, _ := lang.ParseBlockReference(ch.Channel.To); to != nil {
 		refs = append(refs, to)
 	}
 
@@ -74,12 +78,15 @@ type RouterVertex struct {
 	Addr addr.Router
 	// Router block decoded from the Bridge description.
 	Router *config.Router
+	// Translator that can decode and translate a block configuration.
+	Translator translate.BlockTranslator
 }
 
 var (
-	_ ReferenceableVertex = (*RouterVertex)(nil)
-	_ ReferencerVertex    = (*RouterVertex)(nil)
-	_ graph.DOTableVertex = (*RouterVertex)(nil)
+	_ ReferenceableVertex        = (*RouterVertex)(nil)
+	_ ReferencerVertex           = (*RouterVertex)(nil)
+	_ AttachableTranslatorVertex = (*RouterVertex)(nil)
+	_ graph.DOTableVertex        = (*RouterVertex)(nil)
 )
 
 // Referenceable implements ReferenceableVertex.
@@ -89,14 +96,30 @@ func (rtr *RouterVertex) Referenceable() addr.Referenceable {
 
 // Referenceable implements ReferencerVertex.
 func (rtr *RouterVertex) References() []*addr.Reference {
-	if rtr.Router == nil {
+	if rtr.Router == nil || rtr.Translator == nil {
 		return nil
 	}
 
-	// TODO(antoineco): routers can have multiple outbounds depending on
-	// their type. We need to decode the config body using a provided
-	// schema in order to be able to determine all the references.
-	return nil
+	var refs []*addr.Reference
+
+	goConfig := rtr.Translator.ConcreteConfig()
+	if diags := gohcl.DecodeBody(rtr.Router.Config, nil, goConfig); diags.HasErrors() {
+		return refs
+	}
+
+	refs = append(refs, lang.BlockReferences(goConfig)...)
+
+	return refs
+}
+
+// AttachBlockConfig implements AttachableTranslatorVertex.
+func (rtr *RouterVertex) AttachTranslator(tr translate.BlockTranslator) {
+	rtr.Translator = tr
+}
+
+// FindTranslator implements AttachableTranslatorVertex.
+func (rtr *RouterVertex) FindTranslator(tp *translate.TranslatorProviders) translate.BlockTranslator {
+	return tp.Routers.Translator(rtr.Router.Type)
 }
 
 // Node implements graph.DOTableVertex.
@@ -140,7 +163,7 @@ func (trsf *TransformerVertex) References() []*addr.Reference {
 
 	// only return parseable references, errors should be caught in a
 	// validation step
-	if to, _ := addr.ParseBlockRef(trsf.Transformer.To); to != nil {
+	if to, _ := lang.ParseBlockReference(trsf.Transformer.To); to != nil {
 		refs = append(refs, to)
 	}
 
@@ -182,7 +205,7 @@ func (src *SourceVertex) References() []*addr.Reference {
 
 	// only return parseable references, errors should be caught in a
 	// validation step
-	if to, _ := addr.ParseBlockRef(src.Source.To); to != nil {
+	if to, _ := lang.ParseBlockReference(src.Source.To); to != nil {
 		refs = append(refs, to)
 	}
 
@@ -230,7 +253,7 @@ func (trg *TargetVertex) References() []*addr.Reference {
 
 	// only return parseable references, errors should be caught in a
 	// validation step
-	if to, _ := addr.ParseBlockRef(trg.Target.ReplyTo); to != nil {
+	if to, _ := lang.ParseBlockReference(trg.Target.ReplyTo); to != nil {
 		refs = append(refs, to)
 	}
 
@@ -278,7 +301,7 @@ func (fn *FunctionVertex) References() []*addr.Reference {
 
 	// only return parseable references, errors should be caught in a
 	// validation step
-	if to, _ := addr.ParseBlockRef(fn.Function.ReplyTo); to != nil {
+	if to, _ := lang.ParseBlockReference(fn.Function.ReplyTo); to != nil {
 		refs = append(refs, to)
 	}
 

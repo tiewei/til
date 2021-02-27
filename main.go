@@ -35,6 +35,12 @@ func run(args []string, stdout, stderr io.Writer) error {
 	}
 
 	switch subcommand := args[1]; subcommand {
+	case cmdGenerate:
+		cmd := &GenerateCommand{
+			GenericCommand: common,
+		}
+		return cmd.Run(args[2:]...)
+
 	case cmdValidate:
 		cmd := &ValidateCommand{
 			GenericCommand: common,

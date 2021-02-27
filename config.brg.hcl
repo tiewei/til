@@ -1,32 +1,32 @@
-source "awssqs" "MyQueue" {
+source "awssqs" "my_queue" {
   arn = "arn:aws:sqs:us-east-2:123456789012:triggermesh"
-  to = router.MyRouter
+  to = router.my_router
 }
 
-function "MyFunction" {
+function "my_function" {
   repo = "github.com/acme/my-function"
-  reply_to = router.MyRouter
+  reply_to = router.my_router
 }
 
-router "content-based" "MyRouter" {
+router "content_based" "my_router" {
 
-  route "ToMyFunction" {
-    attributes {
+  route {
+    attributes = {
       type = "com.amazon.sqs.message"
     }
-    to = transformer.MyTransformation
+    to = transformer.my_transformation
   }
 
-  route "ToKafka" {
-    attributes {
+  route {
+    attributes = {
       type = "corp.acme.my.processing"
     }
-    to = target.MyKafkaTopic
+    to = target.my_kafka_topic
   }
 
 }
 
-transformer "bumblebee" "MyTransformation" {
+transformer "bumblebee" "my_transformation" {
 
   context {
     operation "store" {
@@ -58,9 +58,9 @@ transformer "bumblebee" "MyTransformation" {
     }
   }
 
-  to = function.MyFunction
+  to = function.my_function
 }
 
-target "kafka" "MyKafkaTopic" {
+target "kafka" "my_kafka_topic" {
   topic = "myapp"
 }

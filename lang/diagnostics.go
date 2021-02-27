@@ -1,4 +1,4 @@
-package addr
+package lang
 
 import (
 	"fmt"

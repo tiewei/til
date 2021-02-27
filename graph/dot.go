@@ -7,7 +7,7 @@ type DOTableVertex interface {
 }
 
 // DOTNode represents a "node" statement in a DOT graph.
-// It wraps attributes marshalers can use to render a Vertex.
+// It wraps attributes marshalers can use to render a Vertex on a graph.
 type DOTNode struct {
 	Header string
 	Body   string
