@@ -7,9 +7,9 @@ import (
 
 // ChannelVertex is an abstract representation of a Channel component within a graph.
 type ChannelVertex struct {
-	// Address of the Channel component in the Bridge desription.
+	// Address of the Channel component in the Bridge description.
 	Addr addr.Channel
-	// Channel block decoded from the Bridge desription.
+	// Channel block decoded from the Bridge description.
 	Channel *config.Channel
 }
 
@@ -46,9 +46,9 @@ func (ch *ChannelVertex) References() []*addr.Reference {
 
 // RouterVertex is an abstract representation of a Router component within a graph.
 type RouterVertex struct {
-	// Address of the Router component in the Bridge desription.
+	// Address of the Router component in the Bridge description.
 	Addr addr.Router
-	// Router block decoded from the Bridge desription.
+	// Router block decoded from the Bridge description.
 	Router *config.Router
 }
 
@@ -76,9 +76,9 @@ func (rtr *RouterVertex) References() []*addr.Reference {
 
 // TransformerVertex is an abstract representation of a Transformer component within a graph.
 type TransformerVertex struct {
-	// Address of the Transformer component in the Bridge desription.
+	// Address of the Transformer component in the Bridge description.
 	Addr addr.Transformer
-	// Transformer block decoded from the Bridge desription.
+	// Transformer block decoded from the Bridge description.
 	Transformer *config.Transformer
 }
 
@@ -111,9 +111,9 @@ func (trsf *TransformerVertex) References() []*addr.Reference {
 
 // SourceVertex is an abstract representation of a Source component within a graph.
 type SourceVertex struct {
-	// Address of the Source component in the Bridge desription.
+	// Address of the Source component in the Bridge description.
 	Addr addr.Source
-	// Source block decoded from the Bridge desription.
+	// Source block decoded from the Bridge description.
 	Source *config.Source
 }
 
@@ -138,9 +138,9 @@ func (src *SourceVertex) References() []*addr.Reference {
 
 // TargetVertex is an abstract representation of a Target component within a graph.
 type TargetVertex struct {
-	// Address of the Target component in the Bridge desription.
+	// Address of the Target component in the Bridge description.
 	Addr addr.Target
-	// Target block decoded from the Bridge desription.
+	// Target block decoded from the Bridge description.
 	Target *config.Target
 }
 
@@ -173,9 +173,9 @@ func (trg *TargetVertex) References() []*addr.Reference {
 
 // FunctionVertex is an abstract representation of a Function component within a graph.
 type FunctionVertex struct {
-	// Address of the Function component in the Bridge desription.
+	// Address of the Function component in the Bridge description.
 	Addr addr.Function
-	// Function block decoded from the Bridge desription.
+	// Function block decoded from the Bridge description.
 	Function *config.Function
 }
 
