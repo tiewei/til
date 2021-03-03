@@ -25,11 +25,8 @@ func (t *AttachTranslatorsTransformer) Transform(g *graph.DirectedGraph) hcl.Dia
 			continue
 		}
 
-		transl := attch.FindTranslator(t.Translators)
-		if transl == nil {
-			continue
-		}
-
+		transl, translDiags := attch.FindTranslator(t.Translators)
+		diags = diags.Extend(translDiags)
 		attch.AttachTranslator(transl)
 	}
 

@@ -14,21 +14,28 @@ import (
 // BlockReferences takes an instance of a Go type and returns all the block
 // references it contains.
 //
+// It is assumed that every hcl.Traversal attribute is a block reference in the
+// Bridge Description Language, therefore error diagnostics are returned
+// whenever a hcl.Traversal which doesn't match this predicate is encountered.
+//
 // This function is typically called with structs decoded from hcl.Body.
-func BlockReferences(i interface{}) []*addr.Reference {
+func BlockReferences(i interface{}) ([]*addr.Reference, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
 	traversals := traversals(reflect.ValueOf(i))
 
-	refs := make([]*addr.Reference, 0, len(traversals))
+	var refs []*addr.Reference
 
 	for _, tr := range traversals {
-		ref, diags := ParseBlockReference(tr)
-		if diags.HasErrors() {
-			continue
+		ref, parseDiags := ParseBlockReference(tr)
+		diags = diags.Extend(parseDiags)
+
+		if ref != nil {
+			refs = append(refs, ref)
 		}
-		refs = append(refs, ref)
 	}
 
-	return refs
+	return refs, diags
 }
 
 // traversals returns a list of all the hcl.Traversals nested inside the given
@@ -70,8 +77,11 @@ func traversals(v reflect.Value) []hcl.Traversal {
 	}
 }
 
-// ParseBlockReference attempts to extract a block reference from an expression
-// attribute parsed as a hcl.Traversal.
+// ParseBlockReference attempts to extract a block reference from a
+// hcl.Traversal.
+//
+// The caller is responsible for checking that a corresponding block exists
+// within the Bridge.
 func ParseBlockReference(attr hcl.Traversal) (*addr.Reference, hcl.Diagnostics) {
 	if attr == nil {
 		return nil, nil

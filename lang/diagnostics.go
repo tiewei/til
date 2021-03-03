@@ -23,8 +23,8 @@ func badRefTypeDiagnostic(typ string, subj hcl.Range) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid block reference",
-		Detail: fmt.Sprintf("The expression refers to a block type that is unknown or doesn't support "+
-			"references: %q. Valid values are %q", typ, referenceableTypes()),
+		Detail: fmt.Sprintf("The expression refers to a block type %q that is unknown or doesn't support "+
+			"references. Valid values are %v", typ, referenceableTypes()),
 		Subject: subj.Ptr(),
 	}
 }

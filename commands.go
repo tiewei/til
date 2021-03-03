@@ -116,8 +116,21 @@ func (c *ValidateCommand) Run(args ...string) error {
 	}
 	filePath := pos[0]
 
-	_, diags := file.NewParser().LoadBridge(filePath)
+	brg, diags := file.NewParser().LoadBridge(filePath)
 	if diags.HasErrors() {
+		return diags
+	}
+
+	tp := &translate.TranslatorProviders{
+		Routers: router.AllRouters,
+	}
+
+	ctx := bridge.Context{
+		Bridge:      brg,
+		Translators: tp,
+	}
+
+	if _, diags := ctx.Graph(); diags.HasErrors() {
 		return diags
 	}
 

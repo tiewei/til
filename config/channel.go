@@ -23,4 +23,7 @@ type Channel struct {
 
 	// Configuration of the channel.
 	Config hcl.Body
+
+	// Source location of the block.
+	SourceRange hcl.Range
 }

@@ -21,4 +21,7 @@ type Function struct {
 
 	// Configuration of the function.
 	Config hcl.Body
+
+	// Source location of the block.
+	SourceRange hcl.Range
 }

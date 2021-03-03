@@ -16,14 +16,15 @@ var _ GraphTransformer = (*ConnectReferencesTransformer)(nil)
 func (t *ConnectReferencesTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	// TODO(antoineco): fail on unknown references.
-
 	vs := g.Vertices()
 
 	rm := NewReferenceMap(vs)
 
 	for _, v := range vs {
-		for _, ref := range rm.References(v) {
+		refs, refDiags := rm.References(v)
+		diags = diags.Extend(refDiags)
+
+		for _, ref := range refs {
 			g.Connect(v, ref)
 		}
 	}

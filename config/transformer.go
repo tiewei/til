@@ -23,4 +23,7 @@ type Transformer struct {
 
 	// Configuration of the transformer.
 	Config hcl.Body
+
+	// Source location of the block.
+	SourceRange hcl.Range
 }

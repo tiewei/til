@@ -1,6 +1,7 @@
 package build
 
 import (
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/gohcl"
 
 	"bridgedl/config"
@@ -39,17 +40,20 @@ func (ch *ChannelVertex) Referenceable() addr.Referenceable {
 	return ch.Addr
 }
 
-// Referenceable implements ReferencerVertex.
-func (ch *ChannelVertex) References() []*addr.Reference {
+// References implements ReferencerVertex.
+func (ch *ChannelVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if ch.Channel == nil {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
-	// only return parseable references, errors should be caught in a
-	// validation step
-	if to, _ := lang.ParseBlockReference(ch.Channel.To); to != nil {
+	to, toDiags := lang.ParseBlockReference(ch.Channel.To)
+	diags = diags.Extend(toDiags)
+
+	if to != nil {
 		refs = append(refs, to)
 	}
 
@@ -57,7 +61,7 @@ func (ch *ChannelVertex) References() []*addr.Reference {
 	// their type (e.g. dead letter destination). We need to decode the
 	// config body using a provided schema in order to be able to determine
 	// all the references.
-	return refs
+	return refs, diags
 }
 
 // Node implements graph.DOTableVertex.
@@ -94,32 +98,42 @@ func (rtr *RouterVertex) Referenceable() addr.Referenceable {
 	return rtr.Addr
 }
 
-// Referenceable implements ReferencerVertex.
-func (rtr *RouterVertex) References() []*addr.Reference {
+// References implements ReferencerVertex.
+func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if rtr.Router == nil || rtr.Translator == nil {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
 	goConfig := rtr.Translator.ConcreteConfig()
-	if diags := gohcl.DecodeBody(rtr.Router.Config, nil, goConfig); diags.HasErrors() {
-		return refs
+	decodeDiags := gohcl.DecodeBody(rtr.Router.Config, nil, goConfig)
+	diags = diags.Extend(decodeDiags)
+
+	refsInCfg, refDiags := lang.BlockReferences(goConfig)
+	diags = diags.Extend(refDiags)
+	refs = append(refs, refsInCfg...)
+
+	return refs, diags
+}
+
+// FindTranslator implements AttachableTranslatorVertex.
+func (rtr *RouterVertex) FindTranslator(tp *translate.TranslatorProviders) (translate.BlockTranslator, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	transl := tp.Routers.Translator(rtr.Router.Type)
+	if transl == nil {
+		diags = diags.Append(noTranslatorDiagnostic(config.BlkRouter, rtr.Router.Type, rtr.Router.SourceRange))
 	}
 
-	refs = append(refs, lang.BlockReferences(goConfig)...)
-
-	return refs
+	return transl, diags
 }
 
 // AttachBlockConfig implements AttachableTranslatorVertex.
 func (rtr *RouterVertex) AttachTranslator(tr translate.BlockTranslator) {
 	rtr.Translator = tr
-}
-
-// FindTranslator implements AttachableTranslatorVertex.
-func (rtr *RouterVertex) FindTranslator(tp *translate.TranslatorProviders) translate.BlockTranslator {
-	return tp.Routers.Translator(rtr.Router.Type)
 }
 
 // Node implements graph.DOTableVertex.
@@ -153,21 +167,24 @@ func (trsf *TransformerVertex) Referenceable() addr.Referenceable {
 	return trsf.Addr
 }
 
-// Referenceable implements ReferencerVertex.
-func (trsf *TransformerVertex) References() []*addr.Reference {
+// References implements ReferencerVertex.
+func (trsf *TransformerVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if trsf.Transformer == nil {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
-	// only return parseable references, errors should be caught in a
-	// validation step
-	if to, _ := lang.ParseBlockReference(trsf.Transformer.To); to != nil {
+	to, toDiags := lang.ParseBlockReference(trsf.Transformer.To)
+	diags = diags.Extend(toDiags)
+
+	if to != nil {
 		refs = append(refs, to)
 	}
 
-	return refs
+	return refs, diags
 }
 
 // Node implements graph.DOTableVertex.
@@ -196,20 +213,23 @@ var (
 )
 
 // Referenceable implements ReferencerVertex.
-func (src *SourceVertex) References() []*addr.Reference {
+func (src *SourceVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if src.Source == nil {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
-	// only return parseable references, errors should be caught in a
-	// validation step
-	if to, _ := lang.ParseBlockReference(src.Source.To); to != nil {
+	to, toDiags := lang.ParseBlockReference(src.Source.To)
+	diags = diags.Extend(toDiags)
+
+	if to != nil {
 		refs = append(refs, to)
 	}
 
-	return refs
+	return refs, diags
 }
 
 // Node implements graph.DOTableVertex.
@@ -243,21 +263,24 @@ func (trg *TargetVertex) Referenceable() addr.Referenceable {
 	return trg.Addr
 }
 
-// Referenceable implements ReferencerVertex.
-func (trg *TargetVertex) References() []*addr.Reference {
+// References implements ReferencerVertex.
+func (trg *TargetVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if trg.Target == nil {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
-	// only return parseable references, errors should be caught in a
-	// validation step
-	if to, _ := lang.ParseBlockReference(trg.Target.ReplyTo); to != nil {
+	to, toDiags := lang.ParseBlockReference(trg.Target.ReplyTo)
+	diags = diags.Extend(toDiags)
+
+	if to != nil {
 		refs = append(refs, to)
 	}
 
-	return refs
+	return refs, diags
 }
 
 // Node implements graph.DOTableVertex.
@@ -291,21 +314,24 @@ func (fn *FunctionVertex) Referenceable() addr.Referenceable {
 	return fn.Addr
 }
 
-// Referenceable implements ReferencerVertex.
-func (fn *FunctionVertex) References() []*addr.Reference {
+// References implements ReferencerVertex.
+func (fn *FunctionVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if fn.Function == nil {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
-	// only return parseable references, errors should be caught in a
-	// validation step
-	if to, _ := lang.ParseBlockReference(fn.Function.ReplyTo); to != nil {
+	to, toDiags := lang.ParseBlockReference(fn.Function.ReplyTo)
+	diags = diags.Extend(toDiags)
+
+	if to != nil {
 		refs = append(refs, to)
 	}
 
-	return refs
+	return refs, diags
 }
 
 // Node implements graph.DOTableVertex.

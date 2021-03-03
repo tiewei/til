@@ -1,6 +1,8 @@
 package build
 
 import (
+	"github.com/hashicorp/hcl/v2"
+
 	"bridgedl/config/addr"
 	"bridgedl/graph"
 )
@@ -14,7 +16,7 @@ type ReferenceableVertex interface {
 // ReferencerVertex must be implemented by all types used as graph.Vertex that
 // can reference addr.Referenceables.
 type ReferencerVertex interface {
-	References() []*addr.Reference
+	References() ([]*addr.Reference, hcl.Diagnostics)
 }
 
 // ReferenceMap is a lookup map of Referenceable vertices indexed by address.
@@ -38,23 +40,30 @@ func NewReferenceMap(vs graph.IndexedVertices) ReferenceMap {
 }
 
 // References returns all the graph vertices the given vertex refers to.
-func (rm ReferenceMap) References(v graph.Vertex) []graph.Vertex {
+func (rm ReferenceMap) References(v graph.Vertex) ([]graph.Vertex, hcl.Diagnostics) {
 	rfr, ok := v.(ReferencerVertex)
 	if !ok {
-		return nil
+		return nil, nil
 	}
+
+	var diags hcl.Diagnostics
 
 	var vs []graph.Vertex
 
-	for _, ref := range rfr.References() {
+	refs, refDiags := rfr.References()
+	diags = diags.Extend(refDiags)
+
+	for _, ref := range refs {
 		key := ref.Subject.Addr()
 		v, exists := rm[key]
 		if !exists {
-			continue
+			diags = diags.Append(unknownReferenceDiagnostic(ref.Subject.Addr(), ref.SourceRange))
 		}
 
-		vs = append(vs, v)
+		if vs != nil {
+			vs = append(vs, v)
+		}
 	}
 
-	return vs
+	return vs, diags
 }

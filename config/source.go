@@ -23,4 +23,7 @@ type Source struct {
 
 	// Configuration of the source.
 	Config hcl.Body
+
+	// Source location of the block.
+	SourceRange hcl.Range
 }

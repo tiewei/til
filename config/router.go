@@ -15,4 +15,7 @@ type Router struct {
 
 	// Configuration of the router.
 	Config hcl.Body
+
+	// Source location of the block.
+	SourceRange hcl.Range
 }
