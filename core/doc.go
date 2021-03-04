@@ -1,5 +1,7 @@
-// Package build contains primitives .
-package build
+// Package core encapsulates the core logic for performing operations on parsed
+// Bridge descriptions, such as resolving dependencies and translating to
+// Kubernetes API objects.
+package core
 
 // NOTE(antoineco): a lot of the concepts found in this package were borrowed
 // from a major refactoring of the HashiCorp Terraform core in 2015, which

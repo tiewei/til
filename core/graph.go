@@ -1,4 +1,4 @@
-package build
+package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
@@ -43,3 +43,20 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 
 	return g, diags
 }
+
+// GraphTransformer operates transformations on a graph.
+type GraphTransformer interface {
+	Transform(*graph.DirectedGraph) hcl.Diagnostics
+}
+
+// Color codes used for representing Bridge components on a DOT graph.
+//
+// Those are from the Brewer palette "Set2" (https://www.graphviz.org/doc/info/colors.html).
+const (
+	dotNodeColor1 = "#66c2a5"
+	dotNodeColor2 = "#fc8d62"
+	dotNodeColor3 = "#8da0cb"
+	dotNodeColor4 = "#e78ac3"
+	dotNodeColor5 = "#a6d854"
+	dotNodeColor6 = "#ffd92f"
+)

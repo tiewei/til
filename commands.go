@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"io"
 
-	"bridgedl/bridge"
 	"bridgedl/config/file"
+	"bridgedl/core"
 	"bridgedl/graph/dot"
 	"bridgedl/translate"
 	"bridgedl/translate/router"
@@ -78,7 +78,7 @@ type GenerateCommand struct {
 	GenericCommand
 }
 
-// Run implements command.
+// Run implements Command.
 func (c *GenerateCommand) Run(args ...string) error {
 	setUsageFn(c.flagSet, usageGenerate)
 
@@ -104,7 +104,7 @@ type ValidateCommand struct {
 	GenericCommand
 }
 
-// Run implements command.
+// Run implements Command.
 func (c *ValidateCommand) Run(args ...string) error {
 	setUsageFn(c.flagSet, usageValidate)
 
@@ -125,7 +125,7 @@ func (c *ValidateCommand) Run(args ...string) error {
 		Routers: router.AllRouters,
 	}
 
-	ctx := bridge.Context{
+	ctx := core.Context{
 		Bridge:      brg,
 		Translators: tp,
 	}
@@ -141,7 +141,7 @@ type GraphCommand struct {
 	GenericCommand
 }
 
-// Run implements command.
+// Run implements Command.
 func (c *GraphCommand) Run(args ...string) error {
 	setUsageFn(c.flagSet, usageGraph)
 
@@ -162,7 +162,7 @@ func (c *GraphCommand) Run(args ...string) error {
 		Routers: router.AllRouters,
 	}
 
-	ctx := bridge.Context{
+	ctx := core.Context{
 		Bridge:      brg,
 		Translators: tp,
 	}

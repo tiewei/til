@@ -1,4 +1,4 @@
-package build
+package core
 
 import (
 	"github.com/hashicorp/hcl/v2"

@@ -1,11 +1,10 @@
-package bridge
+package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
 
 	"bridgedl/config"
 	"bridgedl/graph"
-	"bridgedl/graph/build"
 	"bridgedl/translate"
 )
 
@@ -19,7 +18,7 @@ type Context struct {
 // Graph builds a directed graph which represents event flows between messaging
 // components of a Bridge.
 func (c *Context) Graph() (*graph.DirectedGraph, hcl.Diagnostics) {
-	b := &build.GraphBuilder{
+	b := &GraphBuilder{
 		Bridge:      c.Bridge,
 		Translators: c.Translators,
 	}

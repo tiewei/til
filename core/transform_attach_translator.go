@@ -1,4 +1,4 @@
-package build
+package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
@@ -6,6 +6,19 @@ import (
 	"bridgedl/graph"
 	"bridgedl/translate"
 )
+
+// AttachableTranslatorVertex is implemented by all types used as graph.Vertex
+// that can have a translate.BlockTranslator attached.
+type AttachableTranslatorVertex interface {
+	TranslatorFinder
+	AttachTranslator(translate.BlockTranslator)
+}
+
+// TranslatorFinder can look up a suitable translate.BlockTranslator in a
+// collection of translate.TranslatorProviders.
+type TranslatorFinder interface {
+	FindTranslator(*translate.TranslatorProviders) (translate.BlockTranslator, hcl.Diagnostics)
+}
 
 // AttachTranslatorsTransformer is a GraphTransformer that attaches a block
 // translator to all graph vertices that support it.
