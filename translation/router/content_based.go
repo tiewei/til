@@ -3,19 +3,19 @@ package router
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/translate"
+	"bridgedl/translation"
 )
 
 type ContentBasedTranslator struct{}
 
-var _ translate.BlockTranslator = (*ContentBasedTranslator)(nil)
+var _ translation.BlockTranslator = (*ContentBasedTranslator)(nil)
 
 func (t *ContentBasedTranslator) ConcreteConfig() interface{} {
 	return new(ContentBased)
 }
 
-func (t *ContentBasedTranslator) K8SManifests() []interface{} {
-	return nil
+func (t *ContentBasedTranslator) Manifests(interface{}) []interface{} {
+	panic("not implemented")
 }
 
 type ContentBased struct {

@@ -8,8 +8,6 @@ import (
 	"bridgedl/config/file"
 	"bridgedl/core"
 	"bridgedl/graph/dot"
-	"bridgedl/translate"
-	"bridgedl/translate/router"
 )
 
 // CLI subcommands
@@ -121,14 +119,7 @@ func (c *ValidateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	tp := &translate.TranslatorProviders{
-		Routers: router.AllRouters,
-	}
-
-	ctx := core.Context{
-		Bridge:      brg,
-		Translators: tp,
-	}
+	ctx := core.NewContext(brg)
 
 	if _, diags := ctx.Graph(); diags.HasErrors() {
 		return diags
@@ -158,14 +149,7 @@ func (c *GraphCommand) Run(args ...string) error {
 		return diags
 	}
 
-	tp := &translate.TranslatorProviders{
-		Routers: router.AllRouters,
-	}
-
-	ctx := core.Context{
-		Bridge:      brg,
-		Translators: tp,
-	}
+	ctx := core.NewContext(brg)
 
 	g, diags := ctx.Graph()
 	if diags.HasErrors() {

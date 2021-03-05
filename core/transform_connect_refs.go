@@ -8,13 +8,13 @@ import (
 )
 
 // ReferenceableVertex must be implemented by all types used as graph.Vertex
-// that can be referenced.
+// that can be referenced by other vertices.
 type ReferenceableVertex interface {
 	Referenceable() addr.Referenceable
 }
 
 // ReferencerVertex must be implemented by all types used as graph.Vertex that
-// can reference addr.Referenceables.
+// can reference other vertices.
 type ReferencerVertex interface {
 	References() ([]*addr.Reference, hcl.Diagnostics)
 }

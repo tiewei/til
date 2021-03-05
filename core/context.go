@@ -5,14 +5,25 @@ import (
 
 	"bridgedl/config"
 	"bridgedl/graph"
-	"bridgedl/translate"
+	"bridgedl/translation/router"
 )
 
 // Context encapsulates everything that is required for performing operations
 // on a Bridge.
 type Context struct {
 	Bridge      *config.Bridge
-	Translators *translate.TranslatorProviders
+	Translators *Translators
+}
+
+func NewContext(brg *config.Bridge) *Context {
+	trsl := &Translators{
+		Routers: router.AllRouters,
+	}
+
+	return &Context{
+		Bridge:      brg,
+		Translators: trsl,
+	}
 }
 
 // Graph builds a directed graph which represents event flows between messaging

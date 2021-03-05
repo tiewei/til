@@ -8,7 +8,7 @@ import (
 	"bridgedl/config/addr"
 	"bridgedl/graph"
 	"bridgedl/lang"
-	"bridgedl/translate"
+	"bridgedl/translation"
 )
 
 // RouterVertex is an abstract representation of a Router component within a graph.
@@ -18,7 +18,7 @@ type RouterVertex struct {
 	// Router block decoded from the Bridge description.
 	Router *config.Router
 	// Translator that can decode and translate a block configuration.
-	Translator translate.BlockTranslator
+	Translator translation.BlockTranslator
 }
 
 var (
@@ -55,7 +55,7 @@ func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 }
 
 // FindTranslator implements AttachableTranslatorVertex.
-func (rtr *RouterVertex) FindTranslator(tp *translate.TranslatorProviders) (translate.BlockTranslator, hcl.Diagnostics) {
+func (rtr *RouterVertex) FindTranslator(tp *Translators) (translation.BlockTranslator, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	transl := tp.Routers.Translator(rtr.Router.Type)
@@ -67,8 +67,8 @@ func (rtr *RouterVertex) FindTranslator(tp *translate.TranslatorProviders) (tran
 }
 
 // AttachBlockConfig implements AttachableTranslatorVertex.
-func (rtr *RouterVertex) AttachTranslator(tr translate.BlockTranslator) {
-	rtr.Translator = tr
+func (rtr *RouterVertex) AttachTranslator(bt translation.BlockTranslator) {
+	rtr.Translator = bt
 }
 
 // Node implements graph.DOTableVertex.
