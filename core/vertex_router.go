@@ -2,13 +2,12 @@ package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/gohcl"
+	"github.com/hashicorp/hcl/v2/hcldec"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
 	"bridgedl/lang"
-	"bridgedl/translation"
 )
 
 // RouterVertex is an abstract representation of a Router component within a graph.
@@ -17,15 +16,15 @@ type RouterVertex struct {
 	Addr addr.Router
 	// Router block decoded from the Bridge description.
 	Router *config.Router
-	// Translator that can decode and translate a block configuration.
-	Translator translation.BlockTranslator
+	// Spec used to decode the block configuration.
+	Spec hcldec.Spec
 }
 
 var (
-	_ ReferenceableVertex        = (*RouterVertex)(nil)
-	_ ReferencerVertex           = (*RouterVertex)(nil)
-	_ AttachableTranslatorVertex = (*RouterVertex)(nil)
-	_ graph.DOTableVertex        = (*RouterVertex)(nil)
+	_ ReferenceableVertex  = (*RouterVertex)(nil)
+	_ ReferencerVertex     = (*RouterVertex)(nil)
+	_ AttachableSpecVertex = (*RouterVertex)(nil)
+	_ graph.DOTableVertex  = (*RouterVertex)(nil)
 )
 
 // Referenceable implements ReferenceableVertex.
@@ -35,7 +34,7 @@ func (rtr *RouterVertex) Referenceable() addr.Referenceable {
 
 // References implements ReferencerVertex.
 func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
-	if rtr.Router == nil || rtr.Translator == nil {
+	if rtr.Router == nil || rtr.Spec == nil {
 		return nil, nil
 	}
 
@@ -43,32 +42,33 @@ func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 
 	var refs []*addr.Reference
 
-	goConfig := rtr.Translator.ConcreteConfig()
-	decodeDiags := gohcl.DecodeBody(rtr.Router.Config, nil, goConfig)
-	diags = diags.Extend(decodeDiags)
-
-	refsInCfg, refDiags := lang.BlockReferences(goConfig)
+	refsInCfg, refDiags := lang.BlockReferencesInBody(rtr.Router.Config, rtr.Spec)
 	diags = diags.Extend(refDiags)
+
 	refs = append(refs, refsInCfg...)
 
 	return refs, diags
 }
 
-// FindTranslator implements AttachableTranslatorVertex.
-func (rtr *RouterVertex) FindTranslator(tp *Translators) (translation.BlockTranslator, hcl.Diagnostics) {
+// FindSpec implements AttachableSpecVertex.
+func (rtr *RouterVertex) FindSpec(tp *Translators) (hcldec.Spec, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
+
+	var spec hcldec.Spec
 
 	transl := tp.Routers.Translator(rtr.Router.Type)
 	if transl == nil {
 		diags = diags.Append(noTranslatorDiagnostic(config.BlkRouter, rtr.Router.Type, rtr.Router.SourceRange))
+	} else {
+		spec = transl.Spec()
 	}
 
-	return transl, diags
+	return spec, diags
 }
 
-// AttachBlockConfig implements AttachableTranslatorVertex.
-func (rtr *RouterVertex) AttachTranslator(bt translation.BlockTranslator) {
-	rtr.Translator = bt
+// AttachSpec implements AttachableSpecVertex.
+func (rtr *RouterVertex) AttachSpec(s hcldec.Spec) {
+	rtr.Spec = s
 }
 
 // Node implements graph.DOTableVertex.

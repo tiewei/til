@@ -2,32 +2,35 @@ package lang
 
 import (
 	"fmt"
-	"reflect"
 	"sort"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hcldec"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
 )
 
-// BlockReferences takes an instance of a Go type and returns all the block
-// references it contains.
+// BlockReferencesInBody returns all the block references contained in the
+// given hcl.Body. The provided Spec is used to infer a schema that allows
+// discovering variables in the body.
 //
 // It is assumed that every hcl.Traversal attribute is a block reference in the
 // Bridge Description Language, therefore error diagnostics are returned
 // whenever a hcl.Traversal which doesn't match this predicate is encountered.
-//
-// This function is typically called with structs decoded from hcl.Body.
-func BlockReferences(i interface{}) ([]*addr.Reference, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+func BlockReferencesInBody(b hcl.Body, s hcldec.Spec) ([]*addr.Reference, hcl.Diagnostics) {
+	return blockReferences(hcldec.Variables(b, s))
+}
 
-	traversals := traversals(reflect.ValueOf(i))
+// blockReferences returns the list of block references that can be parsed from
+// the given hcl.Traversals.
+func blockReferences(ts []hcl.Traversal) ([]*addr.Reference, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
 
-	for _, tr := range traversals {
-		ref, parseDiags := ParseBlockReference(tr)
+	for _, t := range ts {
+		ref, parseDiags := ParseBlockReference(t)
 		diags = diags.Extend(parseDiags)
 
 		if ref != nil {
@@ -36,45 +39,6 @@ func BlockReferences(i interface{}) ([]*addr.Reference, hcl.Diagnostics) {
 	}
 
 	return refs, diags
-}
-
-// traversals returns a list of all the hcl.Traversals nested inside the given
-// reflect.Value.
-func traversals(v reflect.Value) []hcl.Traversal {
-	switch v.Kind() {
-	case reflect.Interface:
-		expr, ok := v.Interface().(hcl.Expression)
-		if !ok {
-			return nil
-		}
-
-		tr, diags := hcl.AbsTraversalForExpr(expr)
-		if diags.HasErrors() {
-			return nil
-		}
-
-		return []hcl.Traversal{tr}
-
-	case reflect.Ptr:
-		return traversals(v.Elem())
-
-	case reflect.Struct:
-		var refs []hcl.Traversal
-		for i := 0; i < v.NumField(); i++ {
-			refs = append(refs, traversals(v.Field(i))...)
-		}
-		return refs
-
-	case reflect.Slice:
-		var refs []hcl.Traversal
-		for i := 0; i < v.Len(); i++ {
-			refs = append(refs, traversals(v.Index(i))...)
-		}
-		return refs
-
-	default:
-		return nil
-	}
 }
 
 // ParseBlockReference attempts to extract a block reference from a
@@ -135,7 +99,8 @@ func ParseBlockReference(attr hcl.Traversal) (*addr.Reference, hcl.Diagnostics) 
 		}
 
 	default:
-		// should never occur
+		// should never occur, the list returned by
+		// referenceableTypes() is exhaustive
 		diags = diags.Append(badRefTypeDiagnostic(blkType, ts.Abs.SourceRange()))
 	}
 

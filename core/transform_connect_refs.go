@@ -86,7 +86,7 @@ func (rm ReferenceMap) References(v graph.Vertex) ([]graph.Vertex, hcl.Diagnosti
 			diags = diags.Append(unknownReferenceDiagnostic(ref.Subject.Addr(), ref.SourceRange))
 		}
 
-		if vs != nil {
+		if v != nil {
 			vs = append(vs, v)
 		}
 	}

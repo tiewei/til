@@ -1,5 +1,7 @@
 package translation
 
+import "github.com/hashicorp/hcl/v2/hcldec"
+
 // TranslatorProvider provides access to BlockTranslators for a set of
 // component types.
 //
@@ -16,22 +18,17 @@ type TranslatorProvider interface {
 // blocks from a Bridge Description File into concrete resource definitions,
 // such as Kubernetes objects.
 type BlockTranslator interface {
-	SchemaProvider
+	SpecProvider
 	KubernetesTranslator
 }
 
-// SchemaProvider provides access to Go types that represent the specific
-// configurations of blocks in Bridge Description File.
-//
-// It is assumed that returned instances can be decoded from a hcl.Body using
-// gohcl.DecodeBody. For instance, structs fields are expected to have `hcl`
-// tags.
-type SchemaProvider interface {
-	ConcreteConfig() interface{}
+// SpecProvider provides access to specs that allow component-specific block
+// configurations to be decoded into concrete values.
+type SpecProvider interface {
+	Spec() hcldec.Spec
 }
 
-// KubernetesTranslator translates instances of Go types into Kubernetes
-// manifests.
+// KubernetesTranslator translates component blocks into Kubernetes manifests.
 type KubernetesTranslator interface {
 	Manifests(interface{}) []interface{}
 }
