@@ -119,7 +119,10 @@ func (c *ValidateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	ctx := core.NewContext(brg)
+	ctx, diags := core.NewContext(brg)
+	if diags.HasErrors() {
+		return diags
+	}
 
 	if _, diags := ctx.Graph(); diags.HasErrors() {
 		return diags
@@ -149,7 +152,10 @@ func (c *GraphCommand) Run(args ...string) error {
 		return diags
 	}
 
-	ctx := core.NewContext(brg)
+	ctx, diags := core.NewContext(brg)
+	if diags.HasErrors() {
+		return diags
+	}
 
 	g, diags := ctx.Graph()
 	if diags.HasErrors() {

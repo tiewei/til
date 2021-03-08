@@ -5,33 +5,33 @@ import (
 
 	"bridgedl/config"
 	"bridgedl/graph"
-	"bridgedl/translation/router"
 )
 
 // Context encapsulates everything that is required for performing operations
 // on a Bridge.
 type Context struct {
-	Bridge      *config.Bridge
-	Translators *Translators
+	Bridge *config.Bridge
+	Specs  *Specs
 }
 
-func NewContext(brg *config.Bridge) *Context {
-	trsl := &Translators{
-		Routers: router.AllRouters,
+func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
+	cmpImpls, diags := initComponents(brg)
+	if diags.HasErrors() {
+		return nil, diags
 	}
 
 	return &Context{
-		Bridge:      brg,
-		Translators: trsl,
-	}
+		Bridge: brg,
+		Specs:  initSpecs(cmpImpls),
+	}, nil
 }
 
 // Graph builds a directed graph which represents event flows between messaging
 // components of a Bridge.
 func (c *Context) Graph() (*graph.DirectedGraph, hcl.Diagnostics) {
 	b := &GraphBuilder{
-		Bridge:      c.Bridge,
-		Translators: c.Translators,
+		Bridge: c.Bridge,
+		Specs:  c.Specs,
 	}
 
 	return b.Build()

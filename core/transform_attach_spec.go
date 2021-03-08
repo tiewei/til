@@ -14,22 +14,21 @@ type AttachableSpecVertex interface {
 	AttachSpec(hcldec.Spec)
 }
 
-// SpecFinder can look up a suitable hcldec.Spec in a collection of
-// Translators.
+// SpecFinder can look up a suitable hcldec.Spec in a collection of specs.
 type SpecFinder interface {
-	FindSpec(*Translators) (hcldec.Spec, hcl.Diagnostics)
+	FindSpec(*Specs) (hcldec.Spec, hcl.Diagnostics)
 }
 
-// AttachTranslatorsTransformer is a GraphTransformer that attaches a block
-// translator to all graph vertices that support it.
-type AttachTranslatorsTransformer struct {
-	Translators *Translators
+// AttachSpecsTransformer is a GraphTransformer that attaches a decode spec to
+// all graph vertices that support it.
+type AttachSpecsTransformer struct {
+	Specs *Specs
 }
 
-var _ GraphTransformer = (*AttachTranslatorsTransformer)(nil)
+var _ GraphTransformer = (*AttachSpecsTransformer)(nil)
 
 // Transform implements GraphTransformer.
-func (t *AttachTranslatorsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnostics {
+func (t *AttachSpecsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
 	for _, v := range g.Vertices() {
@@ -38,8 +37,8 @@ func (t *AttachTranslatorsTransformer) Transform(g *graph.DirectedGraph) hcl.Dia
 			continue
 		}
 
-		spec, translDiags := attch.FindSpec(t.Translators)
-		diags = diags.Extend(translDiags)
+		spec, specDiags := attch.FindSpec(t.Specs)
+		diags = diags.Extend(specDiags)
 		attch.AttachSpec(spec)
 	}
 

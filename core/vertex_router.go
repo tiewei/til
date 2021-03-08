@@ -51,16 +51,12 @@ func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 }
 
 // FindSpec implements AttachableSpecVertex.
-func (rtr *RouterVertex) FindSpec(tp *Translators) (hcldec.Spec, hcl.Diagnostics) {
+func (rtr *RouterVertex) FindSpec(s *Specs) (hcldec.Spec, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
-	var spec hcldec.Spec
-
-	transl := tp.Routers.Translator(rtr.Router.Type)
-	if transl == nil {
-		diags = diags.Append(noTranslatorDiagnostic(config.BlkRouter, rtr.Router.Type, rtr.Router.SourceRange))
-	} else {
-		spec = transl.Spec()
+	spec := s.SpecFor(categoryRouters, rtr.Router.Type)
+	if spec == nil {
+		diags = diags.Append(noDecodeSpecDiagnostic(config.BlkRouter, rtr.Router.Type, rtr.Router.SourceRange))
 	}
 
 	return spec, diags

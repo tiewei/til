@@ -1,4 +1,4 @@
-source "awssqs" "my_queue" {
+source "aws_sqs" "my_queue" {
   arn = "arn:aws:sqs:us-east-2:123456789012:triggermesh"
   to = router.my_router
 }

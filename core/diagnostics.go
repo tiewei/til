@@ -6,13 +6,24 @@ import (
 	"github.com/hashicorp/hcl/v2"
 )
 
-// noTranslatorDiagnostic returns a hcl.Diagnostic which indicates that a block
-// translator can not be acquired for a given component type.
-func noTranslatorDiagnostic(blockType, componentType string, subj hcl.Range) *hcl.Diagnostic {
+// noComponentImplDiagnostic returns a hcl.Diagnostic which indicates that no
+// implementation is available for a given component type.
+func noComponentImplDiagnostic(cmpCat, cmpType string, subj hcl.Range) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
-		Summary:  "No translator",
-		Detail:   fmt.Sprintf("Could not find a block translator for a %s of type %q", blockType, componentType),
+		Summary:  "Not implemented",
+		Detail:   fmt.Sprintf("No implementation found for a %s of type %q", cmpCat, cmpType),
+		Subject:  subj.Ptr(),
+	}
+}
+
+// noDecodeSpecDiagnostic returns a hcl.Diagnostic which indicates that a spec
+// for decoding a HCL body can not be acquired for a given component type.
+func noDecodeSpecDiagnostic(cmpCat, cmpType string, subj hcl.Range) *hcl.Diagnostic {
+	return &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "No decode spec",
+		Detail:   fmt.Sprintf("Could not find a decode spec for a %s of type %q", cmpCat, cmpType),
 		Subject:  subj.Ptr(),
 	}
 }

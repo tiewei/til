@@ -10,8 +10,8 @@ import (
 // GraphBuilder builds a graph by applying a series of sequential
 // transformation steps.
 type GraphBuilder struct {
-	Bridge      *config.Bridge
-	Translators *Translators
+	Bridge *config.Bridge
+	Specs  *Specs
 }
 
 // Build iterates over the transformation steps of the GraphBuilder to build a graph.
@@ -24,13 +24,12 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 			Bridge: b.Bridge,
 		},
 
-		// Attach block translators.
+		// Attach decode specs.
 		// This needs to be done before trying to evaluate references
-		// between vertices, because block translators provide access
-		// to the concrete Go types containing those resolvable
-		// references.
-		&AttachTranslatorsTransformer{
-			Translators: b.Translators,
+		// between vertices, because specs allow decoding the HCL
+		// configurations which contain those resolvable references.
+		&AttachSpecsTransformer{
+			Specs: b.Specs,
 		},
 
 		// Resolve references and connect vertices.
