@@ -2,6 +2,8 @@ package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
@@ -15,13 +17,40 @@ type TransformerVertex struct {
 	Addr addr.Transformer
 	// Transformer block decoded from the Bridge description.
 	Transformer *config.Transformer
+	// Spec used to decode the block configuration.
+	Spec hcldec.Spec
+	// Address used as events destination.
+	EventsAddr cty.Value
 }
 
 var (
-	_ ReferenceableVertex = (*TransformerVertex)(nil)
-	_ ReferencerVertex    = (*TransformerVertex)(nil)
-	_ graph.DOTableVertex = (*TransformerVertex)(nil)
+	_ BridgeComponentVertex   = (*TransformerVertex)(nil)
+	_ ReferenceableVertex     = (*TransformerVertex)(nil)
+	_ ReferencerVertex        = (*TransformerVertex)(nil)
+	_ AttachableSpecVertex    = (*TransformerVertex)(nil)
+	_ AttachableAddressVertex = (*TransformerVertex)(nil)
+	_ graph.DOTableVertex     = (*TransformerVertex)(nil)
 )
+
+// Category implements BridgeComponentVertex.
+func (*TransformerVertex) Category() config.ComponentCategory {
+	return config.CategoryTransformers
+}
+
+// Type implements BridgeComponentVertex.
+func (trsf *TransformerVertex) Type() string {
+	return trsf.Transformer.Type
+}
+
+// Identifer implements BridgeComponentVertex.
+func (trsf *TransformerVertex) Identifier() string {
+	return trsf.Transformer.Identifier
+}
+
+// SourceRange implements BridgeComponentVertex.
+func (trsf *TransformerVertex) SourceRange() hcl.Range {
+	return trsf.Transformer.SourceRange
+}
 
 // Referenceable implements ReferenceableVertex.
 func (trsf *TransformerVertex) Referenceable() addr.Referenceable {
@@ -48,11 +77,21 @@ func (trsf *TransformerVertex) References() ([]*addr.Reference, hcl.Diagnostics)
 	return refs, diags
 }
 
+// AttachSpec implements AttachableSpecVertex.
+func (trsf *TransformerVertex) AttachSpec(s hcldec.Spec) {
+	trsf.Spec = s
+}
+
+// AttachAddress implements AttachableAddressVertex.
+func (trsf *TransformerVertex) AttachAddress(addr cty.Value) {
+	trsf.EventsAddr = addr
+}
+
 // Node implements graph.DOTableVertex.
 func (trsf *TransformerVertex) Node() graph.DOTNode {
 	return graph.DOTNode{
-		Header: config.BlkTransf,
-		Body:   trsf.Addr.Identifier,
+		Header: config.CategoryTransformers.String(),
+		Body:   trsf.Transformer.Identifier,
 		Style: &graph.DOTNodeStyle{
 			AccentColor:     dotNodeColor3,
 			HeaderTextColor: "white",

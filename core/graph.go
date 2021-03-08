@@ -12,6 +12,7 @@ import (
 type GraphBuilder struct {
 	Bridge *config.Bridge
 	Specs  *Specs
+	Addr   *Addressables
 }
 
 // Build iterates over the transformation steps of the GraphBuilder to build a graph.
@@ -22,6 +23,15 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 		// Add all blocks as graph vertices.
 		&AddComponentsTransformer{
 			Bridge: b.Bridge,
+		},
+
+		// Compute and attach event addresses.
+		// By determining those addresses while building the graph, we
+		// rule out some categories of issues early, and ensure that
+		// this information is available when the graph is
+		// evaluated/translated later on.
+		&AttachAddressesTransformer{
+			Addr: b.Addr,
 		},
 
 		// Attach decode specs.

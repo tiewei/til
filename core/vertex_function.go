@@ -2,6 +2,8 @@ package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
@@ -15,13 +17,40 @@ type FunctionVertex struct {
 	Addr addr.Function
 	// Function block decoded from the Bridge description.
 	Function *config.Function
+	// Spec used to decode the block configuration.
+	Spec hcldec.Spec
+	// Address used as events destination.
+	EventsAddr cty.Value
 }
 
 var (
-	_ ReferenceableVertex = (*FunctionVertex)(nil)
-	_ ReferencerVertex    = (*FunctionVertex)(nil)
-	_ graph.DOTableVertex = (*FunctionVertex)(nil)
+	_ BridgeComponentVertex   = (*FunctionVertex)(nil)
+	_ ReferenceableVertex     = (*FunctionVertex)(nil)
+	_ ReferencerVertex        = (*FunctionVertex)(nil)
+	_ AttachableAddressVertex = (*FunctionVertex)(nil)
+	_ graph.DOTableVertex     = (*FunctionVertex)(nil)
 )
+
+// Category implements BridgeComponentVertex.
+func (*FunctionVertex) Category() config.ComponentCategory {
+	return config.CategoryFunctions
+}
+
+// Type implements BridgeComponentVertex.
+func (fn *FunctionVertex) Type() string {
+	// "function" types are not supported yet
+	return "undefined"
+}
+
+// Identifer implements BridgeComponentVertex.
+func (fn *FunctionVertex) Identifier() string {
+	return fn.Function.Identifier
+}
+
+// SourceRange implements BridgeComponentVertex.
+func (fn *FunctionVertex) SourceRange() hcl.Range {
+	return fn.Function.SourceRange
+}
 
 // Referenceable implements ReferenceableVertex.
 func (fn *FunctionVertex) Referenceable() addr.Referenceable {
@@ -48,11 +77,16 @@ func (fn *FunctionVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
+// AttachAddress implements AttachableAddressVertex.
+func (fn *FunctionVertex) AttachAddress(addr cty.Value) {
+	fn.EventsAddr = addr
+}
+
 // Node implements graph.DOTableVertex.
 func (fn *FunctionVertex) Node() graph.DOTNode {
 	return graph.DOTNode{
-		Header: config.BlkFunc,
-		Body:   fn.Addr.Identifier,
+		Header: config.CategoryFunctions.String(),
+		Body:   fn.Function.Identifier,
 		Style: &graph.DOTNodeStyle{
 			AccentColor:     dotNodeColor6,
 			HeaderTextColor: "white",

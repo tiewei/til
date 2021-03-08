@@ -11,7 +11,7 @@ import (
 // on a Bridge.
 type Context struct {
 	Bridge *config.Bridge
-	Specs  *Specs
+	Impls  *componentImplementations
 }
 
 func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
@@ -22,7 +22,7 @@ func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
 
 	return &Context{
 		Bridge: brg,
-		Specs:  initSpecs(cmpImpls),
+		Impls:  cmpImpls,
 	}, nil
 }
 
@@ -31,7 +31,8 @@ func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
 func (c *Context) Graph() (*graph.DirectedGraph, hcl.Diagnostics) {
 	b := &GraphBuilder{
 		Bridge: c.Bridge,
-		Specs:  c.Specs,
+		Specs:  initSpecs(c.Impls),
+		Addr:   initAddressables(c.Impls),
 	}
 
 	return b.Build()

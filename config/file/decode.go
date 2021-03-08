@@ -82,7 +82,7 @@ func addChannelBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	key := addr.Channel{Identifier: ch.Identifier}
 
 	if _, exists := brg.Channels[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(key.Addr(), blk.DefRange))
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryChannels, ch.Identifier, blk.DefRange))
 	} else {
 		brg.Channels[key] = ch
 	}
@@ -108,7 +108,7 @@ func addRouterBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	key := addr.Router{Identifier: rtr.Identifier}
 
 	if _, exists := brg.Routers[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(key.Addr(), blk.DefRange))
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryRouters, rtr.Identifier, blk.DefRange))
 	} else {
 		brg.Routers[key] = rtr
 	}
@@ -134,7 +134,7 @@ func addTransformerBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	key := addr.Transformer{Identifier: trsf.Identifier}
 
 	if _, exists := brg.Transformers[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(key.Addr(), blk.DefRange))
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTransformers, trsf.Identifier, blk.DefRange))
 	} else {
 		brg.Transformers[key] = trsf
 	}
@@ -160,7 +160,7 @@ func addSourceBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	key := addr.Source{Identifier: src.Identifier}
 
 	if _, exists := brg.Sources[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(key.Addr(), blk.DefRange))
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategorySources, src.Identifier, blk.DefRange))
 	} else {
 		brg.Sources[key] = src
 	}
@@ -186,7 +186,7 @@ func addTargetBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	key := addr.Target{Identifier: trg.Identifier}
 
 	if _, exists := brg.Targets[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(key.Addr(), blk.DefRange))
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTargets, trg.Identifier, blk.DefRange))
 	} else {
 		brg.Targets[key] = trg
 	}
@@ -378,7 +378,7 @@ func addFunctionBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	key := addr.Function{Identifier: fn.Identifier}
 
 	if _, exists := brg.Functions[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(key.Addr(), blk.DefRange))
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryFunctions, fn.Identifier, blk.DefRange))
 	} else {
 		brg.Functions[key] = fn
 	}

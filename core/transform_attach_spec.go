@@ -10,13 +10,9 @@ import (
 // AttachableSpecVertex is implemented by all types used as graph.Vertex that
 // can have a hcldec.Spec attached.
 type AttachableSpecVertex interface {
-	SpecFinder
-	AttachSpec(hcldec.Spec)
-}
+	BridgeComponentVertex
 
-// SpecFinder can look up a suitable hcldec.Spec in a collection of specs.
-type SpecFinder interface {
-	FindSpec(*Specs) (hcldec.Spec, hcl.Diagnostics)
+	AttachSpec(hcldec.Spec)
 }
 
 // AttachSpecsTransformer is a GraphTransformer that attaches a decode spec to
@@ -37,8 +33,11 @@ func (t *AttachSpecsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnosti
 			continue
 		}
 
-		spec, specDiags := attch.FindSpec(t.Specs)
-		diags = diags.Extend(specDiags)
+		spec := t.Specs.SpecFor(attch.Category(), attch.Type())
+		if spec == nil {
+			diags = diags.Append(noDecodeSpecDiagnostic(attch.Category(), attch.Type(), attch.SourceRange()))
+		}
+
 		attch.AttachSpec(spec)
 	}
 

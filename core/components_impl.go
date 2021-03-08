@@ -8,6 +8,7 @@ import (
 	"bridgedl/translation"
 
 	"bridgedl/internal/components/channels"
+	"bridgedl/internal/components/functions"
 	"bridgedl/internal/components/routers"
 	"bridgedl/internal/components/sources"
 	"bridgedl/internal/components/targets"
@@ -22,7 +23,7 @@ type componentImplementations struct {
 	transformers implForComponentType
 	sources      implForComponentType
 	targets      implForComponentType
-	functions    implForComponentType
+	// "function" types are not supported yet
 }
 
 type implForComponentType map[string]interface{}
@@ -38,7 +39,6 @@ func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnost
 		transformers: make(implForComponentType),
 		sources:      make(implForComponentType),
 		targets:      make(implForComponentType),
-		functions:    make(implForComponentType),
 	}
 
 	for _, ch := range brg.Channels {
@@ -48,7 +48,7 @@ func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnost
 
 		impl, ok := channels.All[ch.Type]
 		if !ok {
-			diags = diags.Append(noComponentImplDiagnostic(config.BlkChannel, ch.Type, ch.SourceRange))
+			diags = diags.Append(noComponentImplDiagnostic(config.CategoryChannels, ch.Type, ch.SourceRange))
 			continue
 		}
 		cmps.channels[ch.Type] = impl
@@ -61,7 +61,7 @@ func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnost
 
 		impl, ok := routers.All[rtr.Type]
 		if !ok {
-			diags = diags.Append(noComponentImplDiagnostic(config.BlkRouter, rtr.Type, rtr.SourceRange))
+			diags = diags.Append(noComponentImplDiagnostic(config.CategoryRouters, rtr.Type, rtr.SourceRange))
 			continue
 		}
 		cmps.routers[rtr.Type] = impl
@@ -74,7 +74,7 @@ func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnost
 
 		impl, ok := transformers.All[trsf.Type]
 		if !ok {
-			diags = diags.Append(noComponentImplDiagnostic(config.BlkTransf, trsf.Type, trsf.SourceRange))
+			diags = diags.Append(noComponentImplDiagnostic(config.CategoryTransformers, trsf.Type, trsf.SourceRange))
 			continue
 		}
 		cmps.transformers[trsf.Type] = impl
@@ -87,7 +87,7 @@ func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnost
 
 		impl, ok := sources.All[src.Type]
 		if !ok {
-			diags = diags.Append(noComponentImplDiagnostic(config.BlkSource, src.Type, src.SourceRange))
+			diags = diags.Append(noComponentImplDiagnostic(config.CategorySources, src.Type, src.SourceRange))
 			continue
 		}
 		cmps.sources[src.Type] = impl
@@ -100,13 +100,11 @@ func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnost
 
 		impl, ok := targets.All[trg.Type]
 		if !ok {
-			diags = diags.Append(noComponentImplDiagnostic(config.BlkTarget, trg.Type, trg.SourceRange))
+			diags = diags.Append(noComponentImplDiagnostic(config.CategoryTargets, trg.Type, trg.SourceRange))
 			continue
 		}
 		cmps.targets[trg.Type] = impl
 	}
-
-	// "function" types are not supported yet
 
 	return cmps, diags
 }
@@ -119,27 +117,28 @@ type Specs struct {
 	transformers specForComponentType
 	sources      specForComponentType
 	targets      specForComponentType
-	function     specForComponentType
+	// "function" types are not supported yet
 }
 
 type specForComponentType map[string]hcldec.Spec
 
 // SpecFor returns a decode spec for the given component type, if it exists.
-func (s *Specs) SpecFor(cmpCat componentCategory, cmpType string) hcldec.Spec {
+func (s *Specs) SpecFor(cmpCat config.ComponentCategory, cmpType string) hcldec.Spec {
 	switch cmpCat {
-	case componentChannels:
+	case config.CategoryChannels:
 		return s.channels[cmpType]
-	case categoryRouters:
+	case config.CategoryRouters:
 		return s.routers[cmpType]
-	case categoryTransformers:
+	case config.CategoryTransformers:
 		return s.transformers[cmpType]
-	case categorySources:
+	case config.CategorySources:
 		return s.sources[cmpType]
-	case categoryTargets:
+	case config.CategoryTargets:
 		return s.targets[cmpType]
-	case categoryFunctions:
-		// "function" types are not supported yet
-		return nil
+	case config.CategoryFunctions:
+		// "function" types are not supported yet, so we should never
+		// have to decode a function config
+		panic("not implemented")
 	default:
 		// should not happen, the list of categories is exhaustive
 		return nil
@@ -186,18 +185,83 @@ func initSpecs(impls *componentImplementations) *Specs {
 		}
 	}
 
-	// "function" types are not supported yet
-
 	return specs
 }
 
-type componentCategory uint8
+// Addressables encapsulates known Addressable component types for each
+// supported component category (block type).
+type Addressables struct {
+	channels     addressableForComponentType
+	routers      addressableForComponentType
+	transformers addressableForComponentType
+	sources      addressableForComponentType
+	targets      addressableForComponentType
+}
 
-const (
-	componentChannels componentCategory = iota
-	categoryRouters
-	categoryTransformers
-	categorySources
-	categoryTargets
-	categoryFunctions
-)
+type addressableForComponentType map[string]translation.Addressable
+
+// AddressableFor returns an Addressable interface for the given component
+// type, if it exists.
+func (a *Addressables) AddressableFor(cmpCat config.ComponentCategory, cmpType string) translation.Addressable {
+	switch cmpCat {
+	case config.CategoryChannels:
+		return a.channels[cmpType]
+	case config.CategoryRouters:
+		return a.routers[cmpType]
+	case config.CategoryTransformers:
+		return a.transformers[cmpType]
+	case config.CategorySources:
+		return a.sources[cmpType]
+	case config.CategoryTargets:
+		return a.targets[cmpType]
+	case config.CategoryFunctions:
+		return (*functions.Function)(nil)
+	default:
+		// should not happen, the list of categories is exhaustive
+		return nil
+	}
+}
+
+// initAddressables populates an instance of Addressables with all known
+// Addressable component types present in the Bridge.
+func initAddressables(impls *componentImplementations) *Addressables {
+	specs := &Addressables{
+		channels:     make(addressableForComponentType),
+		routers:      make(addressableForComponentType),
+		transformers: make(addressableForComponentType),
+		sources:      make(addressableForComponentType),
+		targets:      make(addressableForComponentType),
+	}
+
+	for cmpType, impl := range impls.channels {
+		if addr, ok := impl.(translation.Addressable); ok {
+			specs.channels[cmpType] = addr
+		}
+	}
+
+	for cmpType, impl := range impls.routers {
+		if addr, ok := impl.(translation.Addressable); ok {
+			specs.routers[cmpType] = addr
+		}
+	}
+
+	for cmpType, impl := range impls.transformers {
+		if addr, ok := impl.(translation.Addressable); ok {
+			specs.transformers[cmpType] = addr
+		}
+	}
+
+	for cmpType, impl := range impls.sources {
+		if addr, ok := impl.(translation.Addressable); ok {
+			specs.sources[cmpType] = addr
+		}
+	}
+
+	for cmpType, impl := range impls.targets {
+		if addr, ok := impl.(translation.Addressable); ok {
+			specs.targets[cmpType] = addr
+		}
+	}
+
+	return specs
+}

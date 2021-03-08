@@ -8,6 +8,15 @@ import (
 	"bridgedl/graph"
 )
 
+// BridgeComponentVertex provides various informations about the underlying
+// Bridge component represented by a graph.Vertex.
+type BridgeComponentVertex interface {
+	Category() config.ComponentCategory
+	Type() string
+	Identifier() string
+	SourceRange() hcl.Range
+}
+
 // AddComponentsTransformer is a GraphTransformer that adds all messaging
 // components described in a Bridge as vertices of a graph, without connecting
 // them.
@@ -50,9 +59,6 @@ func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnos
 	}
 	for _, src := range t.Bridge.Sources {
 		v := &SourceVertex{
-			Addr: addr.Source{
-				Identifier: src.Identifier,
-			},
 			Source: src,
 		}
 		g.Add(v)

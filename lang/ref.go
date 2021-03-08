@@ -55,8 +55,9 @@ func ParseBlockReference(attr hcl.Traversal) (*addr.Reference, hcl.Diagnostics) 
 
 	ts := attr.SimpleSplit()
 	blkType := ts.RootName()
+	cmpCat := config.AsComponentCategory(blkType)
 
-	if !referenceableTypes().Has(blkType) {
+	if !referenceableTypes().Has(cmpCat) {
 		diags = diags.Append(badRefTypeDiagnostic(blkType, ts.Abs.SourceRange()))
 		return nil, diags
 	}
@@ -72,28 +73,28 @@ func ParseBlockReference(attr hcl.Traversal) (*addr.Reference, hcl.Diagnostics) 
 
 	identifier := ts.Rel[0].(hcl.TraverseAttr).Name
 
-	switch blkType {
-	case config.BlkChannel:
+	switch cmpCat {
+	case config.CategoryChannels:
 		ref.Subject = addr.Channel{
 			Identifier: identifier,
 		}
 
-	case config.BlkRouter:
+	case config.CategoryRouters:
 		ref.Subject = addr.Router{
 			Identifier: identifier,
 		}
 
-	case config.BlkTransf:
+	case config.CategoryTransformers:
 		ref.Subject = addr.Transformer{
 			Identifier: identifier,
 		}
 
-	case config.BlkTarget:
+	case config.CategoryTargets:
 		ref.Subject = addr.Target{
 			Identifier: identifier,
 		}
 
-	case config.BlkFunc:
+	case config.CategoryFunctions:
 		ref.Subject = addr.Function{
 			Identifier: identifier,
 		}
@@ -109,32 +110,32 @@ func ParseBlockReference(attr hcl.Traversal) (*addr.Reference, hcl.Diagnostics) 
 
 // referenceableTypes returns a set containing the block types that can be
 // referenced inside expressions.
-func referenceableTypes() stringSet {
-	var refTypes stringSet
+func referenceableTypes() compCatSet {
+	var refTypes compCatSet
 
 	refTypes.Add(
-		config.BlkChannel,
-		config.BlkRouter,
-		config.BlkTransf,
-		config.BlkTarget,
-		config.BlkFunc,
+		config.CategoryChannels,
+		config.CategoryRouters,
+		config.CategoryTransformers,
+		config.CategoryTargets,
+		config.CategoryFunctions,
 	)
 
 	return refTypes
 }
 
-type stringSet map[string]struct{}
+type compCatSet map[config.ComponentCategory]struct{}
 
-var _ fmt.Stringer = (stringSet)(nil)
+var _ fmt.Stringer = (compCatSet)(nil)
 
 // Add adds or replaces elements in the set.
-func (s *stringSet) Add(elems ...string) {
+func (s *compCatSet) Add(elems ...config.ComponentCategory) {
 	if len(elems) == 0 {
 		return
 	}
 
 	if *s == nil {
-		*s = make(stringSet, len(elems))
+		*s = make(compCatSet, len(elems))
 	}
 
 	for _, e := range elems {
@@ -143,7 +144,7 @@ func (s *stringSet) Add(elems ...string) {
 }
 
 // Has returns whether the set contains the given element.
-func (s stringSet) Has(elem string) bool {
+func (s compCatSet) Has(elem config.ComponentCategory) bool {
 	if s == nil {
 		return false
 	}
@@ -153,11 +154,11 @@ func (s stringSet) Has(elem string) bool {
 }
 
 // String implements fmt.Stringer.
-func (s stringSet) String() string {
+func (s compCatSet) String() string {
 	elems := make([]string, 0, len(s))
 
 	for e := range s {
-		elems = append(elems, e)
+		elems = append(elems, e.String())
 	}
 
 	sort.Strings(elems)

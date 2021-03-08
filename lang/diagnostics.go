@@ -19,12 +19,12 @@ func badRefFormatDiagnostic(subj hcl.Range) *hcl.Diagnostic {
 
 // badRefTypeDiagnostic returns a hcl.Diagnostic which indicates that the type
 // indicated in a block reference is not supported.
-func badRefTypeDiagnostic(typ string, subj hcl.Range) *hcl.Diagnostic {
+func badRefTypeDiagnostic(blockType string, subj hcl.Range) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Invalid block reference",
 		Detail: fmt.Sprintf("The expression refers to a block type %q that is unknown or doesn't support "+
-			"references. Valid values are %v", typ, referenceableTypes()),
+			"references. Valid values are %v", blockType, referenceableTypes()),
 		Subject: subj.Ptr(),
 	}
 }

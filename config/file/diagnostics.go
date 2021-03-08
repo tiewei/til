@@ -1,9 +1,11 @@
 package file
 
 import (
-	"strconv"
+	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+
+	"bridgedl/config"
 )
 
 // badIdentifierDiagnostic returns a hcl.Diagnostic which indicates that the
@@ -20,11 +22,11 @@ func badIdentifierDiagnostic(subj hcl.Range) *hcl.Diagnostic {
 
 // duplicateBlockDiagnostic returns a hcl.Diagnostic which indicates that a
 // duplicate block definition was found.
-func duplicateBlockDiagnostic(addr string, subj hcl.Range) *hcl.Diagnostic {
+func duplicateBlockDiagnostic(cat config.ComponentCategory, identifier string, subj hcl.Range) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Duplicate block",
-		Detail:   "Found a duplicate block for the identifier " + strconv.Quote(addr),
+		Detail:   fmt.Sprintf("Found a duplicate %q block with the identifier %q", cat, identifier),
 		Subject:  subj.Ptr(),
 	}
 }

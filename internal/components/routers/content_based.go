@@ -1,8 +1,6 @@
 package routers
 
 import (
-	"strings"
-
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
@@ -50,16 +48,5 @@ func (*ContentBased) Manifests(id string, config cty.Value) []interface{} {
 
 // Address implements translation.Addressable.
 func (*ContentBased) Address(id string) cty.Value {
-	// TODO(antoineco): standardize sanitization of id and conversion to
-	// Kubernetes-friendly name.
-	// https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#dns-subdomain-names
-	name := strings.ToLower(strings.ReplaceAll(id, "_", "-"))
-
-	return cty.ObjectVal(map[string]cty.Value{
-		"ref": cty.ObjectVal(map[string]cty.Value{
-			"apiVersion": cty.StringVal("eventing.knative.dev/v1"),
-			"kind":       cty.StringVal("Broker"),
-			"name":       cty.StringVal(name),
-		}),
-	})
+	return k8s.NewDestination("eventing.knative.dev/v1", "Broker", k8s.RFC1123Name(id))
 }

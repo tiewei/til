@@ -2,6 +2,8 @@ package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
@@ -15,13 +17,40 @@ type ChannelVertex struct {
 	Addr addr.Channel
 	// Channel block decoded from the Bridge description.
 	Channel *config.Channel
+	// Spec used to decode the block configuration.
+	Spec hcldec.Spec
+	// Address used as events destination.
+	EventsAddr cty.Value
 }
 
 var (
-	_ ReferenceableVertex = (*ChannelVertex)(nil)
-	_ ReferencerVertex    = (*ChannelVertex)(nil)
-	_ graph.DOTableVertex = (*ChannelVertex)(nil)
+	_ BridgeComponentVertex   = (*ChannelVertex)(nil)
+	_ ReferenceableVertex     = (*ChannelVertex)(nil)
+	_ ReferencerVertex        = (*ChannelVertex)(nil)
+	_ AttachableSpecVertex    = (*ChannelVertex)(nil)
+	_ AttachableAddressVertex = (*ChannelVertex)(nil)
+	_ graph.DOTableVertex     = (*ChannelVertex)(nil)
 )
+
+// Category implements BridgeComponentVertex.
+func (*ChannelVertex) Category() config.ComponentCategory {
+	return config.CategoryChannels
+}
+
+// Type implements BridgeComponentVertex.
+func (ch *ChannelVertex) Type() string {
+	return ch.Channel.Type
+}
+
+// Identifer implements BridgeComponentVertex.
+func (ch *ChannelVertex) Identifier() string {
+	return ch.Channel.Identifier
+}
+
+// SourceRange implements BridgeComponentVertex.
+func (ch *ChannelVertex) SourceRange() hcl.Range {
+	return ch.Channel.SourceRange
+}
 
 // Referenceable implements ReferenceableVertex.
 func (ch *ChannelVertex) Referenceable() addr.Referenceable {
@@ -52,11 +81,21 @@ func (ch *ChannelVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
+// AttachSpec implements AttachableSpecVertex.
+func (ch *ChannelVertex) AttachSpec(s hcldec.Spec) {
+	ch.Spec = s
+}
+
+// AttachAddress implements AttachableAddressVertex.
+func (ch *ChannelVertex) AttachAddress(addr cty.Value) {
+	ch.EventsAddr = addr
+}
+
 // Node implements graph.DOTableVertex.
 func (ch *ChannelVertex) Node() graph.DOTNode {
 	return graph.DOTNode{
-		Header: config.BlkChannel,
-		Body:   ch.Addr.Identifier,
+		Header: config.CategoryChannels.String(),
+		Body:   ch.Channel.Identifier,
 		Style: &graph.DOTNodeStyle{
 			AccentColor:     dotNodeColor1,
 			HeaderTextColor: "white",

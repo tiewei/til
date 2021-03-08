@@ -5,7 +5,8 @@ import "github.com/hashicorp/hcl/v2"
 // Referenceable must be implemented by all address types that can be used as
 // references in Bridge descriptions.
 type Referenceable interface {
-	// String representation of the Referenceable as an address.
+	// Addr produces a string representation of the component by which it
+	// can be uniquely identified and referenced via HCL expressions.
 	Addr() string
 }
 

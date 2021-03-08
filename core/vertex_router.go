@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
@@ -18,14 +19,38 @@ type RouterVertex struct {
 	Router *config.Router
 	// Spec used to decode the block configuration.
 	Spec hcldec.Spec
+	// Address used as events destination.
+	EventsAddr cty.Value
 }
 
 var (
-	_ ReferenceableVertex  = (*RouterVertex)(nil)
-	_ ReferencerVertex     = (*RouterVertex)(nil)
-	_ AttachableSpecVertex = (*RouterVertex)(nil)
-	_ graph.DOTableVertex  = (*RouterVertex)(nil)
+	_ BridgeComponentVertex   = (*RouterVertex)(nil)
+	_ ReferenceableVertex     = (*RouterVertex)(nil)
+	_ ReferencerVertex        = (*RouterVertex)(nil)
+	_ AttachableSpecVertex    = (*RouterVertex)(nil)
+	_ AttachableAddressVertex = (*RouterVertex)(nil)
+	_ graph.DOTableVertex     = (*RouterVertex)(nil)
 )
+
+// Category implements BridgeComponentVertex.
+func (*RouterVertex) Category() config.ComponentCategory {
+	return config.CategoryRouters
+}
+
+// Type implements BridgeComponentVertex.
+func (rtr *RouterVertex) Type() string {
+	return rtr.Router.Type
+}
+
+// Identifer implements BridgeComponentVertex.
+func (rtr *RouterVertex) Identifier() string {
+	return rtr.Router.Identifier
+}
+
+// SourceRange implements BridgeComponentVertex.
+func (rtr *RouterVertex) SourceRange() hcl.Range {
+	return rtr.Router.SourceRange
+}
 
 // Referenceable implements ReferenceableVertex.
 func (rtr *RouterVertex) Referenceable() addr.Referenceable {
@@ -50,28 +75,21 @@ func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
-// FindSpec implements AttachableSpecVertex.
-func (rtr *RouterVertex) FindSpec(s *Specs) (hcldec.Spec, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
-
-	spec := s.SpecFor(categoryRouters, rtr.Router.Type)
-	if spec == nil {
-		diags = diags.Append(noDecodeSpecDiagnostic(config.BlkRouter, rtr.Router.Type, rtr.Router.SourceRange))
-	}
-
-	return spec, diags
-}
-
 // AttachSpec implements AttachableSpecVertex.
 func (rtr *RouterVertex) AttachSpec(s hcldec.Spec) {
 	rtr.Spec = s
 }
 
+// AttachAddress implements AttachableAddressVertex.
+func (rtr *RouterVertex) AttachAddress(addr cty.Value) {
+	rtr.EventsAddr = addr
+}
+
 // Node implements graph.DOTableVertex.
 func (rtr *RouterVertex) Node() graph.DOTNode {
 	return graph.DOTNode{
-		Header: config.BlkRouter,
-		Body:   rtr.Addr.Identifier,
+		Header: config.CategoryRouters.String(),
+		Body:   rtr.Router.Identifier,
 		Style: &graph.DOTNodeStyle{
 			AccentColor:     dotNodeColor2,
 			HeaderTextColor: "white",
