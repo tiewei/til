@@ -29,21 +29,21 @@ func usage(cmdName string) string {
 
 // usageGenerate is a usageFn for the "generate" subcommand.
 func usageGenerate(cmdName string) string {
-	return "Usage: " + cmdName + " " + cmdGenerate + " FILE\n\n" +
+	return "Usage: " + cmdName + " " + cmdGenerate + " FILE\n" +
 		"Generates the Kubernetes manifests that allow the Bridge to be deployed " +
 		"to TriggerMesh, and writes them to standard output.\n"
 }
 
 // usageValidate is a usageFn for the "validate" subcommand.
 func usageValidate(cmdName string) string {
-	return "Usage: " + cmdName + " " + cmdValidate + " FILE\n\n" +
+	return "Usage: " + cmdName + " " + cmdValidate + " FILE\n" +
 		"Returns with an exit code of 0 if FILE is a syntactically valid Bridge " +
 		"Description File, with an exit code of 1 otherwise.\n"
 }
 
 // usageGraph is a usageFn for the "usage" subcommand.
 func usageGraph(cmdName string) string {
-	return "Usage: " + cmdName + " " + cmdGraph + " FILE\n\n" +
+	return "Usage: " + cmdName + " " + cmdGraph + " FILE\n" +
 		"Generates a DOT representation of the Bridge parsed from FILE and writes " +
 		"it to standard output.\n"
 }
