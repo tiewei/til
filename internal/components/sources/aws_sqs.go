@@ -21,18 +21,16 @@ var (
 
 // Spec implements translation.Decodable.
 func (*AWSSQS) Spec() hcldec.Spec {
-	return &hcldec.ObjectSpec{
-		"arn": &hcldec.AttrSpec{
-			Name:     "arn",
-			Type:     cty.String,
-			Required: true,
-		},
+	return &hcldec.AttrSpec{
+		Name:     "arn",
+		Type:     cty.String,
+		Required: true,
 	}
 }
 
 // Manifests implements translation.Translatable.
-func (*AWSSQS) Manifests(id string, config cty.Value) []interface{} {
-	panic("not implemented")
+func (*AWSSQS) Manifests(id string, config, eventDst cty.Value) []interface{} {
+	return nil
 }
 
 // Address implements translation.Addressable.

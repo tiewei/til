@@ -21,12 +21,73 @@ var (
 
 // Spec implements translation.Decodable.
 func (*Bumblebee) Spec() hcldec.Spec {
-	return &hcldec.ObjectSpec{}
+	nestedSpec := &hcldec.BlockListSpec{
+		TypeName: "operation",
+		Nested: &hcldec.ObjectSpec{
+			"operation": &hcldec.BlockLabelSpec{
+				Index: 0,
+				Name:  "operation",
+			},
+			"path": &hcldec.BlockSpec{
+				TypeName: "path",
+				Nested: &hcldec.ObjectSpec{
+					"key": &hcldec.AttrSpec{
+						Name:     "key",
+						Type:     cty.String,
+						Required: true,
+					},
+					"value": &hcldec.AttrSpec{
+						Name:     "value",
+						Type:     cty.String,
+						Required: true,
+					},
+				},
+				Required: true,
+			},
+		},
+		MinItems: 1,
+	}
+
+	return &hcldec.ObjectSpec{
+		"context": &hcldec.BlockSpec{
+			TypeName: "context",
+			Nested:   nestedSpec,
+		},
+		"data": &hcldec.BlockSpec{
+			TypeName: "data",
+			Nested:   nestedSpec,
+		},
+	}
+
+	/*
+		Example of value decoded from the spec above, for a "context"
+		and a "data" block, both containing two nested "operation" blocks:
+
+		v: (map[string]interface {}) (len=2) {
+		 "context": ([]interface {}) (len=2) {
+		  (map[string]interface {}) (len=2) {
+		   "operation": (string) "store",
+		   "path": (map[string]interface {}) (len=2) {
+		    "key": (string) "$id",
+		    "value": (string) "id"
+		   }
+		  },
+		  (map[string]interface {}) (len=2) {
+		   "operation": (string) "add",
+		   "path": (map[string]interface {}) (len=2) {
+		    "key": (string) "id",
+		    "value": (string) "${person}-${id}"
+		   }
+		  }
+		 },
+		 "data": ([]interface {}) (len=2) { ... }
+		}
+	*/
 }
 
 // Manifests implements translation.Translatable.
-func (*Bumblebee) Manifests(id string, config cty.Value) []interface{} {
-	panic("not implemented")
+func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{} {
+	return nil
 }
 
 // Address implements translation.Addressable.

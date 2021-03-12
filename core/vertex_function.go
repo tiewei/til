@@ -2,7 +2,6 @@ package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
@@ -17,8 +16,6 @@ type FunctionVertex struct {
 	Addr addr.Function
 	// Function block decoded from the Bridge description.
 	Function *config.Function
-	// Spec used to decode the block configuration.
-	Spec hcldec.Spec
 	// Address used as events destination.
 	EventsAddr cty.Value
 }
@@ -80,6 +77,11 @@ func (fn *FunctionVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 // AttachAddress implements AttachableAddressVertex.
 func (fn *FunctionVertex) AttachAddress(addr cty.Value) {
 	fn.EventsAddr = addr
+}
+
+// GetAddress implements AttachableAddressVertex.
+func (fn *FunctionVertex) GetAddress() cty.Value {
+	return fn.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

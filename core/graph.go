@@ -26,9 +26,10 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 		},
 
 		// Compute and attach event addresses.
-		// By determining those addresses while building the graph, we
-		// rule out some categories of issues early, and ensure that
-		// this information is available when the graph is
+		// Although addresses aren't used in the process of building
+		// the actual graph, determining them here allows us to rule
+		// out some categories of issues early, and ensures that this
+		// information is readily available when the graph is
 		// evaluated/translated later on.
 		&AttachAddressesTransformer{
 			Addr: b.Addr,

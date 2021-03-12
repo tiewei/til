@@ -17,8 +17,8 @@ var (
 )
 
 // Manifests implements translation.Translatable.
-func (*Function) Manifests(id string, config cty.Value) []interface{} {
-	panic("not implemented")
+func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} {
+	return nil
 }
 
 // Address implements translation.Addressable.

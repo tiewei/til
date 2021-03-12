@@ -15,9 +15,9 @@ import (
 	"bridgedl/internal/components/transformers"
 )
 
-// componentImplementations encapsulates the implementation of all known
+// componentImpls encapsulates the implementation of all known
 // component types for each supported component category (block type).
-type componentImplementations struct {
+type componentImpls struct {
 	channels     implForComponentType
 	routers      implForComponentType
 	transformers implForComponentType
@@ -28,12 +28,34 @@ type componentImplementations struct {
 
 type implForComponentType map[string]interface{}
 
+// ImplementationFor returns an implementation interface for the given
+// component type, if it exists.
+func (i *componentImpls) ImplementationFor(cmpCat config.ComponentCategory, cmpType string) interface{} {
+	switch cmpCat {
+	case config.CategoryChannels:
+		return i.channels[cmpType]
+	case config.CategoryRouters:
+		return i.routers[cmpType]
+	case config.CategoryTransformers:
+		return i.transformers[cmpType]
+	case config.CategorySources:
+		return i.sources[cmpType]
+	case config.CategoryTargets:
+		return i.targets[cmpType]
+	case config.CategoryFunctions:
+		return (*functions.Function)(nil)
+	default:
+		// should not happen, the list of categories is exhaustive
+		return nil
+	}
+}
+
 // initComponents populates the component implementations associated with each
 // component type present in the Bridge.
-func initComponents(brg *config.Bridge) (*componentImplementations, hcl.Diagnostics) {
+func initComponents(brg *config.Bridge) (*componentImpls, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
-	cmps := &componentImplementations{
+	cmps := &componentImpls{
 		channels:     make(implForComponentType),
 		routers:      make(implForComponentType),
 		transformers: make(implForComponentType),
@@ -146,7 +168,7 @@ func (s *Specs) SpecFor(cmpCat config.ComponentCategory, cmpType string) hcldec.
 }
 
 // initSpecs populates the Spec of each Decodable component type present in the Bridge.
-func initSpecs(impls *componentImplementations) *Specs {
+func initSpecs(impls *componentImpls) *Specs {
 	specs := &Specs{
 		channels:     make(specForComponentType),
 		routers:      make(specForComponentType),
@@ -218,13 +240,13 @@ func (a *Addressables) AddressableFor(cmpCat config.ComponentCategory, cmpType s
 		return (*functions.Function)(nil)
 	default:
 		// should not happen, the list of categories is exhaustive
-		return nil
+		panic("unknown component category")
 	}
 }
 
 // initAddressables populates an instance of Addressables with all known
 // Addressable component types present in the Bridge.
-func initAddressables(impls *componentImplementations) *Addressables {
+func initAddressables(impls *componentImpls) *Addressables {
 	specs := &Addressables{
 		channels:     make(addressableForComponentType),
 		routers:      make(addressableForComponentType),

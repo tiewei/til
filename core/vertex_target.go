@@ -82,9 +82,19 @@ func (trg *TargetVertex) AttachSpec(s hcldec.Spec) {
 	trg.Spec = s
 }
 
+// GetSpec implements AttachableSpecVertex.
+func (trg *TargetVertex) GetSpec() hcldec.Spec {
+	return trg.Spec
+}
+
 // AttachAddress implements AttachableAddressVertex.
 func (trg *TargetVertex) AttachAddress(addr cty.Value) {
 	trg.EventsAddr = addr
+}
+
+// GetAddress implements AttachableAddressVertex.
+func (trg *TargetVertex) GetAddress() cty.Value {
+	return trg.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

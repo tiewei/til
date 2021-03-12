@@ -13,6 +13,7 @@ type AttachableAddressVertex interface {
 	BridgeComponentVertex
 
 	AttachAddress(cty.Value)
+	GetAddress() cty.Value
 }
 
 // AttachAddressesTransformer is a GraphTransformer that attaches an event

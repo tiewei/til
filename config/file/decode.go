@@ -1,11 +1,13 @@
 package file
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"bridgedl/config"
-	"bridgedl/config/addr"
+	"bridgedl/config/lookup"
 )
 
 // decodeBridge performs a partial decoding of the Body of a Bridge Description
@@ -56,8 +58,8 @@ func decodeBridge(b hcl.Body, brg *config.Bridge) hcl.Diagnostics {
 
 		default:
 			// should never occur because the hcl.BodyContent was
-			// validated against a hcl.BodySchema
-			continue
+			// validated against a hcl.BodySchema during parsing
+			panic(fmt.Errorf("found unexpected block type %q. The HCL body schema is outdated.", t))
 		}
 	}
 
@@ -79,7 +81,7 @@ func addChannelBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Channels = make(map[interface{}]*config.Channel)
 	}
 
-	key := addr.Channel{Identifier: ch.Identifier}
+	key := lookup.ChannelKey(ch)
 
 	if _, exists := brg.Channels[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryChannels, ch.Identifier, blk.DefRange))
@@ -105,7 +107,7 @@ func addRouterBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Routers = make(map[interface{}]*config.Router)
 	}
 
-	key := addr.Router{Identifier: rtr.Identifier}
+	key := lookup.RouterKey(rtr)
 
 	if _, exists := brg.Routers[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryRouters, rtr.Identifier, blk.DefRange))
@@ -131,7 +133,7 @@ func addTransformerBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Transformers = make(map[interface{}]*config.Transformer)
 	}
 
-	key := addr.Transformer{Identifier: trsf.Identifier}
+	key := lookup.TransformerKey(trsf)
 
 	if _, exists := brg.Transformers[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTransformers, trsf.Identifier, blk.DefRange))
@@ -157,7 +159,7 @@ func addSourceBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Sources = make(map[interface{}]*config.Source)
 	}
 
-	key := addr.Source{Identifier: src.Identifier}
+	key := lookup.SourceKey(src)
 
 	if _, exists := brg.Sources[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategorySources, src.Identifier, blk.DefRange))
@@ -183,7 +185,7 @@ func addTargetBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Targets = make(map[interface{}]*config.Target)
 	}
 
-	key := addr.Target{Identifier: trg.Identifier}
+	key := lookup.TargetKey(trg)
 
 	if _, exists := brg.Targets[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTargets, trg.Identifier, blk.DefRange))
@@ -261,7 +263,7 @@ func decodeFunctionBlock(blk *hcl.Block) (*config.Function, hcl.Diagnostics) {
 		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
 	}
 
-	content, remain, contentDiags := blk.Body.PartialContent(config.FunctionBlockSchema)
+	content, contentDiags := blk.Body.Content(config.FunctionBlockSchema)
 	diags = diags.Extend(contentDiags)
 
 	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrReplyTo])
@@ -270,7 +272,6 @@ func decodeFunctionBlock(blk *hcl.Block) (*config.Function, hcl.Diagnostics) {
 	fn := &config.Function{
 		Identifier:  blk.Labels[0],
 		ReplyTo:     to,
-		Config:      remain,
 		SourceRange: blk.DefRange,
 	}
 
@@ -375,7 +376,7 @@ func addFunctionBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Functions = make(map[interface{}]*config.Function)
 	}
 
-	key := addr.Function{Identifier: fn.Identifier}
+	key := lookup.FunctionKey(fn)
 
 	if _, exists := brg.Functions[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryFunctions, fn.Identifier, blk.DefRange))

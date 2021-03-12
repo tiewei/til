@@ -21,7 +21,7 @@ type Decodable interface {
 // persisted.
 type Translatable interface {
 	// Kubernetes manifests satisfying the given configuration.
-	Manifests(id string, config cty.Value) []interface{}
+	Manifests(id string, config, eventDst cty.Value) []interface{}
 }
 
 // Addressable is implemented by component types that can receive events from

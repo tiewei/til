@@ -70,6 +70,11 @@ func (src *SourceVertex) AttachSpec(s hcldec.Spec) {
 	src.Spec = s
 }
 
+// GetSpec implements AttachableSpecVertex.
+func (src *SourceVertex) GetSpec() hcldec.Spec {
+	return src.Spec
+}
+
 // Node implements graph.DOTableVertex.
 func (src *SourceVertex) Node() graph.DOTNode {
 	return graph.DOTNode{

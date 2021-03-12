@@ -1,1 +1,14 @@
+# Build artifacts
 /bridgedl
+
+# Editors and IDEs
+*.swo
+*.swp
+*~
+/*.sublime-project
+/*.sublime-workspace
+/.idea/
+/.vscode/
+
+# OS artifacts
+.DS_Store

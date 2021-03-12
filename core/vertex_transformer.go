@@ -82,9 +82,19 @@ func (trsf *TransformerVertex) AttachSpec(s hcldec.Spec) {
 	trsf.Spec = s
 }
 
+// GetSpec implements AttachableSpecVertex.
+func (trsf *TransformerVertex) GetSpec() hcldec.Spec {
+	return trsf.Spec
+}
+
 // AttachAddress implements AttachableAddressVertex.
 func (trsf *TransformerVertex) AttachAddress(addr cty.Value) {
 	trsf.EventsAddr = addr
+}
+
+// GetAddress implements AttachableAddressVertex.
+func (trsf *TransformerVertex) GetAddress() cty.Value {
+	return trsf.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

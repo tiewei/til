@@ -19,9 +19,6 @@ type Function struct {
 	// Destination of event responses.
 	ReplyTo hcl.Traversal
 
-	// Configuration of the function.
-	Config hcl.Body
-
 	// Source location of the block.
 	SourceRange hcl.Range
 }

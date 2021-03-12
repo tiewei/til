@@ -1,10 +1,11 @@
+# Sample Bridge Description File
+
 source "aws_sqs" "my_queue" {
   arn = "arn:aws:sqs:us-east-2:123456789012:triggermesh"
   to = router.my_router
 }
 
 function "my_function" {
-  repo = "github.com/acme/my-function"
   reply_to = router.my_router
 }
 
@@ -38,7 +39,7 @@ transformer "bumblebee" "my_transformation" {
     operation "add" {
       path {
         key = "id"
-        value = "${person}-${id}"
+        value = "$${person}-$${id}"
       }
     }
   }

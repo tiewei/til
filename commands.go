@@ -63,6 +63,7 @@ type Command interface {
 }
 
 var (
+	_ Command = (*GenerateCommand)(nil)
 	_ Command = (*ValidateCommand)(nil)
 	_ Command = (*GraphCommand)(nil)
 )
@@ -88,12 +89,22 @@ func (c *GenerateCommand) Run(args ...string) error {
 	}
 	filePath := pos[0]
 
-	_, diags := file.NewParser().LoadBridge(filePath)
+	brg, diags := file.NewParser().LoadBridge(filePath)
 	if diags.HasErrors() {
 		return diags
 	}
 
-	fmt.Fprintln(c.stdout, "Not implemented")
+	ctx, diags := core.NewContext(brg)
+	if diags.HasErrors() {
+		return diags
+	}
+
+	manifests, diags := ctx.Generate()
+	if diags.HasErrors() {
+		return diags
+	}
+
+	_ = manifests
 
 	return nil
 }

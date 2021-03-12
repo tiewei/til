@@ -80,9 +80,19 @@ func (rtr *RouterVertex) AttachSpec(s hcldec.Spec) {
 	rtr.Spec = s
 }
 
+// GetSpec implements AttachableSpecVertex.
+func (rtr *RouterVertex) GetSpec() hcldec.Spec {
+	return rtr.Spec
+}
+
 // AttachAddress implements AttachableAddressVertex.
 func (rtr *RouterVertex) AttachAddress(addr cty.Value) {
 	rtr.EventsAddr = addr
+}
+
+// GetAddress implements AttachableAddressVertex.
+func (rtr *RouterVertex) GetAddress() cty.Value {
+	return rtr.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

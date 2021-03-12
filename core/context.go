@@ -11,7 +11,7 @@ import (
 // on a Bridge.
 type Context struct {
 	Bridge *config.Bridge
-	Impls  *componentImplementations
+	Impls  *componentImpls
 }
 
 func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
@@ -36,4 +36,22 @@ func (c *Context) Graph() (*graph.DirectedGraph, hcl.Diagnostics) {
 	}
 
 	return b.Build()
+}
+
+// Generate generates the deployment manifests for a Bridge.
+func (c *Context) Generate() ([]interface{}, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	g, graphDiags := c.Graph()
+	diags = diags.Extend(graphDiags)
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
+	t := &BridgeTranslator{
+		Impls:  c.Impls,
+		Bridge: c.Bridge,
+	}
+
+	return t.Translate(g)
 }

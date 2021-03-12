@@ -74,10 +74,11 @@ func (ch *ChannelVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 		refs = append(refs, to)
 	}
 
-	// TODO(antoineco): channels can have multiple outbounds depending on
-	// their type (e.g. dead letter destination). We need to decode the
-	// config body using a provided schema in order to be able to determine
-	// all the references.
+	refsInCfg, refDiags := lang.BlockReferencesInBody(ch.Channel.Config, ch.Spec)
+	diags = diags.Extend(refDiags)
+
+	refs = append(refs, refsInCfg...)
+
 	return refs, diags
 }
 
@@ -86,9 +87,19 @@ func (ch *ChannelVertex) AttachSpec(s hcldec.Spec) {
 	ch.Spec = s
 }
 
+// GetSpec implements AttachableSpecVertex.
+func (ch *ChannelVertex) GetSpec() hcldec.Spec {
+	return ch.Spec
+}
+
 // AttachAddress implements AttachableAddressVertex.
 func (ch *ChannelVertex) AttachAddress(addr cty.Value) {
 	ch.EventsAddr = addr
+}
+
+// GetAddress implements AttachableAddressVertex.
+func (ch *ChannelVertex) GetAddress() cty.Value {
+	return ch.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

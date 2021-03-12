@@ -20,6 +20,17 @@ func noComponentImplDiagnostic(cmpCat config.ComponentCategory, cmpType string, 
 	}
 }
 
+// noTranslatableDiagnostic returns a hcl.Diagnostic which indicates that a
+// Translatable interface can not be acquired for a given component type.
+func noTranslatableDiagnostic(cmpCat config.ComponentCategory, cmpType string, subj hcl.Range) *hcl.Diagnostic {
+	return &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "Not translatable",
+		Detail:   fmt.Sprintf("Cannot find a translator for a %s of type %q", cmpCat, cmpType),
+		Subject:  subj.Ptr(),
+	}
+}
+
 // noDecodeSpecDiagnostic returns a hcl.Diagnostic which indicates that a spec
 // for decoding a HCL body can not be acquired for a given component type.
 func noDecodeSpecDiagnostic(cmpCat config.ComponentCategory, cmpType string, subj hcl.Range) *hcl.Diagnostic {
@@ -37,7 +48,7 @@ func unknownReferenceDiagnostic(refAddr addr.Referenceable, subj hcl.Range) *hcl
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Reference to unknown block",
-		Detail:   fmt.Sprintf("The expression %q doesn't match any known configuration block", refAddr),
+		Detail:   fmt.Sprintf("The expression %q doesn't match any known configuration block", refAddr.Addr()),
 		Subject:  subj.Ptr(),
 	}
 }
@@ -48,7 +59,7 @@ func noAddressableDiagnostic(cmpCat config.ComponentCategory, cmpType string, su
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Not addressable",
-		Detail: fmt.Sprintf("Cannot not determine the address for sending events to a %s of type %q",
+		Detail: fmt.Sprintf("Cannot determine the address for sending events to a %s of type %q",
 			cmpCat, cmpType),
 		Subject: subj.Ptr(),
 	}

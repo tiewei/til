@@ -13,6 +13,7 @@ type AttachableSpecVertex interface {
 	BridgeComponentVertex
 
 	AttachSpec(hcldec.Spec)
+	GetSpec() hcldec.Spec
 }
 
 // AttachSpecsTransformer is a GraphTransformer that attaches a decode spec to

@@ -21,12 +21,18 @@ var (
 
 // Spec implements translation.Decodable.
 func (*Kafka) Spec() hcldec.Spec {
-	return &hcldec.ObjectSpec{}
+	return &hcldec.ObjectSpec{
+		"topic": &hcldec.AttrSpec{
+			Name:     "topic",
+			Type:     cty.String,
+			Required: true,
+		},
+	}
 }
 
 // Manifests implements translation.Translatable.
-func (*Kafka) Manifests(id string, config cty.Value) []interface{} {
-	panic("not implemented")
+func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
+	return nil
 }
 
 // Address implements translation.Addressable.
