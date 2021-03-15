@@ -22,9 +22,14 @@ router "content_based" "my_router" {
     attributes = {
       type = "corp.acme.my.processing"
     }
-    to = target.my_kafka_topic
+    to = router.even_uid
   }
 
+}
+
+router "data_expression_filter" "even_uid" {
+  condition = "$user.id.(int64) % 2 == 0"
+  to = target.my_kafka_topic
 }
 
 transformer "bumblebee" "my_transformation" {
