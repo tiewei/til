@@ -21,6 +21,11 @@ type Decodable interface {
 // persisted.
 type Translatable interface {
 	// Kubernetes manifests satisfying the given configuration.
+	//
+	// NOTE(antoineco): we deliberately keep the return type open for the
+	// time being to be able to experiment with different formats until
+	// this code matures. The initial implementation uses
+	// unstructured.Unstructured from k8s/apimachinery.
 	Manifests(id string, config, eventDst cty.Value) []interface{}
 }
 

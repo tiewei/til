@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
+
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"bridgedl/config/file"
 	"bridgedl/core"
@@ -104,7 +107,25 @@ func (c *GenerateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	_ = manifests
+	// NOTE(antoineco): We assume for the time being that all generated
+	// manifests are unstructured.Unstructured objects. This might change
+	// in the future. See translation.Translatable.
+	list := &unstructured.UnstructuredList{}
+	list.SetAPIVersion("v1")
+	list.SetKind("List")
+
+	for _, m := range manifests {
+		list.Items = append(list.Items, *m.(*unstructured.Unstructured))
+	}
+
+	b, err := json.MarshalIndent(list, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshaling manifests to JSON: %w", err)
+	}
+
+	if _, err := c.stdout.Write(b); err != nil {
+		return fmt.Errorf("writing generated manifests: %w", err)
+	}
 
 	return nil
 }
