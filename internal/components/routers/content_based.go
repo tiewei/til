@@ -1,6 +1,8 @@
 package routers
 
 import (
+	"strconv"
+
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
@@ -80,10 +82,47 @@ func (*ContentBased) Spec() hcldec.Spec {
 
 // Manifests implements translation.Translatable.
 func (*ContentBased) Manifests(id string, config, _ cty.Value) []interface{} {
-	return nil
+	var manifests []interface{}
+
+	namePrefix := k8s.RFC1123Name(id)
+
+	broker := k8s.NewBroker(namePrefix)
+	manifests = append(manifests, broker)
+
+	i := 0
+	routeIter := config.ElementIterator()
+	for routeIter.Next() {
+		_, route := routeIter.Element()
+
+		routeDst := route.GetAttr("to")
+		filterAttr := attributesFromRoute(route)
+
+		name := namePrefix + "-r" + strconv.Itoa(i)
+		trigger := k8s.NewTrigger(name, namePrefix, routeDst, filterAttr)
+
+		manifests = append(manifests, trigger)
+
+		i++
+	}
+
+	return manifests
 }
 
 // Address implements translation.Addressable.
 func (*ContentBased) Address(id string) cty.Value {
 	return k8s.NewDestination("eventing.knative.dev/v1", "Broker", k8s.RFC1123Name(id))
+}
+
+func attributesFromRoute(route cty.Value) map[string]interface{} {
+	routeAttr := route.GetAttr("attributes")
+
+	filterAttr := make(map[string]interface{}, routeAttr.LengthInt())
+
+	routeAttrIter := routeAttr.ElementIterator()
+	for routeAttrIter.Next() {
+		attr, val := routeAttrIter.Element()
+		filterAttr[attr.AsString()] = val.AsString()
+	}
+
+	return filterAttr
 }
