@@ -23,5 +23,5 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 // Address implements translation.Addressable.
 func (*Function) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("serving.knative.dev/v1", "Service", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIServing, "Service", k8s.RFC1123Name(id))
 }

@@ -110,7 +110,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value) []interface{} {
 
 // Address implements translation.Addressable.
 func (*ContentBased) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("eventing.knative.dev/v1", "Broker", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIEventing, "Broker", k8s.RFC1123Name(id))
 }
 
 func attributesFromRoute(route cty.Value) map[string]interface{} {
