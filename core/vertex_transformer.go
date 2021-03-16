@@ -8,7 +8,9 @@ import (
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
+	"bridgedl/k8s"
 	"bridgedl/lang"
+	"bridgedl/translation"
 )
 
 // TransformerVertex is an abstract representation of a Transformer component within a graph.
@@ -17,39 +19,34 @@ type TransformerVertex struct {
 	Addr addr.Transformer
 	// Transformer block decoded from the Bridge description.
 	Transformer *config.Transformer
+	// Implementation of the Transformer component.
+	Impl interface{}
 	// Spec used to decode the block configuration.
 	Spec hcldec.Spec
-	// Address used as events destination.
-	EventsAddr cty.Value
 }
 
 var (
-	_ BridgeComponentVertex   = (*TransformerVertex)(nil)
-	_ ReferenceableVertex     = (*TransformerVertex)(nil)
-	_ ReferencerVertex        = (*TransformerVertex)(nil)
-	_ AttachableSpecVertex    = (*TransformerVertex)(nil)
-	_ AttachableAddressVertex = (*TransformerVertex)(nil)
-	_ graph.DOTableVertex     = (*TransformerVertex)(nil)
+	_ MessagingComponentVertex = (*TransformerVertex)(nil)
+	_ ReferenceableVertex      = (*TransformerVertex)(nil)
+	_ EventSenderVertex        = (*TransformerVertex)(nil)
+	_ AttachableImplVertex     = (*TransformerVertex)(nil)
+	_ DecodableConfigVertex    = (*TransformerVertex)(nil)
+	_ graph.DOTableVertex      = (*TransformerVertex)(nil)
 )
 
-// Category implements BridgeComponentVertex.
-func (*TransformerVertex) Category() config.ComponentCategory {
-	return config.CategoryTransformers
+// ComponentAddr implements MessagingComponentVertex.
+func (trsf *TransformerVertex) ComponentAddr() addr.MessagingComponent {
+	return addr.MessagingComponent{
+		Category:    config.CategoryTransformers,
+		Type:        trsf.Transformer.Type,
+		Identifier:  trsf.Transformer.Identifier,
+		SourceRange: trsf.Transformer.SourceRange,
+	}
 }
 
-// Type implements BridgeComponentVertex.
-func (trsf *TransformerVertex) Type() string {
-	return trsf.Transformer.Type
-}
-
-// Identifer implements BridgeComponentVertex.
-func (trsf *TransformerVertex) Identifier() string {
-	return trsf.Transformer.Identifier
-}
-
-// SourceRange implements BridgeComponentVertex.
-func (trsf *TransformerVertex) SourceRange() hcl.Range {
-	return trsf.Transformer.SourceRange
+// Implementation implements MessagingComponentVertex.
+func (trsf *TransformerVertex) Implementation() interface{} {
+	return trsf.Impl
 }
 
 // Referenceable implements ReferenceableVertex.
@@ -57,7 +54,31 @@ func (trsf *TransformerVertex) Referenceable() addr.Referenceable {
 	return trsf.Addr
 }
 
-// References implements ReferencerVertex.
+// EventAddress implements ReferenceableVertex.
+func (trsf *TransformerVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	addr, ok := trsf.Impl.(translation.Addressable)
+	if !ok {
+		diags = diags.Append(noAddressableDiagnostic(trsf.ComponentAddr()))
+		return cty.NullVal(k8s.DestinationCty), diags
+	}
+
+	config, decDiags := lang.DecodeIgnoreVars(trsf.Transformer.Config, trsf.Spec)
+	diags = diags.Extend(decDiags)
+
+	eventDst := cty.NullVal(k8s.DestinationCty)
+	dst := addr.Address(trsf.Transformer.Identifier, config, eventDst)
+
+	return dst, diags
+}
+
+// EventDestination implements EventSenderVertex.
+func (trsf *TransformerVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	return trsf.Transformer.To.TraverseAbs(ctx)
+}
+
+// References implements EventSenderVertex.
 func (trsf *TransformerVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if trsf.Transformer == nil {
 		return nil, nil
@@ -77,24 +98,19 @@ func (trsf *TransformerVertex) References() ([]*addr.Reference, hcl.Diagnostics)
 	return refs, diags
 }
 
-// AttachSpec implements AttachableSpecVertex.
+// AttachImpl implements AttachableImplVertex.
+func (trsf *TransformerVertex) AttachImpl(impl interface{}) {
+	trsf.Impl = impl
+}
+
+// DecodedConfig implements DecodableConfigVertex.
+func (trsf *TransformerVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	return hcldec.Decode(trsf.Transformer.Config, trsf.Spec, ctx)
+}
+
+// AttachSpec implements DecodableConfigVertex.
 func (trsf *TransformerVertex) AttachSpec(s hcldec.Spec) {
 	trsf.Spec = s
-}
-
-// GetSpec implements AttachableSpecVertex.
-func (trsf *TransformerVertex) GetSpec() hcldec.Spec {
-	return trsf.Spec
-}
-
-// AttachAddress implements AttachableAddressVertex.
-func (trsf *TransformerVertex) AttachAddress(addr cty.Value) {
-	trsf.EventsAddr = addr
-}
-
-// GetAddress implements AttachableAddressVertex.
-func (trsf *TransformerVertex) GetAddress() cty.Value {
-	return trsf.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

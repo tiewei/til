@@ -34,6 +34,6 @@ func (*AWSSQS) Manifests(id string, config, eventDst cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*AWSSQS) Address(id string) cty.Value {
+func (*AWSSQS) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination("sources.triggermesh.io/v1alpha1", "AWSSQSSource", k8s.RFC1123Name(id))
 }

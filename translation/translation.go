@@ -43,5 +43,5 @@ type Addressable interface {
 
 	// Address of the component expressed as a Knative "duck" destination
 	// in the cty type system.
-	Address(id string) cty.Value
+	Address(id string, config, eventDst cty.Value) cty.Value
 }

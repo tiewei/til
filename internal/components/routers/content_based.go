@@ -109,7 +109,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*ContentBased) Address(id string) cty.Value {
+func (*ContentBased) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination("eventing.knative.dev/v1", "Broker", k8s.RFC1123Name(id))
 }
 

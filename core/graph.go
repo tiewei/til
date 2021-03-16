@@ -11,8 +11,7 @@ import (
 // transformation steps.
 type GraphBuilder struct {
 	Bridge *config.Bridge
-	Specs  *Specs
-	Addr   *Addressables
+	Impls  *componentImpls
 }
 
 // Build iterates over the transformation steps of the GraphBuilder to build a graph.
@@ -25,23 +24,16 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 			Bridge: b.Bridge,
 		},
 
-		// Compute and attach event addresses.
-		// Although addresses aren't used in the process of building
-		// the actual graph, determining them here allows us to rule
-		// out some categories of issues early, and ensures that this
-		// information is readily available when the graph is
-		// evaluated/translated later on.
-		&AttachAddressesTransformer{
-			Addr: b.Addr,
+		// Attach component implementations.
+		&AttachImplementationsTransformer{
+			Impls: b.Impls,
 		},
 
 		// Attach decode specs.
 		// This needs to be done before trying to evaluate references
 		// between vertices, because specs allow decoding the HCL
 		// configurations which contain those resolvable references.
-		&AttachSpecsTransformer{
-			Specs: b.Specs,
-		},
+		&AttachSpecsTransformer{},
 
 		// Resolve references and connect vertices.
 		&ConnectReferencesTransformer{},

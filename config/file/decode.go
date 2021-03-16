@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
 	"bridgedl/config"
-	"bridgedl/config/lookup"
+	"bridgedl/config/addr"
 )
 
 // decodeBridge performs a partial decoding of the Body of a Bridge Description
@@ -81,7 +81,7 @@ func addChannelBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Channels = make(map[interface{}]*config.Channel)
 	}
 
-	key := lookup.ChannelKey(ch)
+	key := addr.Channel{Identifier: ch.Identifier}
 
 	if _, exists := brg.Channels[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryChannels, ch.Identifier, blk.DefRange))
@@ -107,7 +107,7 @@ func addRouterBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Routers = make(map[interface{}]*config.Router)
 	}
 
-	key := lookup.RouterKey(rtr)
+	key := addr.Router{Identifier: rtr.Identifier}
 
 	if _, exists := brg.Routers[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryRouters, rtr.Identifier, blk.DefRange))
@@ -133,7 +133,7 @@ func addTransformerBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Transformers = make(map[interface{}]*config.Transformer)
 	}
 
-	key := lookup.TransformerKey(trsf)
+	key := addr.Transformer{Identifier: trsf.Identifier}
 
 	if _, exists := brg.Transformers[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTransformers, trsf.Identifier, blk.DefRange))
@@ -159,7 +159,7 @@ func addSourceBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Sources = make(map[interface{}]*config.Source)
 	}
 
-	key := lookup.SourceKey(src)
+	key := addr.Source{Identifier: src.Identifier}
 
 	if _, exists := brg.Sources[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategorySources, src.Identifier, blk.DefRange))
@@ -185,7 +185,7 @@ func addTargetBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		brg.Targets = make(map[interface{}]*config.Target)
 	}
 
-	key := lookup.TargetKey(trg)
+	key := addr.Target{Identifier: trg.Identifier}
 
 	if _, exists := brg.Targets[key]; exists {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTargets, trg.Identifier, blk.DefRange))
@@ -196,33 +196,30 @@ func addTargetBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	return diags
 }
 
-// decodeTransformerBlock performs a partial decoding of the Body of a "transformer"
-// block into a Transformer struct.
-func decodeTransformerBlock(blk *hcl.Block) (*config.Transformer, hcl.Diagnostics) {
+// addFunctionBlock adds a Function component to a Bridge.
+func addFunctionBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
-	if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
-		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
-	}
-	if !hclsyntax.ValidIdentifier(blk.Labels[1]) {
-		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[1]))
-	}
-
-	content, remain, contentDiags := blk.Body.PartialContent(config.TransformerBlockSchema)
-	diags = diags.Extend(contentDiags)
-
-	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrTo])
+	fn, decodeDiags := decodeFunctionBlock(blk)
 	diags = diags.Extend(decodeDiags)
 
-	rtr := &config.Transformer{
-		Type:        blk.Labels[0],
-		Identifier:  blk.Labels[1],
-		To:          to,
-		Config:      remain,
-		SourceRange: blk.DefRange,
+	if fn == nil {
+		return nil
 	}
 
-	return rtr, diags
+	if brg.Functions == nil {
+		brg.Functions = make(map[interface{}]*config.Function)
+	}
+
+	key := addr.Function{Identifier: fn.Identifier}
+
+	if _, exists := brg.Functions[key]; exists {
+		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryFunctions, fn.Identifier, blk.DefRange))
+	} else {
+		brg.Functions[key] = fn
+	}
+
+	return diags
 }
 
 // decodeChannelBlock performs a partial decoding of the Body of a "channel"
@@ -254,30 +251,6 @@ func decodeChannelBlock(blk *hcl.Block) (*config.Channel, hcl.Diagnostics) {
 	return ch, diags
 }
 
-// decodeFunctionBlock performs a partial decoding of the Body of a "function"
-// block into a Function struct.
-func decodeFunctionBlock(blk *hcl.Block) (*config.Function, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
-
-	if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
-		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
-	}
-
-	content, contentDiags := blk.Body.Content(config.FunctionBlockSchema)
-	diags = diags.Extend(contentDiags)
-
-	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrReplyTo])
-	diags = diags.Extend(decodeDiags)
-
-	fn := &config.Function{
-		Identifier:  blk.Labels[0],
-		ReplyTo:     to,
-		SourceRange: blk.DefRange,
-	}
-
-	return fn, diags
-}
-
 // decodeRouterBlock performs a partial decoding of the Body of a "router"
 // block into a Router struct.
 func decodeRouterBlock(blk *hcl.Block) (*config.Router, hcl.Diagnostics) {
@@ -296,6 +269,35 @@ func decodeRouterBlock(blk *hcl.Block) (*config.Router, hcl.Diagnostics) {
 	rtr := &config.Router{
 		Type:        blk.Labels[0],
 		Identifier:  blk.Labels[1],
+		Config:      remain,
+		SourceRange: blk.DefRange,
+	}
+
+	return rtr, diags
+}
+
+// decodeTransformerBlock performs a partial decoding of the Body of a "transformer"
+// block into a Transformer struct.
+func decodeTransformerBlock(blk *hcl.Block) (*config.Transformer, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
+		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
+	}
+	if !hclsyntax.ValidIdentifier(blk.Labels[1]) {
+		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[1]))
+	}
+
+	content, remain, contentDiags := blk.Body.PartialContent(config.TransformerBlockSchema)
+	diags = diags.Extend(contentDiags)
+
+	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrTo])
+	diags = diags.Extend(decodeDiags)
+
+	rtr := &config.Transformer{
+		Type:        blk.Labels[0],
+		Identifier:  blk.Labels[1],
+		To:          to,
 		Config:      remain,
 		SourceRange: blk.DefRange,
 	}
@@ -361,30 +363,28 @@ func decodeTargetBlock(blk *hcl.Block) (*config.Target, hcl.Diagnostics) {
 	return trg, diags
 }
 
-// addFunctionBlock adds a Function component to a Bridge.
-func addFunctionBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
+// decodeFunctionBlock performs a partial decoding of the Body of a "function"
+// block into a Function struct.
+func decodeFunctionBlock(blk *hcl.Block) (*config.Function, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
-	fn, decodeDiags := decodeFunctionBlock(blk)
+	if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
+		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
+	}
+
+	content, contentDiags := blk.Body.Content(config.FunctionBlockSchema)
+	diags = diags.Extend(contentDiags)
+
+	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrReplyTo])
 	diags = diags.Extend(decodeDiags)
 
-	if fn == nil {
-		return nil
+	fn := &config.Function{
+		Identifier:  blk.Labels[0],
+		ReplyTo:     to,
+		SourceRange: blk.DefRange,
 	}
 
-	if brg.Functions == nil {
-		brg.Functions = make(map[interface{}]*config.Function)
-	}
-
-	key := lookup.FunctionKey(fn)
-
-	if _, exists := brg.Functions[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryFunctions, fn.Identifier, blk.DefRange))
-	} else {
-		brg.Functions[key] = fn
-	}
-
-	return diags
+	return fn, diags
 }
 
 // decodeBlockRef decodes an expression attribute representing a reference to

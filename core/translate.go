@@ -1,16 +1,12 @@
 package core
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/hashicorp/hcl/v2"
-	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
-	"bridgedl/config/lookup"
 	"bridgedl/graph"
+	"bridgedl/k8s"
 	"bridgedl/translation"
 )
 
@@ -27,48 +23,45 @@ func (t *BridgeTranslator) Translate(g *graph.DirectedGraph) ([]interface{}, hcl
 
 	var manifests []interface{}
 
-	evalCtx := evalContext(g)
+	evalCtx, evalDiags := evalContext(g)
+	diags = diags.Extend(evalDiags)
 
 	for _, v := range g.Vertices() {
-		cmp, ok := v.(BridgeComponentVertex)
+		cmp, ok := v.(MessagingComponentVertex)
 		if !ok {
 			continue
 		}
 
-		cmpCat, cmpType, cmpID := cmp.Category(), cmp.Type(), cmp.Identifier()
+		var loopDiags hcl.Diagnostics
 
-		impl := t.Impls.ImplementationFor(cmpCat, cmpType)
-		if impl == nil {
-			// this would indicate a bug because initComponents
-			// should validate that all components declared in the
-			// bridge are at least partially implemented, so we
-			// want such error to be loud
-			panic(fmt.Errorf("no implementation for a %s of type %q. This should have been caught "+
-				"earlier during validation.", cmpCat, cmpType))
+		config := cty.NullVal(cty.DynamicPseudoType)
+		if dec, ok := v.(DecodableConfigVertex); ok {
+			var cfgDiags hcl.Diagnostics
+			config, cfgDiags = dec.DecodedConfig(evalCtx)
+			loopDiags = loopDiags.Extend(cfgDiags)
 		}
 
-		transl, ok := impl.(translation.Translatable)
-		if !ok {
-			diags = diags.Append(noTranslatableDiagnostic(cmpCat, cmpType, cmp.SourceRange()))
+		eventDst := cty.NullVal(k8s.DestinationCty)
+		if sdr, ok := v.(EventSenderVertex); ok {
+			var dstDiags hcl.Diagnostics
+			eventDst, dstDiags = sdr.EventDestination(evalCtx)
+			loopDiags = loopDiags.Extend(dstDiags)
+		}
+
+		diags = diags.Extend(loopDiags)
+		if loopDiags.HasErrors() {
 			continue
 		}
 
-		var spec hcldec.Spec
+		cmpAddr := cmp.ComponentAddr()
 
-		sp, ok := v.(AttachableSpecVertex)
-		if ok {
-			spec = sp.GetSpec()
+		transl, ok := cmp.Implementation().(translation.Translatable)
+		if !ok {
+			diags = diags.Append(noTranslatableDiagnostic(cmpAddr))
+			continue
 		}
 
-		dataSrc := lookup.NewDataSource(t.Bridge)
-
-		config, cfgDiags := componentConfig(dataSrc, cmpCat, cmpID, spec, evalCtx)
-		diags = diags.Extend(cfgDiags)
-
-		eventDst, dstDiags := eventDestination(dataSrc, cmpCat, cmpID, evalCtx)
-		diags = diags.Extend(dstDiags)
-
-		manifests = append(manifests, transl.Manifests(cmpID, config, eventDst)...)
+		manifests = append(manifests, transl.Manifests(cmpAddr.Identifier, config, eventDst)...)
 	}
 
 	return manifests, diags
@@ -80,27 +73,29 @@ func (t *BridgeTranslator) Translate(g *graph.DirectedGraph) ([]interface{}, hcl
 // Because traversal expressions always represent references to Addressables in
 // the Bridge Description Language, all values nested of this EvalContext
 // represent event addresses.
-func evalContext(g *graph.DirectedGraph) *hcl.EvalContext {
+func evalContext(g *graph.DirectedGraph) (*hcl.EvalContext, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
 	addrs := make(componentAddressesByCategory)
 
 	// the keys of the graph's "up edges" are all vertices that are
 	// referenced by at least one other vertex
 	for v := range g.UpEdges() {
-		addrCmp, ok := v.(AttachableAddressVertex)
+		addr, ok := v.(AddressableVertex)
 		if !ok {
-			// this would indicate a bug in the graph building
-			// logic, so we want such error to be loud
-			panic(errors.New("all referenceable vertices should also be addressable. This should have " +
-				"been caught earlier during validation."))
+			continue
 		}
 
-		cmpCat := addrCmp.Category()
+		cmpAddr := addr.ComponentAddr()
 
-		if _, ok := addrs[cmpCat]; !ok {
-			addrs[cmpCat] = make(map[string]cty.Value)
+		evAddr, evAddrDiags := addr.EventAddress()
+		diags = diags.Extend(evAddrDiags)
+
+		if _, ok := addrs[cmpAddr.Category]; !ok {
+			addrs[cmpAddr.Category] = make(map[string]cty.Value)
 		}
 
-		addrs[cmpCat][addrCmp.Identifier()] = addrCmp.GetAddress()
+		addrs[cmpAddr.Category][cmpAddr.Identifier] = evAddr
 	}
 
 	evalCtx := &hcl.EvalContext{
@@ -111,7 +106,7 @@ func evalContext(g *graph.DirectedGraph) *hcl.EvalContext {
 		evalCtx.Variables[cmpCat.String()] = cty.ObjectVal(addrByCmpID)
 	}
 
-	return evalCtx
+	return evalCtx, diags
 }
 
 // componentAddressesByCategory is a collection of maps of component ID to
@@ -127,84 +122,3 @@ func evalContext(g *graph.DirectedGraph) *hcl.EvalContext {
 //     "my_channel": <address value>
 //   }
 type componentAddressesByCategory map[config.ComponentCategory]map[string]cty.Value
-
-// componentConfig returns the value decoded from the hcl.Config of the given
-// component.
-//
-// It is acceptable for some component types to return a null cty.Value, if
-// this type's configuration contains only optional attributes.
-func componentConfig(ds *lookup.DataSource, cmpCat config.ComponentCategory, cmpID string,
-	spec hcldec.Spec, evalCtx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-
-	// some component types may not have any configuration body to decode
-	// at all, in which case no hcldec.Spec will be passed as argument
-	if spec == nil {
-		return cty.NullVal(cty.DynamicPseudoType), nil
-	}
-
-	var bodyToDecode hcl.Body
-
-	switch cmpCat {
-	case config.CategoryChannels:
-		bodyToDecode = ds.Channel(cmpID).Config
-	case config.CategoryRouters:
-		bodyToDecode = ds.Router(cmpID).Config
-	case config.CategoryTransformers:
-		bodyToDecode = ds.Transformer(cmpID).Config
-	case config.CategorySources:
-		bodyToDecode = ds.Source(cmpID).Config
-	case config.CategoryTargets:
-		bodyToDecode = ds.Target(cmpID).Config
-	case config.CategoryFunctions:
-		// "function" types are not supported yet, so there is
-		// no HCL body to decode
-		return cty.NullVal(cty.DynamicPseudoType), nil
-	default:
-		// should not happen, the list of categories is exhaustive
-		panic(fmt.Errorf("encountered unknown component category %q", cmpCat))
-	}
-
-	return hcldec.Decode(bodyToDecode, spec, evalCtx)
-}
-
-// eventDestination returns the destination corresponding to the top-level "to"
-// attribute of the given component, for component categories that include such
-// attribute.
-func eventDestination(ds *lookup.DataSource, cmpCat config.ComponentCategory, cmpID string,
-	evalCtx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-
-	var toExpr hcl.Traversal
-
-	switch cmpCat {
-	case config.CategoryChannels:
-		toExpr = ds.Channel(cmpID).To
-
-	case config.CategoryRouters:
-		// "router" types only have nested block references
-		return cty.NullVal(destinationCty), nil
-
-	case config.CategoryTransformers:
-		toExpr = ds.Transformer(cmpID).To
-
-	case config.CategorySources:
-		toExpr = ds.Source(cmpID).To
-
-	case config.CategoryTargets:
-		toExpr = ds.Target(cmpID).ReplyTo
-		if toExpr == nil {
-			return cty.NullVal(destinationCty), nil
-		}
-
-	case config.CategoryFunctions:
-		toExpr = ds.Function(cmpID).ReplyTo
-		if toExpr == nil {
-			return cty.NullVal(destinationCty), nil
-		}
-
-	default:
-		// should not happen, the list of categories is exhaustive
-		panic(fmt.Errorf("encountered unknown component category %q", cmpCat))
-	}
-
-	return toExpr.TraverseAbs(evalCtx)
-}

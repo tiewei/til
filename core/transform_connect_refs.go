@@ -2,21 +2,47 @@ package core
 
 import (
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config/addr"
 	"bridgedl/graph"
 )
 
-// ReferenceableVertex must be implemented by all types used as graph.Vertex
-// that can be referenced by other vertices.
-type ReferenceableVertex interface {
-	Referenceable() addr.Referenceable
+// AddressableVertex is implemented by all types used as graph.Vertex that can
+// expose an address for receiving events.
+type AddressableVertex interface {
+	EventAddress() (cty.Value, hcl.Diagnostics)
+
+	// Assembling an hcl.EvalContext requires knowledge about the category
+	// of the component represented by the vertex, in addition to its event
+	// address
+	MessagingComponentVertex
 }
 
-// ReferencerVertex must be implemented by all types used as graph.Vertex that
-// can reference other vertices.
+// ReferenceableVertex is implemented by all types used as graph.Vertex that
+// can be referenced by other vertices.
+type ReferenceableVertex interface {
+	Referenceable() addr.Referenceable
+
+	// By our definition, a Referenceable vertex must also expose an
+	// address and accept events.
+	AddressableVertex
+}
+
+// ReferencerVertex is implemented by all types used as graph.Vertex that can
+// reference other vertices.
 type ReferencerVertex interface {
 	References() ([]*addr.Reference, hcl.Diagnostics)
+}
+
+// EventSenderVertex is implemented by all types used as graph.Vertex that may
+// have a main event destination configured ("to" top-level HCL attribute).
+type EventSenderVertex interface {
+	EventDestination(*hcl.EvalContext) (cty.Value, hcl.Diagnostics)
+
+	// If a component can send events, it can also have at least one
+	// reference to other components.
+	ReferencerVertex
 }
 
 // ConnectReferencesTransformer is a GraphTransformer that connects vertices of

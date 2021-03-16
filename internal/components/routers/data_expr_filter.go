@@ -61,6 +61,6 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*DataExprFilter) Address(id string) cty.Value {
+func (*DataExprFilter) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination("routing.triggermesh.io/v1alpha1", "Filter", k8s.RFC1123Name(id))
 }

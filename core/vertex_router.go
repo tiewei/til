@@ -8,7 +8,9 @@ import (
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
+	"bridgedl/k8s"
 	"bridgedl/lang"
+	"bridgedl/translation"
 )
 
 // RouterVertex is an abstract representation of a Router component within a graph.
@@ -17,44 +19,58 @@ type RouterVertex struct {
 	Addr addr.Router
 	// Router block decoded from the Bridge description.
 	Router *config.Router
+	// Implementation of the Router component.
+	Impl interface{}
 	// Spec used to decode the block configuration.
 	Spec hcldec.Spec
-	// Address used as events destination.
-	EventsAddr cty.Value
 }
 
 var (
-	_ BridgeComponentVertex   = (*RouterVertex)(nil)
-	_ ReferenceableVertex     = (*RouterVertex)(nil)
-	_ ReferencerVertex        = (*RouterVertex)(nil)
-	_ AttachableSpecVertex    = (*RouterVertex)(nil)
-	_ AttachableAddressVertex = (*RouterVertex)(nil)
-	_ graph.DOTableVertex     = (*RouterVertex)(nil)
+	_ MessagingComponentVertex = (*RouterVertex)(nil)
+	_ ReferenceableVertex      = (*RouterVertex)(nil)
+	_ ReferencerVertex         = (*RouterVertex)(nil)
+	_ AttachableImplVertex     = (*RouterVertex)(nil)
+	_ DecodableConfigVertex    = (*RouterVertex)(nil)
+	_ graph.DOTableVertex      = (*RouterVertex)(nil)
 )
 
-// Category implements BridgeComponentVertex.
-func (*RouterVertex) Category() config.ComponentCategory {
-	return config.CategoryRouters
+// ComponentAddr implements MessagingComponentVertex.
+func (rtr *RouterVertex) ComponentAddr() addr.MessagingComponent {
+	return addr.MessagingComponent{
+		Category:    config.CategoryRouters,
+		Type:        rtr.Router.Type,
+		Identifier:  rtr.Router.Identifier,
+		SourceRange: rtr.Router.SourceRange,
+	}
 }
 
-// Type implements BridgeComponentVertex.
-func (rtr *RouterVertex) Type() string {
-	return rtr.Router.Type
-}
-
-// Identifer implements BridgeComponentVertex.
-func (rtr *RouterVertex) Identifier() string {
-	return rtr.Router.Identifier
-}
-
-// SourceRange implements BridgeComponentVertex.
-func (rtr *RouterVertex) SourceRange() hcl.Range {
-	return rtr.Router.SourceRange
+// Implementation implements MessagingComponentVertex.
+func (rtr *RouterVertex) Implementation() interface{} {
+	return rtr.Impl
 }
 
 // Referenceable implements ReferenceableVertex.
 func (rtr *RouterVertex) Referenceable() addr.Referenceable {
 	return rtr.Addr
+}
+
+// EventAddress implements ReferenceableVertex.
+func (rtr *RouterVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	addr, ok := rtr.Impl.(translation.Addressable)
+	if !ok {
+		diags = diags.Append(noAddressableDiagnostic(rtr.ComponentAddr()))
+		return cty.NullVal(k8s.DestinationCty), diags
+	}
+
+	config, decDiags := lang.DecodeIgnoreVars(rtr.Router.Config, rtr.Spec)
+	diags = diags.Extend(decDiags)
+
+	eventDst := cty.NullVal(k8s.DestinationCty)
+	dst := addr.Address(rtr.Router.Identifier, config, eventDst)
+
+	return dst, diags
 }
 
 // References implements ReferencerVertex.
@@ -75,24 +91,19 @@ func (rtr *RouterVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
-// AttachSpec implements AttachableSpecVertex.
+// AttachImpl implements AttachableImplVertex.
+func (rtr *RouterVertex) AttachImpl(impl interface{}) {
+	rtr.Impl = impl
+}
+
+// DecodedConfig implements DecodableConfigVertex.
+func (rtr *RouterVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	return hcldec.Decode(rtr.Router.Config, rtr.Spec, ctx)
+}
+
+// AttachSpec implements DecodableConfigVertex.
 func (rtr *RouterVertex) AttachSpec(s hcldec.Spec) {
 	rtr.Spec = s
-}
-
-// GetSpec implements AttachableSpecVertex.
-func (rtr *RouterVertex) GetSpec() hcldec.Spec {
-	return rtr.Spec
-}
-
-// AttachAddress implements AttachableAddressVertex.
-func (rtr *RouterVertex) AttachAddress(addr cty.Value) {
-	rtr.EventsAddr = addr
-}
-
-// GetAddress implements AttachableAddressVertex.
-func (rtr *RouterVertex) GetAddress() cty.Value {
-	return rtr.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

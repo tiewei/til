@@ -3,6 +3,7 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
 	"bridgedl/config/addr"
@@ -14,38 +15,41 @@ import (
 type SourceVertex struct {
 	// Source block decoded from the Bridge description.
 	Source *config.Source
+	// Implementation of the Source component.
+	Impl interface{}
 	// Spec used to decode the block configuration.
 	Spec hcldec.Spec
 }
 
 var (
-	_ BridgeComponentVertex = (*SourceVertex)(nil)
-	_ ReferencerVertex      = (*SourceVertex)(nil)
-	_ AttachableSpecVertex  = (*SourceVertex)(nil)
-	_ graph.DOTableVertex   = (*SourceVertex)(nil)
+	_ MessagingComponentVertex = (*SourceVertex)(nil)
+	_ EventSenderVertex        = (*SourceVertex)(nil)
+	_ AttachableImplVertex     = (*SourceVertex)(nil)
+	_ DecodableConfigVertex    = (*SourceVertex)(nil)
+	_ graph.DOTableVertex      = (*SourceVertex)(nil)
 )
 
-// Category implements BridgeComponentVertex.
-func (*SourceVertex) Category() config.ComponentCategory {
-	return config.CategorySources
+// ComponentAddr implements MessagingComponentVertex.
+func (src *SourceVertex) ComponentAddr() addr.MessagingComponent {
+	return addr.MessagingComponent{
+		Category:    config.CategorySources,
+		Type:        src.Source.Type,
+		Identifier:  src.Source.Identifier,
+		SourceRange: src.Source.SourceRange,
+	}
 }
 
-// Type implements BridgeComponentVertex.
-func (src *SourceVertex) Type() string {
-	return src.Source.Type
+// Implementation implements MessagingComponentVertex.
+func (src *SourceVertex) Implementation() interface{} {
+	return src.Impl
 }
 
-// Identifer implements BridgeComponentVertex.
-func (src *SourceVertex) Identifier() string {
-	return src.Source.Identifier
+// EventDestination implements EventSenderVertex.
+func (src *SourceVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	return src.Source.To.TraverseAbs(ctx)
 }
 
-// SourceRange implements BridgeComponentVertex.
-func (src *SourceVertex) SourceRange() hcl.Range {
-	return src.Source.SourceRange
-}
-
-// Referenceable implements ReferencerVertex.
+// References implements EventSenderVertex.
 func (src *SourceVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if src.Source == nil {
 		return nil, nil
@@ -65,14 +69,19 @@ func (src *SourceVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
-// AttachSpec implements AttachableSpecVertex.
-func (src *SourceVertex) AttachSpec(s hcldec.Spec) {
-	src.Spec = s
+// AttachImpl implements AttachableImplVertex.
+func (src *SourceVertex) AttachImpl(impl interface{}) {
+	src.Impl = impl
 }
 
-// GetSpec implements AttachableSpecVertex.
-func (src *SourceVertex) GetSpec() hcldec.Spec {
-	return src.Spec
+// DecodedConfig implements DecodableConfigVertex.
+func (src *SourceVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	return hcldec.Decode(src.Source.Config, src.Spec, ctx)
+}
+
+// AttachSpec implements DecodableConfigVertex.
+func (src *SourceVertex) AttachSpec(s hcldec.Spec) {
+	src.Spec = s
 }
 
 // Node implements graph.DOTableVertex.

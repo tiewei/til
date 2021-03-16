@@ -31,8 +31,7 @@ func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
 func (c *Context) Graph() (*graph.DirectedGraph, hcl.Diagnostics) {
 	b := &GraphBuilder{
 		Bridge: c.Bridge,
-		Specs:  initSpecs(c.Impls),
-		Addr:   initAddressables(c.Impls),
+		Impls:  c.Impls,
 	}
 
 	return b.Build()

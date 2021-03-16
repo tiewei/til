@@ -7,7 +7,9 @@ import (
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
+	"bridgedl/k8s"
 	"bridgedl/lang"
+	"bridgedl/translation"
 )
 
 // FunctionVertex is an abstract representation of a Function component within a graph.
@@ -16,37 +18,30 @@ type FunctionVertex struct {
 	Addr addr.Function
 	// Function block decoded from the Bridge description.
 	Function *config.Function
-	// Address used as events destination.
-	EventsAddr cty.Value
+	// Implementation of the Function component.
+	Impl interface{}
 }
 
 var (
-	_ BridgeComponentVertex   = (*FunctionVertex)(nil)
-	_ ReferenceableVertex     = (*FunctionVertex)(nil)
-	_ ReferencerVertex        = (*FunctionVertex)(nil)
-	_ AttachableAddressVertex = (*FunctionVertex)(nil)
-	_ graph.DOTableVertex     = (*FunctionVertex)(nil)
+	_ MessagingComponentVertex = (*FunctionVertex)(nil)
+	_ ReferenceableVertex      = (*FunctionVertex)(nil)
+	_ EventSenderVertex        = (*FunctionVertex)(nil)
+	_ AttachableImplVertex     = (*FunctionVertex)(nil)
+	_ graph.DOTableVertex      = (*FunctionVertex)(nil)
 )
 
-// Category implements BridgeComponentVertex.
-func (*FunctionVertex) Category() config.ComponentCategory {
-	return config.CategoryFunctions
+// ComponentAddr implements MessagingComponentVertex.
+func (fn *FunctionVertex) ComponentAddr() addr.MessagingComponent {
+	return addr.MessagingComponent{
+		Category:    config.CategoryFunctions,
+		Identifier:  fn.Function.Identifier,
+		SourceRange: fn.Function.SourceRange,
+	}
 }
 
-// Type implements BridgeComponentVertex.
-func (fn *FunctionVertex) Type() string {
-	// "function" types are not supported yet
-	return "undefined"
-}
-
-// Identifer implements BridgeComponentVertex.
-func (fn *FunctionVertex) Identifier() string {
-	return fn.Function.Identifier
-}
-
-// SourceRange implements BridgeComponentVertex.
-func (fn *FunctionVertex) SourceRange() hcl.Range {
-	return fn.Function.SourceRange
+// Implementation implements MessagingComponentVertex.
+func (fn *FunctionVertex) Implementation() interface{} {
+	return fn.Impl
 }
 
 // Referenceable implements ReferenceableVertex.
@@ -54,7 +49,43 @@ func (fn *FunctionVertex) Referenceable() addr.Referenceable {
 	return fn.Addr
 }
 
-// References implements ReferencerVertex.
+// EventAddress implements ReferenceableVertex.
+func (fn *FunctionVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	addr, ok := fn.Impl.(translation.Addressable)
+	if !ok {
+		diags = diags.Append(noAddressableDiagnostic(fn.ComponentAddr()))
+		return cty.NullVal(k8s.DestinationCty), diags
+	}
+
+	// functions of different types aren't supported yet, so there is no
+	// body to decode
+	config := cty.NullVal(cty.DynamicPseudoType)
+
+	eventDst := cty.NullVal(k8s.DestinationCty)
+	if fn.Function.ReplyTo != nil {
+		// FIXME(antoineco): this is hacky. So far the only thing that
+		// may influence the value of the event address is the presence
+		// or not of a "reply_to" expression, not its actual value.
+		// We should tackle this by revisiting our translation interfaces.
+		eventDst = k8s.NewDestination("", "", "")
+	}
+
+	dst := addr.Address(fn.Function.Identifier, config, eventDst)
+
+	return dst, diags
+}
+
+// EventDestination implements EventSenderVertex.
+func (fn *FunctionVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	if fn.Function.ReplyTo == nil {
+		return cty.NullVal(k8s.DestinationCty), nil
+	}
+	return fn.Function.ReplyTo.TraverseAbs(ctx)
+}
+
+// References implements EventSenderVertex.
 func (fn *FunctionVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if fn.Function == nil {
 		return nil, nil
@@ -74,14 +105,9 @@ func (fn *FunctionVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
-// AttachAddress implements AttachableAddressVertex.
-func (fn *FunctionVertex) AttachAddress(addr cty.Value) {
-	fn.EventsAddr = addr
-}
-
-// GetAddress implements AttachableAddressVertex.
-func (fn *FunctionVertex) GetAddress() cty.Value {
-	return fn.EventsAddr
+// AttachImpl implements AttachableImplVertex.
+func (fn *FunctionVertex) AttachImpl(impl interface{}) {
+	fn.Impl = impl
 }
 
 // Node implements graph.DOTableVertex.

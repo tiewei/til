@@ -36,6 +36,6 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*Kafka) Address(id string) cty.Value {
-	return k8s.NewDestination("eventing.knative.dev", "KafkaSink", k8s.RFC1123Name(id))
+func (*Kafka) Address(id string, _, _ cty.Value) cty.Value {
+	return k8s.NewDestination("eventing.knative.dev/v1alpha1", "KafkaSink", k8s.RFC1123Name(id))
 }

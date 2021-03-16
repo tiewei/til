@@ -1,6 +1,10 @@
 package addr
 
-import "bridgedl/config"
+import (
+	"github.com/hashicorp/hcl/v2"
+
+	"bridgedl/config"
+)
 
 // Channel is the address of a "channel" block within a Bridge description.
 type Channel struct {
@@ -65,4 +69,13 @@ var _ Referenceable = (*Function)(nil)
 // Addr implements Referenceable.
 func (ch Function) Addr() string {
 	return config.CategoryFunctions.String() + "." + ch.Identifier
+}
+
+// MessagingComponent is an address that can represent any messaging component
+// within a Bridge description.
+type MessagingComponent struct {
+	Category    config.ComponentCategory
+	Type        string
+	Identifier  string
+	SourceRange hcl.Range
 }

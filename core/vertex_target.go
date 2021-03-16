@@ -8,7 +8,9 @@ import (
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
+	"bridgedl/k8s"
 	"bridgedl/lang"
+	"bridgedl/translation"
 )
 
 // TargetVertex is an abstract representation of a Target component within a graph.
@@ -17,39 +19,34 @@ type TargetVertex struct {
 	Addr addr.Target
 	// Target block decoded from the Bridge description.
 	Target *config.Target
+	// Implementation of the Target component.
+	Impl interface{}
 	// Spec used to decode the block configuration.
 	Spec hcldec.Spec
-	// Address used as events destination.
-	EventsAddr cty.Value
 }
 
 var (
-	_ BridgeComponentVertex   = (*TargetVertex)(nil)
-	_ ReferenceableVertex     = (*TargetVertex)(nil)
-	_ ReferencerVertex        = (*TargetVertex)(nil)
-	_ AttachableSpecVertex    = (*TargetVertex)(nil)
-	_ AttachableAddressVertex = (*TargetVertex)(nil)
-	_ graph.DOTableVertex     = (*TargetVertex)(nil)
+	_ MessagingComponentVertex = (*TargetVertex)(nil)
+	_ ReferenceableVertex      = (*TargetVertex)(nil)
+	_ EventSenderVertex        = (*TargetVertex)(nil)
+	_ AttachableImplVertex     = (*TargetVertex)(nil)
+	_ DecodableConfigVertex    = (*TargetVertex)(nil)
+	_ graph.DOTableVertex      = (*TargetVertex)(nil)
 )
 
-// Category implements BridgeComponentVertex.
-func (*TargetVertex) Category() config.ComponentCategory {
-	return config.CategoryTargets
+// ComponentAddr implements MessagingComponentVertex.
+func (trg *TargetVertex) ComponentAddr() addr.MessagingComponent {
+	return addr.MessagingComponent{
+		Category:    config.CategoryTargets,
+		Type:        trg.Target.Type,
+		Identifier:  trg.Target.Identifier,
+		SourceRange: trg.Target.SourceRange,
+	}
 }
 
-// Type implements BridgeComponentVertex.
-func (trg *TargetVertex) Type() string {
-	return trg.Target.Type
-}
-
-// Identifer implements BridgeComponentVertex.
-func (trg *TargetVertex) Identifier() string {
-	return trg.Target.Identifier
-}
-
-// SourceRange implements BridgeComponentVertex.
-func (trg *TargetVertex) SourceRange() hcl.Range {
-	return trg.Target.SourceRange
+// Implementation implements MessagingComponentVertex.
+func (trg *TargetVertex) Implementation() interface{} {
+	return trg.Impl
 }
 
 // Referenceable implements ReferenceableVertex.
@@ -57,7 +54,42 @@ func (trg *TargetVertex) Referenceable() addr.Referenceable {
 	return trg.Addr
 }
 
-// References implements ReferencerVertex.
+// EventAddress implements ReferenceableVertex.
+func (trg *TargetVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	addr, ok := trg.Impl.(translation.Addressable)
+	if !ok {
+		diags = diags.Append(noAddressableDiagnostic(trg.ComponentAddr()))
+		return cty.NullVal(k8s.DestinationCty), diags
+	}
+
+	config, decDiags := lang.DecodeIgnoreVars(trg.Target.Config, trg.Spec)
+	diags = diags.Extend(decDiags)
+
+	eventDst := cty.NullVal(k8s.DestinationCty)
+	if trg.Target.ReplyTo != nil {
+		// FIXME(antoineco): this is hacky. So far the only thing that
+		// may influence the value of the event address is the presence
+		// or not of a "reply_to" expression, not its actual value.
+		// We should tackle this by revisiting our translation interfaces.
+		eventDst = k8s.NewDestination("", "", "")
+	}
+
+	dst := addr.Address(trg.Target.Identifier, config, eventDst)
+
+	return dst, diags
+}
+
+// EventDestination implements EventSenderVertex.
+func (trg *TargetVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	if trg.Target.ReplyTo == nil {
+		return cty.NullVal(k8s.DestinationCty), nil
+	}
+	return trg.Target.ReplyTo.TraverseAbs(ctx)
+}
+
+// References implements EventSenderVertex.
 func (trg *TargetVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	if trg.Target == nil {
 		return nil, nil
@@ -77,24 +109,19 @@ func (trg *TargetVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	return refs, diags
 }
 
-// AttachSpec implements AttachableSpecVertex.
+// AttachImpl implements AttachableImplVertex.
+func (trg *TargetVertex) AttachImpl(impl interface{}) {
+	trg.Impl = impl
+}
+
+// DecodedConfig implements DecodableConfigVertex.
+func (trg *TargetVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+	return hcldec.Decode(trg.Target.Config, trg.Spec, ctx)
+}
+
+// AttachSpec implements DecodableConfigVertex.
 func (trg *TargetVertex) AttachSpec(s hcldec.Spec) {
 	trg.Spec = s
-}
-
-// GetSpec implements AttachableSpecVertex.
-func (trg *TargetVertex) GetSpec() hcldec.Spec {
-	return trg.Spec
-}
-
-// AttachAddress implements AttachableAddressVertex.
-func (trg *TargetVertex) AttachAddress(addr cty.Value) {
-	trg.EventsAddr = addr
-}
-
-// GetAddress implements AttachableAddressVertex.
-func (trg *TargetVertex) GetAddress() cty.Value {
-	return trg.EventsAddr
 }
 
 // Node implements graph.DOTableVertex.

@@ -8,13 +8,11 @@ import (
 	"bridgedl/graph"
 )
 
-// BridgeComponentVertex provides various informations about the underlying
-// Bridge component represented by a graph.Vertex.
-type BridgeComponentVertex interface {
-	Category() config.ComponentCategory
-	Type() string
-	Identifier() string
-	SourceRange() hcl.Range
+// MessagingComponentVertex is implemented by all messaging components of a
+// Bridge which are represented by a graph.Vertex.
+type MessagingComponentVertex interface {
+	ComponentAddr() addr.MessagingComponent
+	Implementation() interface{}
 }
 
 // AddComponentsTransformer is a GraphTransformer that adds all messaging
@@ -39,6 +37,7 @@ func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnos
 		}
 		g.Add(v)
 	}
+
 	for _, rtr := range t.Bridge.Routers {
 		v := &RouterVertex{
 			Addr: addr.Router{
@@ -48,6 +47,7 @@ func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnos
 		}
 		g.Add(v)
 	}
+
 	for _, trsf := range t.Bridge.Transformers {
 		v := &TransformerVertex{
 			Addr: addr.Transformer{
@@ -57,12 +57,14 @@ func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnos
 		}
 		g.Add(v)
 	}
+
 	for _, src := range t.Bridge.Sources {
 		v := &SourceVertex{
 			Source: src,
 		}
 		g.Add(v)
 	}
+
 	for _, trg := range t.Bridge.Targets {
 		v := &TargetVertex{
 			Addr: addr.Target{
@@ -72,6 +74,7 @@ func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnos
 		}
 		g.Add(v)
 	}
+
 	for _, fn := range t.Bridge.Functions {
 		v := &FunctionVertex{
 			Addr: addr.Function{
