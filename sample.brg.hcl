@@ -2,6 +2,10 @@
 
 source "aws_sqs" "my_queue" {
   arn = "arn:aws:sqs:us-east-2:123456789012:triggermesh"
+
+  access_key = "AKIA0000000000000000"
+  secret_key = "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IHZpdmVycmEu"
+
   to = router.my_router
 }
 

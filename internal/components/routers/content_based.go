@@ -76,7 +76,6 @@ func (*ContentBased) Spec() hcldec.Spec {
 		  }
 		 }
 		}
-
 	*/
 }
 

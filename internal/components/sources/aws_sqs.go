@@ -4,36 +4,66 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
 
-// TODO(antoineco): this is a mock implementation. It exists only to allow
-// testing the generator manually using the config.brg.hcl file at the root of
-// the repo while this code is still at the stage of prototype.
 type AWSSQS struct{}
 
 var (
 	_ translation.Decodable    = (*AWSSQS)(nil)
 	_ translation.Translatable = (*AWSSQS)(nil)
-	_ translation.Addressable  = (*AWSSQS)(nil)
 )
 
 // Spec implements translation.Decodable.
 func (*AWSSQS) Spec() hcldec.Spec {
-	return &hcldec.AttrSpec{
-		Name:     "arn",
-		Type:     cty.String,
-		Required: true,
+	return &hcldec.ObjectSpec{
+		"arn": &hcldec.AttrSpec{
+			Name:     "arn",
+			Type:     cty.String,
+			Required: true,
+		},
+		"access_key": &hcldec.AttrSpec{
+			Name:     "access_key",
+			Type:     cty.String,
+			Required: true,
+		},
+		"secret_key": &hcldec.AttrSpec{
+			Name:     "secret_key",
+			Type:     cty.String,
+			Required: true,
+		},
 	}
 }
 
 // Manifests implements translation.Translatable.
 func (*AWSSQS) Manifests(id string, config, eventDst cty.Value) []interface{} {
-	return nil
-}
+	var manifests []interface{}
 
-// Address implements translation.Addressable.
-func (*AWSSQS) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("sources.triggermesh.io/v1alpha1", "AWSSQSSource", k8s.RFC1123Name(id))
+	s := &unstructured.Unstructured{}
+	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
+	s.SetKind("AWSSQSSource")
+	s.SetName(k8s.RFC1123Name(id))
+
+	arn := config.GetAttr("arn").AsString()
+	_ = unstructured.SetNestedField(s.Object, arn, "spec", "arn")
+
+	accessKey := config.GetAttr("access_key").AsString()
+	secretKey := config.GetAttr("secret_key").AsString()
+	_ = unstructured.SetNestedField(s.Object, accessKey, "spec", "credentials", "accessKeyID", "value")
+	_ = unstructured.SetNestedField(s.Object, secretKey, "spec", "credentials", "secretAccessKey", "value")
+
+	sinkRef := eventDst.GetAttr("ref")
+
+	sink := map[string]interface{}{
+		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
+		"kind":       sinkRef.GetAttr("kind").AsString(),
+		"name":       sinkRef.GetAttr("name").AsString(),
+	}
+
+	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+
+	return append(manifests, s)
 }
