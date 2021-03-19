@@ -58,10 +58,10 @@ type GraphTransformer interface {
 //
 // Those are from the Brewer palette "Set2" (https://www.graphviz.org/doc/info/colors.html).
 const (
-	dotNodeColor1 = "#66c2a5"
-	dotNodeColor2 = "#fc8d62"
-	dotNodeColor3 = "#8da0cb"
-	dotNodeColor4 = "#e78ac3"
-	dotNodeColor5 = "#a6d854"
-	dotNodeColor6 = "#ffd92f"
+	dotNodeColor1 = "/set26/1"
+	dotNodeColor2 = "/set26/2"
+	dotNodeColor3 = "/set26/3"
+	dotNodeColor4 = "/set26/4"
+	dotNodeColor5 = "/set26/5"
+	dotNodeColor6 = "/set26/6"
 )
