@@ -78,6 +78,11 @@ func (trg *TargetVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
 
 	dst := addr.Address(trg.Target.Identifier, config, eventDst)
 
+	if !k8s.IsDestination(dst) {
+		diags = diags.Append(wrongAddressTypeDiagnostic(trg.ComponentAddr()))
+		dst = cty.NullVal(k8s.DestinationCty)
+	}
+
 	return dst, diags
 }
 

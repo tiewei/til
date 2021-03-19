@@ -70,6 +70,11 @@ func (ch *ChannelVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
 	eventDst := cty.NullVal(k8s.DestinationCty)
 	dst := addr.Address(ch.Channel.Identifier, config, eventDst)
 
+	if !k8s.IsDestination(dst) {
+		diags = diags.Append(wrongAddressTypeDiagnostic(ch.ComponentAddr()))
+		dst = cty.NullVal(k8s.DestinationCty)
+	}
+
 	return dst, diags
 }
 

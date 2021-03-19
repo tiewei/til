@@ -74,6 +74,11 @@ func (fn *FunctionVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
 
 	dst := addr.Address(fn.Function.Identifier, config, eventDst)
 
+	if !k8s.IsDestination(dst) {
+		diags = diags.Append(wrongAddressTypeDiagnostic(fn.ComponentAddr()))
+		dst = cty.NullVal(k8s.DestinationCty)
+	}
+
 	return dst, diags
 }
 

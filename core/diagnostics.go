@@ -52,3 +52,15 @@ func noAddressableDiagnostic(cmp addr.MessagingComponent) *hcl.Diagnostic {
 		Subject: cmp.SourceRange.Ptr(),
 	}
 }
+
+// wrongAddressTypeDiagnostic returns a hcl.Diagnostic which indicates that a
+// component type implementation returned an unexpected type of event address.
+func wrongAddressTypeDiagnostic(cmp addr.MessagingComponent) *hcl.Diagnostic {
+	return &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "Wrong address type",
+		Detail: fmt.Sprintf("The event address computed for the %s %q is not a destination type",
+			cmp.Category, cmp.Identifier),
+		Subject: cmp.SourceRange.Ptr(),
+	}
+}

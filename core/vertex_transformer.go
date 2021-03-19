@@ -70,6 +70,11 @@ func (trsf *TransformerVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
 	eventDst := cty.NullVal(k8s.DestinationCty)
 	dst := addr.Address(trsf.Transformer.Identifier, config, eventDst)
 
+	if !k8s.IsDestination(dst) {
+		diags = diags.Append(wrongAddressTypeDiagnostic(trsf.ComponentAddr()))
+		dst = cty.NullVal(k8s.DestinationCty)
+	}
+
 	return dst, diags
 }
 

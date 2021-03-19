@@ -70,6 +70,11 @@ func (rtr *RouterVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
 	eventDst := cty.NullVal(k8s.DestinationCty)
 	dst := addr.Address(rtr.Router.Identifier, config, eventDst)
 
+	if !k8s.IsDestination(dst) {
+		diags = diags.Append(wrongAddressTypeDiagnostic(rtr.ComponentAddr()))
+		dst = cty.NullVal(k8s.DestinationCty)
+	}
+
 	return dst, diags
 }
 
