@@ -11,7 +11,11 @@ import (
 // AddressableVertex is implemented by all types used as graph.Vertex that can
 // expose an address for receiving events.
 type AddressableVertex interface {
-	EventAddress() (cty.Value, hcl.Diagnostics)
+	// Address for receiving events.
+	// The returned boolean value indicates whether all expressions from
+	// the component's configuration could be decoded without injecting
+	// placeholders inside the given evaluation context.
+	EventAddress(*hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics)
 
 	// Assembling an hcl.EvalContext requires knowledge about the category
 	// of the component represented by the vertex, in addition to its event
@@ -38,7 +42,11 @@ type ReferencerVertex interface {
 // EventSenderVertex is implemented by all types used as graph.Vertex that may
 // have a main event destination configured ("to" top-level HCL attribute).
 type EventSenderVertex interface {
-	EventDestination(*hcl.EvalContext) (cty.Value, hcl.Diagnostics)
+	// Event destination.
+	// The returned boolean value indicates whether all expressions from
+	// the component's configuration could be decoded without injecting
+	// placeholders inside the given evaluation context.
+	EventDestination(*hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics)
 
 	// If a component can send events, it can also have at least one
 	// reference to other components.

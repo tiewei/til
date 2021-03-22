@@ -55,43 +55,39 @@ func (trg *TargetVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (trg *TargetVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+func (trg *TargetVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := trg.Impl.(translation.Addressable)
 	if !ok {
 		diags = diags.Append(noAddressableDiagnostic(trg.ComponentAddr()))
-		return cty.NullVal(k8s.DestinationCty), diags
+		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	config, decDiags := lang.DecodeIgnoreVars(trg.Target.Config, trg.Spec)
-	diags = diags.Extend(decDiags)
+	cfg, cfgComplete, cfgDiags := trg.DecodedConfig(ctx)
+	diags = diags.Extend(cfgDiags)
 
-	eventDst := cty.NullVal(k8s.DestinationCty)
-	if trg.Target.ReplyTo != nil {
-		// FIXME(antoineco): this is hacky. So far the only thing that
-		// may influence the value of the event address is the presence
-		// or not of a "reply_to" expression, not its actual value.
-		// We should tackle this by revisiting our translation interfaces.
-		eventDst = k8s.NewDestination("", "", "")
-	}
+	dst, dstComplete, dstDiags := trg.EventDestination(ctx)
+	diags = diags.Extend(dstDiags)
 
-	dst := addr.Address(trg.Target.Identifier, config, eventDst)
+	evAddr := addr.Address(trg.Target.Identifier, cfg, dst)
 
-	if !k8s.IsDestination(dst) {
+	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(trg.ComponentAddr()))
 		dst = cty.NullVal(k8s.DestinationCty)
 	}
 
-	return dst, diags
+	complete := cfgComplete && dstComplete
+
+	return evAddr, complete, diags
 }
 
 // EventDestination implements EventSenderVertex.
-func (trg *TargetVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+func (trg *TargetVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	if trg.Target.ReplyTo == nil {
-		return cty.NullVal(k8s.DestinationCty), nil
+		return cty.NullVal(k8s.DestinationCty), true, nil
 	}
-	return trg.Target.ReplyTo.TraverseAbs(ctx)
+	return lang.TraverseAbsSafe(trg.Target.ReplyTo, ctx)
 }
 
 // References implements EventSenderVertex.
@@ -120,8 +116,8 @@ func (trg *TargetVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (trg *TargetVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	return hcldec.Decode(trg.Target.Config, trg.Spec, ctx)
+func (trg *TargetVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+	return lang.DecodeSafe(trg.Target.Config, trg.Spec, ctx)
 }
 
 // AttachSpec implements DecodableConfigVertex.

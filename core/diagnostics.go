@@ -64,3 +64,16 @@ func wrongAddressTypeDiagnostic(cmp addr.MessagingComponent) *hcl.Diagnostic {
 		Subject: cmp.SourceRange.Ptr(),
 	}
 }
+
+// undecodableDiagnostic returns a hcl.Diagnostic which indicates that the
+// topology of the Bridge resulted in a component that could not be decoded.
+func undecodableDiagnostic(cmp addr.MessagingComponent) *hcl.Diagnostic {
+	return &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "Undecodable",
+		Detail: fmt.Sprintf("Attempts to decode the %s %q resulted in errors due to expressions that "+
+			"could not be resolved at runtime. Please ensure the Bridge topology is valid.",
+			cmp.Category, cmp.Type),
+		Subject: cmp.SourceRange.Ptr(),
+	}
+}

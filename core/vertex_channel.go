@@ -55,32 +55,36 @@ func (ch *ChannelVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (ch *ChannelVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+func (ch *ChannelVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := ch.Impl.(translation.Addressable)
 	if !ok {
 		diags = diags.Append(noAddressableDiagnostic(ch.ComponentAddr()))
-		return cty.NullVal(k8s.DestinationCty), diags
+		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	config, decDiags := lang.DecodeIgnoreVars(ch.Channel.Config, ch.Spec)
-	diags = diags.Extend(decDiags)
+	cfg, cfgComplete, cfgDiags := ch.DecodedConfig(ctx)
+	diags = diags.Extend(cfgDiags)
 
-	eventDst := cty.NullVal(k8s.DestinationCty)
-	dst := addr.Address(ch.Channel.Identifier, config, eventDst)
+	dst, dstComplete, dstDiags := ch.EventDestination(ctx)
+	diags = diags.Extend(dstDiags)
 
-	if !k8s.IsDestination(dst) {
+	evAddr := addr.Address(ch.Channel.Identifier, cfg, dst)
+
+	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(ch.ComponentAddr()))
 		dst = cty.NullVal(k8s.DestinationCty)
 	}
 
-	return dst, diags
+	complete := cfgComplete && dstComplete
+
+	return evAddr, complete, diags
 }
 
 // EventDestination implements EventSenderVertex.
-func (ch *ChannelVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	return ch.Channel.To.TraverseAbs(ctx)
+func (ch *ChannelVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+	return lang.TraverseAbsSafe(ch.Channel.To, ctx)
 }
 
 // References implements EventSenderVertex.
@@ -114,8 +118,8 @@ func (ch *ChannelVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (ch *ChannelVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	return hcldec.Decode(ch.Channel.Config, ch.Spec, ctx)
+func (ch *ChannelVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+	return lang.DecodeSafe(ch.Channel.Config, ch.Spec, ctx)
 }
 
 // AttachSpec implements DecodableConfigVertex.

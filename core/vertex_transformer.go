@@ -55,32 +55,36 @@ func (trsf *TransformerVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (trsf *TransformerVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+func (trsf *TransformerVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := trsf.Impl.(translation.Addressable)
 	if !ok {
 		diags = diags.Append(noAddressableDiagnostic(trsf.ComponentAddr()))
-		return cty.NullVal(k8s.DestinationCty), diags
+		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	config, decDiags := lang.DecodeIgnoreVars(trsf.Transformer.Config, trsf.Spec)
-	diags = diags.Extend(decDiags)
+	cfg, cfgComplete, cfgDiags := trsf.DecodedConfig(ctx)
+	diags = diags.Extend(cfgDiags)
 
-	eventDst := cty.NullVal(k8s.DestinationCty)
-	dst := addr.Address(trsf.Transformer.Identifier, config, eventDst)
+	dst, dstComplete, dstDiags := trsf.EventDestination(ctx)
+	diags = diags.Extend(dstDiags)
 
-	if !k8s.IsDestination(dst) {
+	evAddr := addr.Address(trsf.Transformer.Identifier, cfg, dst)
+
+	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(trsf.ComponentAddr()))
 		dst = cty.NullVal(k8s.DestinationCty)
 	}
 
-	return dst, diags
+	complete := cfgComplete && dstComplete
+
+	return evAddr, complete, diags
 }
 
 // EventDestination implements EventSenderVertex.
-func (trsf *TransformerVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	return trsf.Transformer.To.TraverseAbs(ctx)
+func (trsf *TransformerVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+	return lang.TraverseAbsSafe(trsf.Transformer.To, ctx)
 }
 
 // References implements EventSenderVertex.
@@ -109,8 +113,8 @@ func (trsf *TransformerVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (trsf *TransformerVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	return hcldec.Decode(trsf.Transformer.Config, trsf.Spec, ctx)
+func (trsf *TransformerVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+	return lang.DecodeSafe(trsf.Transformer.Config, trsf.Spec, ctx)
 }
 
 // AttachSpec implements DecodableConfigVertex.

@@ -20,7 +20,11 @@ type AttachableSpecVertex interface {
 // DecodableConfigVertex is implemented by all types used as graph.Vertex that
 // may contain a HCL configuration body that can be decoded.
 type DecodableConfigVertex interface {
-	DecodedConfig(*hcl.EvalContext) (cty.Value, hcl.Diagnostics)
+	// Decoded HCL configuration body.
+	// The returned boolean value indicates whether all expressions from
+	// the component's configuration could be decoded without injecting
+	// placeholders inside the given evaluation context.
+	DecodedConfig(*hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics)
 
 	// If a type can decode a configuration, it must also be able to attach
 	// a decode spec.

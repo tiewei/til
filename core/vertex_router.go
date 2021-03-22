@@ -55,27 +55,31 @@ func (rtr *RouterVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (rtr *RouterVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+func (rtr *RouterVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := rtr.Impl.(translation.Addressable)
 	if !ok {
 		diags = diags.Append(noAddressableDiagnostic(rtr.ComponentAddr()))
-		return cty.NullVal(k8s.DestinationCty), diags
+		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	config, decDiags := lang.DecodeIgnoreVars(rtr.Router.Config, rtr.Spec)
-	diags = diags.Extend(decDiags)
+	cfg, cfgComplete, cfgDiags := rtr.DecodedConfig(ctx)
+	diags = diags.Extend(cfgDiags)
 
-	eventDst := cty.NullVal(k8s.DestinationCty)
-	dst := addr.Address(rtr.Router.Identifier, config, eventDst)
+	// routers do not have a "main" event destination
+	dst := cty.NullVal(k8s.DestinationCty)
 
-	if !k8s.IsDestination(dst) {
+	evAddr := addr.Address(rtr.Router.Identifier, cfg, dst)
+
+	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(rtr.ComponentAddr()))
 		dst = cty.NullVal(k8s.DestinationCty)
 	}
 
-	return dst, diags
+	complete := cfgComplete
+
+	return evAddr, complete, diags
 }
 
 // References implements ReferencerVertex.
@@ -102,8 +106,8 @@ func (rtr *RouterVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (rtr *RouterVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
-	return hcldec.Decode(rtr.Router.Config, rtr.Spec, ctx)
+func (rtr *RouterVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+	return lang.DecodeSafe(rtr.Router.Config, rtr.Spec, ctx)
 }
 
 // AttachSpec implements DecodableConfigVertex.

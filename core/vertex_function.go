@@ -50,44 +50,40 @@ func (fn *FunctionVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (fn *FunctionVertex) EventAddress() (cty.Value, hcl.Diagnostics) {
+func (fn *FunctionVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := fn.Impl.(translation.Addressable)
 	if !ok {
 		diags = diags.Append(noAddressableDiagnostic(fn.ComponentAddr()))
-		return cty.NullVal(k8s.DestinationCty), diags
+		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
 	// functions of different types aren't supported yet, so there is no
 	// body to decode
-	config := cty.NullVal(cty.DynamicPseudoType)
+	cfg := cty.NullVal(cty.DynamicPseudoType)
 
-	eventDst := cty.NullVal(k8s.DestinationCty)
-	if fn.Function.ReplyTo != nil {
-		// FIXME(antoineco): this is hacky. So far the only thing that
-		// may influence the value of the event address is the presence
-		// or not of a "reply_to" expression, not its actual value.
-		// We should tackle this by revisiting our translation interfaces.
-		eventDst = k8s.NewDestination("", "", "")
-	}
+	dst, dstComplete, dstDiags := fn.EventDestination(ctx)
+	diags = diags.Extend(dstDiags)
 
-	dst := addr.Address(fn.Function.Identifier, config, eventDst)
+	evAddr := addr.Address(fn.Function.Identifier, cfg, dst)
 
 	if !k8s.IsDestination(dst) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(fn.ComponentAddr()))
 		dst = cty.NullVal(k8s.DestinationCty)
 	}
 
-	return dst, diags
+	complete := dstComplete
+
+	return evAddr, complete, diags
 }
 
 // EventDestination implements EventSenderVertex.
-func (fn *FunctionVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
+func (fn *FunctionVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
 	if fn.Function.ReplyTo == nil {
-		return cty.NullVal(k8s.DestinationCty), nil
+		return cty.NullVal(k8s.DestinationCty), true, nil
 	}
-	return fn.Function.ReplyTo.TraverseAbs(ctx)
+	return lang.TraverseAbsSafe(fn.Function.ReplyTo, ctx)
 }
 
 // References implements EventSenderVertex.
