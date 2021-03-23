@@ -45,8 +45,8 @@ func (src *SourceVertex) Implementation() interface{} {
 }
 
 // EventDestination implements EventSenderVertex.
-func (src *SourceVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.TraverseAbsSafe(src.Source.To, ctx)
+func (src *SourceVertex) EventDestination(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeTraversal(src.Source.To)
 }
 
 // References implements EventSenderVertex.
@@ -75,8 +75,8 @@ func (src *SourceVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (src *SourceVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.DecodeSafe(src.Source.Config, src.Spec, ctx)
+func (src *SourceVertex) DecodedConfig(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeBlock(src.Source.Config, src.Spec)
 }
 
 // AttachSpec implements DecodableConfigVertex.

@@ -55,7 +55,7 @@ func (rtr *RouterVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (rtr *RouterVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (rtr *RouterVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := rtr.Impl.(translation.Addressable)
@@ -64,7 +64,7 @@ func (rtr *RouterVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hc
 		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	cfg, cfgComplete, cfgDiags := rtr.DecodedConfig(ctx)
+	cfg, cfgComplete, cfgDiags := rtr.DecodedConfig(e)
 	diags = diags.Extend(cfgDiags)
 
 	// routers do not have a "main" event destination
@@ -106,8 +106,8 @@ func (rtr *RouterVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (rtr *RouterVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.DecodeSafe(rtr.Router.Config, rtr.Spec, ctx)
+func (rtr *RouterVertex) DecodedConfig(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeBlock(rtr.Router.Config, rtr.Spec)
 }
 
 // AttachSpec implements DecodableConfigVertex.

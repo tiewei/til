@@ -55,7 +55,7 @@ func (trg *TargetVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (trg *TargetVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (trg *TargetVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := trg.Impl.(translation.Addressable)
@@ -64,10 +64,10 @@ func (trg *TargetVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hc
 		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	cfg, cfgComplete, cfgDiags := trg.DecodedConfig(ctx)
+	cfg, cfgComplete, cfgDiags := trg.DecodedConfig(e)
 	diags = diags.Extend(cfgDiags)
 
-	dst, dstComplete, dstDiags := trg.EventDestination(ctx)
+	dst, dstComplete, dstDiags := trg.EventDestination(e)
 	diags = diags.Extend(dstDiags)
 
 	evAddr := addr.Address(trg.Target.Identifier, cfg, dst)
@@ -83,11 +83,11 @@ func (trg *TargetVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hc
 }
 
 // EventDestination implements EventSenderVertex.
-func (trg *TargetVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (trg *TargetVertex) EventDestination(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	if trg.Target.ReplyTo == nil {
 		return cty.NullVal(k8s.DestinationCty), true, nil
 	}
-	return lang.TraverseAbsSafe(trg.Target.ReplyTo, ctx)
+	return e.DecodeTraversal(trg.Target.ReplyTo)
 }
 
 // References implements EventSenderVertex.
@@ -116,8 +116,8 @@ func (trg *TargetVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (trg *TargetVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.DecodeSafe(trg.Target.Config, trg.Spec, ctx)
+func (trg *TargetVertex) DecodedConfig(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeBlock(trg.Target.Config, trg.Spec)
 }
 
 // AttachSpec implements DecodableConfigVertex.

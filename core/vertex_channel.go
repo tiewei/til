@@ -55,7 +55,7 @@ func (ch *ChannelVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (ch *ChannelVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (ch *ChannelVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := ch.Impl.(translation.Addressable)
@@ -64,10 +64,10 @@ func (ch *ChannelVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hc
 		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	cfg, cfgComplete, cfgDiags := ch.DecodedConfig(ctx)
+	cfg, cfgComplete, cfgDiags := ch.DecodedConfig(e)
 	diags = diags.Extend(cfgDiags)
 
-	dst, dstComplete, dstDiags := ch.EventDestination(ctx)
+	dst, dstComplete, dstDiags := ch.EventDestination(e)
 	diags = diags.Extend(dstDiags)
 
 	evAddr := addr.Address(ch.Channel.Identifier, cfg, dst)
@@ -83,8 +83,8 @@ func (ch *ChannelVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hc
 }
 
 // EventDestination implements EventSenderVertex.
-func (ch *ChannelVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.TraverseAbsSafe(ch.Channel.To, ctx)
+func (ch *ChannelVertex) EventDestination(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeTraversal(ch.Channel.To)
 }
 
 // References implements EventSenderVertex.
@@ -118,8 +118,8 @@ func (ch *ChannelVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (ch *ChannelVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.DecodeSafe(ch.Channel.Config, ch.Spec, ctx)
+func (ch *ChannelVertex) DecodedConfig(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeBlock(ch.Channel.Config, ch.Spec)
 }
 
 // AttachSpec implements DecodableConfigVertex.

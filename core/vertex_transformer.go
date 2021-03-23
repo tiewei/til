@@ -55,7 +55,7 @@ func (trsf *TransformerVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (trsf *TransformerVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (trsf *TransformerVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := trsf.Impl.(translation.Addressable)
@@ -64,10 +64,10 @@ func (trsf *TransformerVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bo
 		return cty.NullVal(k8s.DestinationCty), false, diags
 	}
 
-	cfg, cfgComplete, cfgDiags := trsf.DecodedConfig(ctx)
+	cfg, cfgComplete, cfgDiags := trsf.DecodedConfig(e)
 	diags = diags.Extend(cfgDiags)
 
-	dst, dstComplete, dstDiags := trsf.EventDestination(ctx)
+	dst, dstComplete, dstDiags := trsf.EventDestination(e)
 	diags = diags.Extend(dstDiags)
 
 	evAddr := addr.Address(trsf.Transformer.Identifier, cfg, dst)
@@ -83,8 +83,8 @@ func (trsf *TransformerVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bo
 }
 
 // EventDestination implements EventSenderVertex.
-func (trsf *TransformerVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.TraverseAbsSafe(trsf.Transformer.To, ctx)
+func (trsf *TransformerVertex) EventDestination(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeTraversal(trsf.Transformer.To)
 }
 
 // References implements EventSenderVertex.
@@ -113,8 +113,8 @@ func (trsf *TransformerVertex) AttachImpl(impl interface{}) {
 }
 
 // DecodedConfig implements DecodableConfigVertex.
-func (trsf *TransformerVertex) DecodedConfig(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
-	return lang.DecodeSafe(trsf.Transformer.Config, trsf.Spec, ctx)
+func (trsf *TransformerVertex) DecodedConfig(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
+	return e.DecodeBlock(trsf.Transformer.Config, trsf.Spec)
 }
 
 // AttachSpec implements DecodableConfigVertex.

@@ -50,7 +50,7 @@ func (fn *FunctionVertex) Referenceable() addr.Referenceable {
 }
 
 // EventAddress implements ReferenceableVertex.
-func (fn *FunctionVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (fn *FunctionVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	addr, ok := fn.Impl.(translation.Addressable)
@@ -63,7 +63,7 @@ func (fn *FunctionVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, h
 	// body to decode
 	cfg := cty.NullVal(cty.DynamicPseudoType)
 
-	dst, dstComplete, dstDiags := fn.EventDestination(ctx)
+	dst, dstComplete, dstDiags := fn.EventDestination(e)
 	diags = diags.Extend(dstDiags)
 
 	evAddr := addr.Address(fn.Function.Identifier, cfg, dst)
@@ -79,11 +79,11 @@ func (fn *FunctionVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, h
 }
 
 // EventDestination implements EventSenderVertex.
-func (fn *FunctionVertex) EventDestination(ctx *hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics) {
+func (fn *FunctionVertex) EventDestination(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
 	if fn.Function.ReplyTo == nil {
 		return cty.NullVal(k8s.DestinationCty), true, nil
 	}
-	return lang.TraverseAbsSafe(fn.Function.ReplyTo, ctx)
+	return e.DecodeTraversal(fn.Function.ReplyTo)
 }
 
 // References implements EventSenderVertex.

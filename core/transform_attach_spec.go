@@ -23,8 +23,8 @@ type DecodableConfigVertex interface {
 	// Decoded HCL configuration body.
 	// The returned boolean value indicates whether all expressions from
 	// the component's configuration could be decoded without injecting
-	// placeholders inside the given evaluation context.
-	DecodedConfig(*hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics)
+	// placeholders into the evaluation context.
+	DecodedConfig(*Evaluator) (cty.Value, bool, hcl.Diagnostics)
 
 	// If a type can decode a configuration, it must also be able to attach
 	// a decode spec.

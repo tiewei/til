@@ -14,12 +14,13 @@ type AddressableVertex interface {
 	// Address for receiving events.
 	// The returned boolean value indicates whether all expressions from
 	// the component's configuration could be decoded without injecting
-	// placeholders inside the given evaluation context.
-	EventAddress(*hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics)
+	// placeholders into the evaluation context.
+	EventAddress(*Evaluator) (cty.Value, bool, hcl.Diagnostics)
 
-	// Assembling an hcl.EvalContext requires knowledge about the category
-	// of the component represented by the vertex, in addition to its event
-	// address
+	// This interface is embedded for convenience. During a graph
+	// evaluation, knowledge about the category of the component
+	// represented by the vertex is required to be able to populate the
+	// Evaluator (in addition to the event address).
 	MessagingComponentVertex
 }
 
@@ -28,8 +29,9 @@ type AddressableVertex interface {
 type ReferenceableVertex interface {
 	Referenceable() addr.Referenceable
 
-	// By our definition, a Referenceable vertex must also expose an
-	// address and accept events.
+	// In the current version of the Bridge Description Language, a
+	// Referenceable vertex must also expose an address and accept events.
+	// This may change in the future.
 	AddressableVertex
 }
 
@@ -45,8 +47,8 @@ type EventSenderVertex interface {
 	// Event destination.
 	// The returned boolean value indicates whether all expressions from
 	// the component's configuration could be decoded without injecting
-	// placeholders inside the given evaluation context.
-	EventDestination(*hcl.EvalContext) (cty.Value, bool, hcl.Diagnostics)
+	// placeholders into the evaluation context.
+	EventDestination(*Evaluator) (cty.Value, bool, hcl.Diagnostics)
 
 	// If a component can send events, it can also have at least one
 	// reference to other components.
