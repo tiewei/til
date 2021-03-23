@@ -74,7 +74,7 @@ func (rtr *RouterVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, hc
 
 	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(rtr.ComponentAddr()))
-		dst = cty.NullVal(k8s.DestinationCty)
+		evAddr = cty.UnknownVal(k8s.DestinationCty)
 	}
 
 	complete := cfgComplete

@@ -68,9 +68,9 @@ func (fn *FunctionVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bool, h
 
 	evAddr := addr.Address(fn.Function.Identifier, cfg, dst)
 
-	if !k8s.IsDestination(dst) {
+	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(fn.ComponentAddr()))
-		dst = cty.NullVal(k8s.DestinationCty)
+		evAddr = cty.UnknownVal(k8s.DestinationCty)
 	}
 
 	complete := dstComplete

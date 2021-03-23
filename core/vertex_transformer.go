@@ -74,7 +74,7 @@ func (trsf *TransformerVertex) EventAddress(ctx *hcl.EvalContext) (cty.Value, bo
 
 	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(trsf.ComponentAddr()))
-		dst = cty.NullVal(k8s.DestinationCty)
+		evAddr = cty.UnknownVal(k8s.DestinationCty)
 	}
 
 	complete := cfgComplete && dstComplete

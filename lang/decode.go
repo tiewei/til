@@ -54,7 +54,7 @@ func TraverseAbsSafe(t hcl.Traversal, ctx *hcl.EvalContext) (cty.Value, bool /*c
 		return val, true, diags.Extend(evalDiags)
 	}
 
-	defaultVal := cty.NullVal(k8s.DestinationCty)
+	defaultVal := cty.UnknownVal(k8s.DestinationCty)
 	ctx = evalContextEnsureVars(ctx, defaultVal, filterBlockRefs(t)...)
 
 	val, evalDiags = t.TraverseAbs(ctx)
@@ -68,7 +68,7 @@ func TraverseAbsSafe(t hcl.Traversal, ctx *hcl.EvalContext) (cty.Value, bool /*c
 func decodeIgnoreUnknownRefs(b hcl.Body, s hcldec.Spec, ctx *hcl.EvalContext) (cty.Value, hcl.Diagnostics) {
 	blockRefs := filterBlockRefs(hcldec.Variables(b, s)...)
 
-	defaultVal := cty.NullVal(k8s.DestinationCty)
+	defaultVal := cty.UnknownVal(k8s.DestinationCty)
 	ctx = evalContextEnsureVars(ctx, defaultVal, blockRefs...)
 
 	return hcldec.Decode(b, s, ctx)
