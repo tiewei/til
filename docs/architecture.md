@@ -10,6 +10,7 @@ This document describes the architecture of the `bridgedl` interpreter, and expl
 1. [Request Flow](#request-flow)
 1. [Graph Builder](#graph-builder)
 1. [Components Implementations](#components-implementations)
+1. [Bridge Translator](#bridge-translator)
 
 ## Overview
 
@@ -74,7 +75,7 @@ for each type in the [`config`][pkgconfig] package, we leverage Go's behavioral 
 [`core.ChannelVertex`][pkgcore-chvrtx]) implements methods that are only relevant to the [`core`][pkgcore] package, and
 generally to a single `core.GraphTransformer`. For instance, if a type of component can be the destination of events
 within the Bridge, and by definition exposes a Knative [Addressable][kn-addr] type, its vertex type will implement
-[`core.AttachableAddressVertex`][pkgcore-addrvrtx].
+[`core.AddressableVertex`][pkgcore-addrvrtx].
 
 ## Components Implementations
 
@@ -99,17 +100,37 @@ types][tf-res] by using decode schemas and calling CRUD functions on the decoded
 
 Currently, all components implementations reside in-tree, inside sub-packages of [`internal/components`][pkgcomps].
 
+## Bridge Translator
+
+The [`core.BridgeTranslator`][pkgcore-brgtrsl] is responsible for evaluating the simple connected graph built by
+`core.GraphBuilder`, and translating it into a list of Kubernetes manifests which can be deployed to a target
+environment (cluster) to materialize the Bridge.
+
+It does so by creating a topological ordering of the graph which ensures, whenever possible, that the address (event
+destination) of a given Bridge component is readily available when components which depend on that address are
+evaluated/translated. This ordering allows the translation to be accurate without having to visit a graph vertex
+multiple times (e.g. once to store its event address in the evaluation context, once to translate it after all addresses
+within the Bridge have been determined).
+
+Event addresses are stored as variables inside a [`core.Evaluator`][pkgcore-eval], which accumulates them as the graph
+is being walked.
+
+![Evaluation - Topological sort][topo-sort-graph]
+
 <!-- internal links -->
 [arch-graph]: .assets/arch-request-flow.svg
+[topo-sort-graph]: .assets/topological-sort.svg
 [bdl-spec]: language-spec.md
-[pkgcore-graphb]: https://github.com/triggermesh/bridgedl/blob/f6c07127/core/graph.go#L10-L16
-[pkgcore-grapht]: https://github.com/triggermesh/bridgedl/blob/f6c07127/core/graph.go#L59-L62
-[pkgcore]: https://github.com/triggermesh/bridgedl/blob/f6c07127/core/doc.go
-[pkgcore-chvrtx]: https://github.com/triggermesh/bridgedl/blob/f6c07127/core/vertex_channel.go#L14-L24
-[pkgcore-addrvrtx]: https://github.com/triggermesh/bridgedl/blob/f6c07127/core/transform_attach_addr.go#L10-L16
-[pkgconfig]: https://github.com/triggermesh/bridgedl/blob/f6c07127/config/doc.go
+[pkgcore-graphb]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/graph.go#L10-L15
+[pkgcore-grapht]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/graph.go#L52-L55
+[pkgcore-brgtrsl]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/translate.go#L13-L18
+[pkgcore-eval]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/eval_context.go#L12-L27
+[pkgcore]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/doc.go
+[pkgcore-chvrtx]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/vertex_channel.go#L16-L26
+[pkgcore-addrvrtx]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/transform_connect_refs.go#L11-L25
+[pkgconfig]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/config/doc.go
 [pkgcomps]: ../internal/components
-[pkgtransl]: https://github.com/triggermesh/bridgedl/blob/f6c07127/translation/doc.go
+[pkgtransl]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/translation/doc.go
 
 <!-- HashiCorp links -->
 [tf-arch]: https://github.com/hashicorp/terraform/blob/main/docs/architecture.md
