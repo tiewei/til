@@ -6,6 +6,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
+	"bridgedl/fs"
 	"bridgedl/lang"
 )
 
@@ -27,10 +28,10 @@ type Evaluator struct {
 }
 
 // NewEvaluator returns an initialized Evaluator.
-func NewEvaluator() *Evaluator {
+func NewEvaluator(baseDir string, fs fs.FS) *Evaluator {
 	return &Evaluator{
 		variables: make(variablesIndexedByRoot),
-		functions: make(map[string]function.Function),
+		functions: lang.Functions(baseDir, fs),
 	}
 }
 

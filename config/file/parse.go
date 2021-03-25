@@ -3,6 +3,7 @@ package file
 import (
 	"fmt"
 	"io"
+	"path/filepath"
 
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
@@ -22,7 +23,7 @@ type Parser struct {
 func NewParser() *Parser {
 	return &Parser{
 		Parser: hclparse.NewParser(),
-		FS:     &fs.OSFS{},
+		FS:     (*fs.OSFS)(nil),
 	}
 }
 
@@ -34,7 +35,19 @@ func (p *Parser) LoadBridge(filePath string) (*config.Bridge, hcl.Diagnostics) {
 		return nil, diags
 	}
 
-	brg := &config.Bridge{}
+	absFilePath, err := filepath.Abs(filePath)
+	if err != nil {
+		return nil, hcl.Diagnostics{{
+			Severity: hcl.DiagError,
+			Summary:  "File system error",
+			Detail: fmt.Sprintf("Could not determine an absolute path for the file %q. "+
+				"The error was: %s", filePath, err),
+		}}
+	}
+
+	brg := &config.Bridge{
+		Path: absFilePath,
+	}
 	diags = decodeBridge(hclFile.Body, brg)
 
 	return brg, diags

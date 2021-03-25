@@ -50,6 +50,9 @@ var BridgeSchema = &hcl.BodySchema{
 
 // Bridge represents the body of a Bridge Description File.
 type Bridge struct {
+	// Absolute path of the file this configuration was loaded from.
+	Path string
+
 	// Indexed lists of messaging components.
 	// Parsers should index each component with a key that uniquely identifies a block.
 	Channels     map[interface{}]*Channel

@@ -1,9 +1,12 @@
 package core
 
 import (
+	"path/filepath"
+
 	"github.com/hashicorp/hcl/v2"
 
 	"bridgedl/config"
+	"bridgedl/fs"
 	"bridgedl/graph"
 )
 
@@ -12,6 +15,9 @@ import (
 type Context struct {
 	Bridge *config.Bridge
 	Impls  *componentImpls
+
+	// interface used by functions that access the file system
+	FS fs.FS
 }
 
 func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
@@ -23,6 +29,8 @@ func NewContext(brg *config.Bridge) (*Context, hcl.Diagnostics) {
 	return &Context{
 		Bridge: brg,
 		Impls:  cmpImpls,
+
+		FS: (*fs.OSFS)(nil),
 	}, nil
 }
 
@@ -48,8 +56,10 @@ func (c *Context) Generate() ([]interface{}, hcl.Diagnostics) {
 	}
 
 	t := &BridgeTranslator{
-		Impls:  c.Impls,
-		Bridge: c.Bridge,
+		Impls: c.Impls,
+
+		BaseDir: filepath.Dir(c.Bridge.Path),
+		FS:      c.FS,
 	}
 
 	return t.Translate(g)

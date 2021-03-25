@@ -4,7 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
+	"bridgedl/fs"
 	"bridgedl/graph"
 	"bridgedl/k8s"
 	"bridgedl/translation"
@@ -13,8 +13,11 @@ import (
 // BridgeTranslator translates a Bridge into a collection of Kubernetes API
 // objects for deploying that Bridge.
 type BridgeTranslator struct {
-	Impls  *componentImpls
-	Bridge *config.Bridge
+	Impls *componentImpls
+
+	// used by functions that access the file system
+	BaseDir string
+	FS      fs.FS
 }
 
 // Translate performs the translation.
@@ -23,7 +26,7 @@ func (t *BridgeTranslator) Translate(g *graph.DirectedGraph) ([]interface{}, hcl
 
 	var bridgeManifests []interface{}
 
-	eval := NewEvaluator()
+	eval := NewEvaluator(t.BaseDir, t.FS)
 
 	// The returned SCCs are topologically sorted as a byproduct of the
 	// cycle detection algorithm.
