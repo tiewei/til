@@ -1,5 +1,19 @@
 # Sample Bridge Description File
 
+source "aws_s3" "my_bucket" {
+  arn = "arn:aws:s3:::timur-test-bucket"
+
+  event_types = [
+    "s3:ObjectCreated:*",
+    "s3:ObjectRemoved:*"
+  ]
+
+  access_key = "AKIA0000000000000000"
+  secret_key = "TG9yZW0gaXBzdW0gZG9sb3Igc2l0IHZpdmVycmEu"
+
+  to = router.my_router
+}
+
 source "aws_sqs" "my_queue" {
   arn = "arn:aws:sqs:us-east-2:123456789012:triggermesh"
 
