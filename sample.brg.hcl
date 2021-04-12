@@ -1,7 +1,7 @@
 # Sample Bridge Description File
 
 source "aws_s3" "my_bucket" {
-  arn = "arn:aws:s3:::timur-test-bucket"
+  arn = "arn:aws:s3:::test-bucket"
 
   event_types = [
     "s3:ObjectCreated:*",
@@ -47,7 +47,7 @@ router "content_based" "my_router" {
 
 router "data_expression_filter" "even_uid" {
   condition = "$user.id.(int64) % 2 == 0"
-  to = target.my_kafka_topic
+  to = target.custom_logic
 }
 
 transformer "bumblebee" "my_transformation" {
@@ -87,4 +87,24 @@ transformer "bumblebee" "my_transformation" {
 
 target "kafka" "my_kafka_topic" {
   topic = "myapp"
+}
+
+target "function" "custom_logic" {
+  runtime = "python"
+  entrypoint = "foo"
+  public = true
+  code =<<EOF
+import urllib.request
+
+def foo(event, context):
+  resp = urllib.request.urlopen(event['url'])
+  page = resp.read()
+
+  response = {
+    "statusCode": resp.status,
+    "body": str(page)
+  }
+
+return response
+  EOF
 }
