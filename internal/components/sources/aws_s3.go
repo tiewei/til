@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/secrets"
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
@@ -35,14 +36,9 @@ func (*AWSS3) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: false,
 		},
-		"access_key": &hcldec.AttrSpec{
-			Name:     "access_key",
-			Type:     cty.String,
-			Required: true,
-		},
-		"secret_key": &hcldec.AttrSpec{
-			Name:     "secret_key",
-			Type:     cty.String,
+		"credentials": &hcldec.AttrSpec{
+			Name:     "credentials",
+			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
 	}
@@ -60,11 +56,6 @@ func (*AWSS3) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	arn := config.GetAttr("arn").AsString()
 	_ = unstructured.SetNestedField(s.Object, arn, "spec", "arn")
 
-	accessKey := config.GetAttr("access_key").AsString()
-	secretKey := config.GetAttr("secret_key").AsString()
-	_ = unstructured.SetNestedField(s.Object, accessKey, "spec", "credentials", "accessKeyID", "value")
-	_ = unstructured.SetNestedField(s.Object, secretKey, "spec", "credentials", "secretAccessKey", "value")
-
 	eventTypes := config.GetAttr("event_types").AsValueSlice()
 	var stringSlice []string
 	for _, v := range eventTypes {
@@ -77,14 +68,17 @@ func (*AWSS3) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		_ = unstructured.SetNestedField(s.Object, queueARN, "spec", "queueARN")
 	}
 
-	sinkRef := eventDst.GetAttr("ref")
+	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
+	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
+	_ = unstructured.SetNestedMap(s.Object, accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
+	_ = unstructured.SetNestedMap(s.Object, secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
 
+	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
 		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-
 	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
 
 	return append(manifests, s)
