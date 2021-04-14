@@ -8,3 +8,8 @@ const (
 	secrClassAWSAccessKeyID     = "access_key_id"
 	secrClassAWSSecretAccessKey = "secret_access_key"
 )
+
+// Secret class "confluent"
+const (
+	secrClassConfluentPasswd = "password"
+)

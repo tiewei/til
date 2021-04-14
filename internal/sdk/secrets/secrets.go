@@ -15,3 +15,11 @@ func SecretKeyRefsAWS(secretName string) (accessKeyID, secretAccessKey secretKey
 			"key":  secrClassAWSSecretAccessKey,
 		}
 }
+
+// SecretKeyRefsConfluent returns secret key selectors for the "confluent" secret class.
+func SecretKeyRefsConfluent(secretName string) (passwd secretKeySelector) {
+	return secretKeySelector{
+		"name": secretName,
+		"key":  secrClassConfluentPasswd,
+	}
+}
