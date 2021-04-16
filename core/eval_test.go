@@ -102,7 +102,7 @@ func TestEvaluator(t *testing.T) {
 		const fakeFileContents = "fake file contents"
 
 		testFS := fs.NewMemFS()
-		testFS.CreateFile(filepath.Join(baseDir, fakeFileRelPath),
+		_ = testFS.CreateFile(filepath.Join(baseDir, fakeFileRelPath),
 			[]byte(fakeFileContents),
 		)
 

@@ -59,7 +59,7 @@ func decodeBridge(b hcl.Body, brg *config.Bridge) hcl.Diagnostics {
 		default:
 			// should never occur because the hcl.BodyContent was
 			// validated against a hcl.BodySchema during parsing
-			panic(fmt.Errorf("found unexpected block type %q. The HCL body schema is outdated.", t))
+			panic(fmt.Sprintf("found unexpected block type %q. The HCL body schema is outdated.", t))
 		}
 	}
 

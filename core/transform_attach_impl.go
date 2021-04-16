@@ -14,8 +14,8 @@ type AttachableImplVertex interface {
 	AttachImpl(interface{})
 }
 
-// AttachSpecsTransformer is a GraphTransformer that attaches a component
-// implementation to all graph vertices that support it.
+// AttachImplementationsTransformer is a GraphTransformer that attaches a
+// component implementation to all graph vertices that support it.
 type AttachImplementationsTransformer struct {
 	Impls *componentImpls
 }

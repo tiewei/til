@@ -17,7 +17,7 @@ func TestFileFunc(t *testing.T) {
 	const fakeFileContents = `{"msg": "Hello, World!"}`
 
 	testFS := fs.NewMemFS()
-	testFS.CreateFile(filepath.Join(baseDir, fakeFileRelPath),
+	_ = testFS.CreateFile(filepath.Join(baseDir, fakeFileRelPath),
 		[]byte(fakeFileContents),
 	)
 

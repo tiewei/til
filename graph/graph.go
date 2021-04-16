@@ -2,7 +2,7 @@ package graph
 
 import "fmt"
 
-// DirectedSimpleGraph is an implementation of a directed graph.
+// DirectedGraph is an implementation of a directed graph.
 //
 // Fields are kept private to ensure the consistency of the graph's state.
 type DirectedGraph struct {
@@ -66,7 +66,7 @@ func (g *DirectedGraph) DownEdges() HeadVerticesByTailVertex {
 	return g.downEdges
 }
 
-// Edges is an accessor to the graph's up edges.
+// UpEdges is an accessor to the graph's up edges.
 func (g *DirectedGraph) UpEdges() TailVerticesByHeadVertex {
 	return g.upEdges
 }
@@ -82,12 +82,4 @@ func (g *DirectedGraph) Connect(tail, head Vertex) {
 
 	g.downEdges.Connect(tail, head)
 	g.upEdges.Connect(head, tail)
-}
-
-// SimpleDirectedGraph is a specialization of DirectedGraph which implements a
-// simple directed graph. Such graph cannot have loops (an edge connecting a
-// vertex to itself).
-// TODO(antoineco): implement loop detection
-type SimpleDirectedGraph struct {
-	DirectedGraph
 }
