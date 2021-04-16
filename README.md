@@ -3,12 +3,18 @@
 Specification and interpreter for TriggerMesh's Bridge Description Language.
 
 The Bridge Description Language is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
-offer a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
+provide a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
+
+Using the `bridgedl` CLI tool, it is possible to turn Bridge definitions into deployment manifests which can run
+complete messaging systems on the TriggerMesh platform.
 
 ## Documentation
 
-Please refer to the [`docs/`](./docs) directory for details about the language specification and other technical
-documents.
+For instructions about the usage of the language and its tooling, please refer to the [Wiki][wiki] _(temporary
+location)_.
+
+For details about the language specification and other technical documents about the interpreter, please refer to the
+[`docs/`](./docs) directory.
 
 ## Getting started
 
@@ -31,6 +37,7 @@ $ ./bridgedl --help
 ```
 
 [tm-brg]: https://www.triggermesh.com/integrations
+[wiki]: https://github.com/triggermesh/bridgedl/wiki
 
 [go]: https://golang.org/
 [go-dl]: https://golang.org/dl/
