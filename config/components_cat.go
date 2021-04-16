@@ -16,7 +16,6 @@ const (
 	CategoryTransformers
 	CategorySources
 	CategoryTargets
-	CategoryFunctions
 )
 
 // String implements fmt.Stringer.
@@ -32,8 +31,6 @@ func (c ComponentCategory) String() string {
 		return BlkSource
 	case CategoryTargets:
 		return BlkTarget
-	case CategoryFunctions:
-		return BlkFunc
 	default:
 		return "config.ComponentCategory(" + strconv.FormatInt(int64(c), 10) + ")"
 	}
@@ -53,8 +50,6 @@ func AsComponentCategory(s string) ComponentCategory {
 		return CategorySources
 	case BlkTarget:
 		return CategoryTargets
-	case BlkFunc:
-		return CategoryFunctions
 	default:
 		return CategoryUnknown
 	}

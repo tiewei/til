@@ -63,5 +63,4 @@ const (
 	dotNodeColor3 = "/set26/3"
 	dotNodeColor4 = "/set26/4"
 	dotNodeColor5 = "/set26/5"
-	dotNodeColor6 = "/set26/6"
 )

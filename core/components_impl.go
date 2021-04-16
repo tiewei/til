@@ -7,7 +7,6 @@ import (
 	"bridgedl/config/addr"
 
 	"bridgedl/internal/components/channels"
-	"bridgedl/internal/components/functions"
 	"bridgedl/internal/components/routers"
 	"bridgedl/internal/components/sources"
 	"bridgedl/internal/components/targets"
@@ -22,7 +21,6 @@ type componentImpls struct {
 	transformers implForComponentType
 	sources      implForComponentType
 	targets      implForComponentType
-	// "function" types are not supported yet
 }
 
 type implForComponentType map[string]interface{}
@@ -41,8 +39,6 @@ func (i *componentImpls) ImplementationFor(cmpCat config.ComponentCategory, cmpT
 		return i.sources[cmpType]
 	case config.CategoryTargets:
 		return i.targets[cmpType]
-	case config.CategoryFunctions:
-		return (*functions.Function)(nil)
 	default:
 		// should not happen, the list of categories is exhaustive
 		return nil

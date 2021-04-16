@@ -16,7 +16,6 @@ offer a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
    * [`transformer`](#transformer)
    * [`source`](#source)
    * [`target`](#target)
-   * [`function`](#function)
 
 ## Configuration Files
 
@@ -43,7 +42,6 @@ of them represents a different _component category_.
 * `transformer`
 * `source`
 * `target`
-* `function`
 
 Each of these block types is described in the [Block Types](#block-types) section.
 
@@ -118,14 +116,6 @@ target <TARGET TYPE> <TARGET IDENTIFIER> {
     reply_to = <BLOCK REFERENCE> // optional
 
     # component-type-specific configuration
-}
-```
-
-### `function`
-
-```hcl
-function <FUNCTION TYPE> <FUNCTION IDENTIFIER> {
-    // TODO: unspecified
 }
 ```
 

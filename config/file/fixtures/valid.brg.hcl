@@ -33,10 +33,6 @@ channel "some_channel" "MyChannel" {
   to = transformer.MyTransformer
 }
 
-function "MyFunction" {
-  reply_to = router.MyRouter
-}
-
 target "sometarget" "MyTarget" {
   some_block { }
 

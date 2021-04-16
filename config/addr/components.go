@@ -59,18 +59,6 @@ func (trg Target) Addr() string {
 	return config.CategoryTargets.String() + "." + trg.Identifier
 }
 
-// Function is the address of a "function" block within a Bridge description.
-type Function struct {
-	Identifier string
-}
-
-var _ Referenceable = (*Function)(nil)
-
-// Addr implements Referenceable.
-func (ch Function) Addr() string {
-	return config.CategoryFunctions.String() + "." + ch.Identifier
-}
-
 // MessagingComponent is an address that can represent any messaging component
 // within a Bridge description.
 type MessagingComponent struct {

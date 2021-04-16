@@ -75,15 +75,5 @@ func (t *AddComponentsTransformer) Transform(g *graph.DirectedGraph) hcl.Diagnos
 		g.Add(v)
 	}
 
-	for _, fn := range t.Bridge.Functions {
-		v := &FunctionVertex{
-			Addr: addr.Function{
-				Identifier: fn.Identifier,
-			},
-			Function: fn,
-		}
-		g.Add(v)
-	}
-
 	return diags
 }

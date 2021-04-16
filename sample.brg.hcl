@@ -23,10 +23,6 @@ source "aws_sqs" "my_queue" {
   to = router.my_router
 }
 
-function "my_function" {
-  reply_to = router.my_router
-}
-
 router "content_based" "my_router" {
 
   route {
@@ -82,7 +78,7 @@ transformer "bumblebee" "my_transformation" {
     }
   }
 
-  to = function.my_function
+  to = target.custom_logic
 }
 
 target "kafka" "my_kafka_topic" {

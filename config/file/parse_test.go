@@ -51,9 +51,6 @@ func TestLoadBridge(t *testing.T) {
 		if n := len(brg.Targets); n != 1 {
 			t.Error("Expected 1 target, got", n)
 		}
-		if n := len(brg.Functions); n != 1 {
-			t.Error("Expected 1 function, got", n)
-		}
 	})
 
 	t.Run("with unknown block", func(t *testing.T) {
@@ -79,8 +76,7 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Channels) != 0 ||
 			len(brg.Routers) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Targets) != 0 ||
-			len(brg.Functions) != 0 {
+			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -119,8 +115,7 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Channels) != 0 ||
 			len(brg.Routers) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Targets) != 0 ||
-			len(brg.Functions) != 0 {
+			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -167,8 +162,7 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Channels) != 0 ||
 			len(brg.Routers) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Targets) != 0 ||
-			len(brg.Functions) != 0 {
+			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -210,8 +204,7 @@ func TestLoadBridge(t *testing.T) {
 			t.Error("Expected 1 source, got", n)
 		}
 		if len(brg.Routers) != 0 ||
-			len(brg.Targets) != 0 ||
-			len(brg.Functions) != 0 {
+			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all other components to be empty. Parsed bridge:\n%+v", brg)
 		}
@@ -241,8 +234,7 @@ func TestLoadBridge(t *testing.T) {
 		if len(brg.Routers) != 0 ||
 			len(brg.Channels) != 0 ||
 			len(brg.Transformers) != 0 ||
-			len(brg.Targets) != 0 ||
-			len(brg.Functions) != 0 {
+			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all other components to be empty. Parsed bridge:\n%+v", brg)
 		}

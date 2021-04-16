@@ -52,10 +52,6 @@ func decodeBridge(b hcl.Body, brg *config.Bridge) hcl.Diagnostics {
 			addDiags := addTargetBlock(brg, blk)
 			diags = diags.Extend(addDiags)
 
-		case config.BlkFunc:
-			addDiags := addFunctionBlock(brg, blk)
-			diags = diags.Extend(addDiags)
-
 		default:
 			// should never occur because the hcl.BodyContent was
 			// validated against a hcl.BodySchema during parsing
@@ -191,32 +187,6 @@ func addTargetBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryTargets, trg.Identifier, blk.DefRange))
 	} else {
 		brg.Targets[key] = trg
-	}
-
-	return diags
-}
-
-// addFunctionBlock adds a Function component to a Bridge.
-func addFunctionBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
-	var diags hcl.Diagnostics
-
-	fn, decodeDiags := decodeFunctionBlock(blk)
-	diags = diags.Extend(decodeDiags)
-
-	if fn == nil {
-		return nil
-	}
-
-	if brg.Functions == nil {
-		brg.Functions = make(map[interface{}]*config.Function)
-	}
-
-	key := addr.Function{Identifier: fn.Identifier}
-
-	if _, exists := brg.Functions[key]; exists {
-		diags = diags.Append(duplicateBlockDiagnostic(config.CategoryFunctions, fn.Identifier, blk.DefRange))
-	} else {
-		brg.Functions[key] = fn
 	}
 
 	return diags
@@ -361,30 +331,6 @@ func decodeTargetBlock(blk *hcl.Block) (*config.Target, hcl.Diagnostics) {
 	}
 
 	return trg, diags
-}
-
-// decodeFunctionBlock performs a partial decoding of the Body of a "function"
-// block into a Function struct.
-func decodeFunctionBlock(blk *hcl.Block) (*config.Function, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
-
-	if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
-		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
-	}
-
-	content, contentDiags := blk.Body.Content(config.FunctionBlockSchema)
-	diags = diags.Extend(contentDiags)
-
-	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrReplyTo])
-	diags = diags.Extend(decodeDiags)
-
-	fn := &config.Function{
-		Identifier:  blk.Labels[0],
-		ReplyTo:     to,
-		SourceRange: blk.DefRange,
-	}
-
-	return fn, diags
 }
 
 // decodeBlockRef decodes an expression attribute representing a reference to

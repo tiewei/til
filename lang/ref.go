@@ -94,11 +94,6 @@ func ParseBlockReference(attr hcl.Traversal) (*addr.Reference, hcl.Diagnostics) 
 			Identifier: identifier,
 		}
 
-	case config.CategoryFunctions:
-		ref.Subject = addr.Function{
-			Identifier: identifier,
-		}
-
 	default:
 		// should never occur, the list returned by
 		// referenceableTypes() is exhaustive
@@ -118,7 +113,6 @@ func referenceableTypes() compCatSet {
 		config.CategoryRouters,
 		config.CategoryTransformers,
 		config.CategoryTargets,
-		config.CategoryFunctions,
 	)
 
 	return refTypes

@@ -9,7 +9,6 @@ const (
 	BlkTransf  = "transformer"
 	BlkSource  = "source"
 	BlkTarget  = "target"
-	BlkFunc    = "function"
 )
 
 // Common identifiers for HCL block labels.
@@ -42,9 +41,6 @@ var BridgeSchema = &hcl.BodySchema{
 	}, {
 		Type:       BlkTarget,
 		LabelNames: []string{LblType, LblID},
-	}, {
-		Type:       BlkFunc,
-		LabelNames: []string{LblID},
 	}},
 }
 
@@ -60,5 +56,4 @@ type Bridge struct {
 	Transformers map[interface{}]*Transformer
 	Sources      map[interface{}]*Source
 	Targets      map[interface{}]*Target
-	Functions    map[interface{}]*Function
 }
