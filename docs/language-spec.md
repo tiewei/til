@@ -43,7 +43,7 @@ of them represents a different _component category_.
 * `source`
 * `target`
 
-Each of these block types is described in the [Block Types](#block-types) section.
+Each of these block types is described in the [Block Types](#block-types-component-categories) section.
 
 ## Block Labels
 
