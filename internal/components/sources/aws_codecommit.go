@@ -54,7 +54,7 @@ func (*AWSCodeCommit) Manifests(id string, config, eventDst cty.Value) []interfa
 
 	s := &unstructured.Unstructured{}
 	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AWSCodeCommit")
+	s.SetKind("AWSCodeCommitSource")
 	s.SetName(k8s.RFC1123Name(id))
 
 	arn := config.GetAttr("arn").AsString()

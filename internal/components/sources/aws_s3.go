@@ -54,7 +54,7 @@ func (*AWSS3) Manifests(id string, config, eventDst cty.Value) []interface{} {
 
 	s := &unstructured.Unstructured{}
 	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AWSS3")
+	s.SetKind("AWSS3Source")
 	s.SetName(k8s.RFC1123Name(id))
 
 	arn := config.GetAttr("arn").AsString()

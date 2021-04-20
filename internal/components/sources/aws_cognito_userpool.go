@@ -44,7 +44,7 @@ func (*AWSCognitoUserPool) Manifests(id string, config, eventDst cty.Value) []in
 
 	s := &unstructured.Unstructured{}
 	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AWSCognitoUserPool")
+	s.SetKind("AWSCognitoUserPoolSource")
 	s.SetName(k8s.RFC1123Name(id))
 
 	arn := config.GetAttr("arn").AsString()
