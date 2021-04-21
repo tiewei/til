@@ -11,11 +11,11 @@ offer a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
 1. [Component Identifiers](#component-identifiers)
 1. [Block References](#block-references)
 1. [Block Types (Component Categories)](#block-types-component-categories)
-   * [`channel`](#channel)
-   * [`router`](#router)
-   * [`transformer`](#transformer)
-   * [`source`](#source)
-   * [`target`](#target)
+   * [channel](#channel)
+   * [router](#router)
+   * [transformer](#transformer)
+   * [source](#source)
+   * [target](#target)
 
 ## Configuration Files
 
