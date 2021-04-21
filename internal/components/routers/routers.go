@@ -4,4 +4,5 @@ package routers
 var All = map[string]interface{}{
 	"content_based":          (*ContentBased)(nil),
 	"data_expression_filter": (*DataExprFilter)(nil),
+	"splitter":               (*Splitter)(nil),
 }
