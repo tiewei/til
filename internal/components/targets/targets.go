@@ -6,4 +6,5 @@ var All = map[string]interface{}{
 	"container": (*Container)(nil),
 	"function":  (*Function)(nil),
 	"kafka":     (*Kafka)(nil),
+	"zendesk":   (*Zendesk)(nil),
 }

@@ -13,3 +13,8 @@ const (
 const (
 	secrClassConfluentPasswd = "password"
 )
+
+// Secret class "zendesk"
+const (
+	secrClassZendeskToken = "token"
+)

@@ -23,3 +23,11 @@ func SecretKeyRefsConfluent(secretName string) (passwd secretKeySelector) {
 		"key":  secrClassConfluentPasswd,
 	}
 }
+
+// SecretKeyRefsZendesk returns secret key selectors for the "zendesk" secret class.
+func SecretKeyRefsZendesk(secretName string) (token secretKeySelector) {
+	return secretKeySelector{
+		"name": secretName,
+		"key":  secrClassZendeskToken,
+	}
+}
