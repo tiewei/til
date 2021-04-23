@@ -64,8 +64,8 @@ func (*Zendesk) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	_ = unstructured.SetNestedField(s.Object, email, "spec", "email")
 
 	apiAuthSecretName := config.GetAttr("api_auth").GetAttr("name").AsString()
-	passwd := secrets.SecretKeyRefsZendesk(apiAuthSecretName)
-	_ = unstructured.SetNestedMap(s.Object, passwd, "spec", "token", "secretKeyRef")
+	tokenSecretRef := secrets.SecretKeyRefsZendesk(apiAuthSecretName)
+	_ = unstructured.SetNestedMap(s.Object, tokenSecretRef, "spec", "token", "secretKeyRef")
 
 	return append(manifests, s)
 }

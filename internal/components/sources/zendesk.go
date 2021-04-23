@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/secrets"
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
@@ -30,9 +31,9 @@ func (*Zendesk) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"token": &hcldec.AttrSpec{
-			Name:     "token",
-			Type:     cty.String,
+		"api_auth": &hcldec.AttrSpec{
+			Name:     "api_auth",
+			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
 		"webhook_username": &hcldec.AttrSpec{
@@ -63,8 +64,9 @@ func (*Zendesk) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	subdomain := config.GetAttr("subdomain").AsString()
 	_ = unstructured.SetNestedField(s.Object, subdomain, "spec", "subdomain")
 
-	token := config.GetAttr("token").AsString()
-	_ = unstructured.SetNestedField(s.Object, token, "spec", "token", "value")
+	apiAuthSecretName := config.GetAttr("api_auth").GetAttr("name").AsString()
+	tokenSecretRef := secrets.SecretKeyRefsZendesk(apiAuthSecretName)
+	_ = unstructured.SetNestedMap(s.Object, tokenSecretRef, "spec", "token", "valueFromSecret")
 
 	webhookUsername := config.GetAttr("webhook_username").AsString()
 	_ = unstructured.SetNestedField(s.Object, webhookUsername, "spec", "webhookUsername")
