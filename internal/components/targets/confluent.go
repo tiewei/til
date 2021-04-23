@@ -90,8 +90,8 @@ func (*Confluent) Manifests(id string, config, eventDst cty.Value) []interface{}
 	_ = unstructured.SetNestedField(s.Object, username, "spec", "username")
 
 	saslAuthSecretName := config.GetAttr("sasl_auth").GetAttr("name").AsString()
-	passwd := secrets.SecretKeyRefsConfluent(saslAuthSecretName)
-	_ = unstructured.SetNestedMap(s.Object, passwd, "spec", "password", "secretKeyRef")
+	_, password, _ := secrets.SecretKeyRefsKafkaSASL(saslAuthSecretName)
+	_ = unstructured.SetNestedMap(s.Object, password, "spec", "password", "secretKeyRef")
 
 	return append(manifests, s)
 }

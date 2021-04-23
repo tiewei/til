@@ -19,11 +19,6 @@ func SecretKeyRefsAWS(secretName string) (accessKeyID, secretAccessKey secretKey
 		newSecretKeySelector(secretName, secrClassAWSSecretAccessKey)
 }
 
-// SecretKeyRefsConfluent returns secret key selectors for the "confluent" secret class.
-func SecretKeyRefsConfluent(secretName string) (passwd secretKeySelector) {
-	return newSecretKeySelector(secretName, secrClassConfluentPasswd)
-}
-
 // SecretKeyRefsKafkaSASL returns secret key selectors for the "kafka_sasl" secret class.
 func SecretKeyRefsKafkaSASL(secretName string) (usr, passwd, typ secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassKafkaSASLUser),

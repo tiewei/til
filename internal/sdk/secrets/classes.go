@@ -9,11 +9,6 @@ const (
 	secrClassAWSSecretAccessKey = "secret_access_key"
 )
 
-// Secret class "confluent"
-const (
-	secrClassConfluentPasswd = "password"
-)
-
 // Secret class "kafka_sasl"
 const (
 	secrClassKafkaSASLUser   = "username"
