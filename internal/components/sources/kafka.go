@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/secrets"
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
@@ -34,6 +35,16 @@ func (*Kafka) Spec() hcldec.Spec {
 			Name:     "topics",
 			Type:     cty.List(cty.String),
 			Required: true,
+		},
+		"sasl_auth": &hcldec.AttrSpec{
+			Name:     "sasl_auth",
+			Type:     k8s.ObjectReferenceCty,
+			Required: false,
+		},
+		"tls": &hcldec.AttrSpec{
+			Name:     "tls",
+			Type:     k8s.ObjectReferenceCty,
+			Required: false,
 		},
 	}
 }
@@ -67,6 +78,24 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		topics = append(topics, topic.AsString())
 	}
 	_ = unstructured.SetNestedSlice(s.Object, topics, "spec", "topics")
+
+	if v := config.GetAttr("sasl_auth"); !v.IsNull() {
+		saslAuthSecretName := v.GetAttr("name").AsString()
+		user, password, typ := secrets.SecretKeyRefsKafkaSASL(saslAuthSecretName)
+		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "sasl", "enable")
+		_ = unstructured.SetNestedMap(s.Object, user, "spec", "net", "sasl", "user")
+		_ = unstructured.SetNestedMap(s.Object, password, "spec", "net", "sasl", "password")
+		_ = unstructured.SetNestedMap(s.Object, typ, "spec", "net", "sasl", "type")
+	}
+
+	if v := config.GetAttr("tls"); !v.IsNull() {
+		tlsSecretName := v.GetAttr("name").AsString()
+		cert, key, caCert := secrets.SecretKeyRefsTLS(tlsSecretName)
+		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "enable")
+		_ = unstructured.SetNestedMap(s.Object, cert, "spec", "net", "tls", "cert")
+		_ = unstructured.SetNestedMap(s.Object, key, "spec", "net", "tls", "key")
+		_ = unstructured.SetNestedMap(s.Object, caCert, "spec", "net", "tls", "caCert")
+	}
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{

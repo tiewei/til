@@ -14,6 +14,20 @@ const (
 	secrClassConfluentPasswd = "password"
 )
 
+// Secret class "kafka_sasl"
+const (
+	secrClassKafkaSASLUser   = "username"
+	secrClassKafkaSASLPasswd = "password"
+	secrClassKafkaSASLType   = "type"
+)
+
+// Secret class "tls"
+const (
+	secrClassTLSCert   = "certificate"
+	secrClassTLSKey    = "key"
+	secrClassTLSCACert = "ca_certificate"
+)
+
 // Secret class "zendesk"
 const (
 	secrClassZendeskToken = "token"

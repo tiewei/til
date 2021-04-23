@@ -24,6 +24,39 @@ func SecretKeyRefsConfluent(secretName string) (passwd secretKeySelector) {
 	}
 }
 
+// SecretKeyRefsKafkaSASL returns secret key selectors for the "kafka_sasl" secret class.
+func SecretKeyRefsKafkaSASL(secretName string) (usr, passwd, typ secretKeySelector) {
+	return secretKeySelector{
+			"name": secretName,
+			"key":  secrClassKafkaSASLUser,
+		},
+		secretKeySelector{
+			"name": secretName,
+			"key":  secrClassKafkaSASLPasswd,
+		},
+		secretKeySelector{
+			"name": secretName,
+			"key":  secrClassKafkaSASLType,
+		}
+
+}
+
+// SecretKeyRefsTLS returns secret key selectors for the "tls" secret class.
+func SecretKeyRefsTLS(secretName string) (cert, key, caCert secretKeySelector) {
+	return secretKeySelector{
+			"name": secretName,
+			"key":  secrClassTLSCert,
+		},
+		secretKeySelector{
+			"name": secretName,
+			"key":  secrClassTLSKey,
+		},
+		secretKeySelector{
+			"name": secretName,
+			"key":  secrClassTLSCACert,
+		}
+}
+
 // SecretKeyRefsZendesk returns secret key selectors for the "zendesk" secret class.
 func SecretKeyRefsZendesk(secretName string) (token secretKeySelector) {
 	return secretKeySelector{
