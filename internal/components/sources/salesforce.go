@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/secrets"
 	"bridgedl/internal/sdk/validation"
 	"bridgedl/k8s"
 	"bridgedl/translation"
@@ -49,9 +50,9 @@ func (*Salesforce) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"cert_key": &hcldec.AttrSpec{
-			Name:     "cert_key",
-			Type:     cty.String,
+		"secret_key": &hcldec.AttrSpec{
+			Name:     "secret_key",
+			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
 	}
@@ -83,8 +84,9 @@ func (*Salesforce) Manifests(id string, config, eventDst cty.Value) []interface{
 	user := config.GetAttr("user").AsString()
 	_ = unstructured.SetNestedField(s.Object, user, "spec", "auth", "user")
 
-	certKey := config.GetAttr("cert_key").AsString()
-	_ = unstructured.SetNestedField(s.Object, certKey, "spec", "auth", "certKey", "value")
+	secrKeySecretName := config.GetAttr("secret_key").GetAttr("name").AsString()
+	secrKeySecretRef := secrets.SecretKeyRefsSalesforceOAuthJWT(secrKeySecretName)
+	_ = unstructured.SetNestedMap(s.Object, secrKeySecretRef, "spec", "auth", "certKey", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{

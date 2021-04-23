@@ -19,6 +19,11 @@ func SecretKeyRefsAWS(secretName string) (accessKeyID, secretAccessKey secretKey
 		newSecretKeySelector(secretName, secrClassAWSSecretAccessKey)
 }
 
+// SecretKeyRefsSalesforceOAuthJWT returns secret key selectors for the "salesforce_oauth_jwt" secret class.
+func SecretKeyRefsSalesforceOAuthJWT(secretName string) (key secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSalesforceOAuthJWTKey)
+}
+
 // SecretKeyRefsSlackApp returns secret key selectors for the "slack_app" secret class.
 func SecretKeyRefsSlackApp(secretName string) (signSecr secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSlackAppSignSecr)

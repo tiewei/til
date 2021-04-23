@@ -16,6 +16,11 @@ const (
 	secrClassKafkaSASLMechanism = "mechanism"
 )
 
+// Secret class "salesforce_oauth_jwt"
+const (
+	secrClassSalesforceOAuthJWTKey = "secret_key"
+)
+
 // Secret class "slack_app"
 const (
 	secrClassSlackAppSignSecr = "signing_secret"
