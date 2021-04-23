@@ -9,6 +9,13 @@ const (
 	secrClassAWSSecretAccessKey = "secret_access_key"
 )
 
+// Secret class "basic_auth"
+// https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret
+const (
+	secrClassBasicAuthUser   = "username"
+	secrClassBasicAuthPasswd = "password"
+)
+
 // Secret class "kafka_sasl"
 const (
 	secrClassKafkaSASLUser      = "username"
