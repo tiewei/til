@@ -81,11 +81,11 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 
 	if v := config.GetAttr("sasl_auth"); !v.IsNull() {
 		saslAuthSecretName := v.GetAttr("name").AsString()
-		user, password, typ := secrets.SecretKeyRefsKafkaSASL(saslAuthSecretName)
+		user, password, mechanism := secrets.SecretKeyRefsKafkaSASL(saslAuthSecretName)
 		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "sasl", "enable")
 		_ = unstructured.SetNestedMap(s.Object, user, "spec", "net", "sasl", "user")
 		_ = unstructured.SetNestedMap(s.Object, password, "spec", "net", "sasl", "password")
-		_ = unstructured.SetNestedMap(s.Object, typ, "spec", "net", "sasl", "type")
+		_ = unstructured.SetNestedMap(s.Object, mechanism, "spec", "net", "sasl", "type")
 	}
 
 	if v := config.GetAttr("tls"); !v.IsNull() {

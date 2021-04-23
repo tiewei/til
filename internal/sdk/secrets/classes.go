@@ -11,9 +11,9 @@ const (
 
 // Secret class "kafka_sasl"
 const (
-	secrClassKafkaSASLUser   = "username"
-	secrClassKafkaSASLPasswd = "password"
-	secrClassKafkaSASLType   = "type"
+	secrClassKafkaSASLUser      = "username"
+	secrClassKafkaSASLPasswd    = "password"
+	secrClassKafkaSASLMechanism = "mechanism"
 )
 
 // Secret class "tls"
