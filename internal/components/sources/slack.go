@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/secrets"
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
@@ -22,7 +23,7 @@ func (*Slack) Spec() hcldec.Spec {
 	return &hcldec.ObjectSpec{
 		"signing_secret": &hcldec.AttrSpec{
 			Name:     "signing_secret",
-			Type:     cty.String,
+			Type:     k8s.ObjectReferenceCty,
 			Required: false,
 		},
 		"app_ID": &hcldec.AttrSpec{
@@ -42,9 +43,10 @@ func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	s.SetKind("SlackSource")
 	s.SetName(k8s.RFC1123Name(id))
 
-	signingSecret := config.GetAttr("signing_secret")
-	if !signingSecret.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, signingSecret.AsString(), "spec", "signingSecret", "value")
+	if v := config.GetAttr("signing_secret"); !v.IsNull() {
+		signingSecretSecretName := v.GetAttr("name").AsString()
+		signingSecret := secrets.SecretKeyRefsSlackApp(signingSecretSecretName)
+		_ = unstructured.SetNestedMap(s.Object, signingSecret, "spec", "signingSecret", "valueFromSecret")
 	}
 
 	appID := config.GetAttr("app_ID")

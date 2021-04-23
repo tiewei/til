@@ -16,6 +16,11 @@ const (
 	secrClassKafkaSASLMechanism = "mechanism"
 )
 
+// Secret class "slack_app"
+const (
+	secrClassSlackAppSignSecr = "signing_secret"
+)
+
 // Secret class "tls"
 const (
 	secrClassTLSCert   = "certificate"
