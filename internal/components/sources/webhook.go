@@ -28,7 +28,7 @@ func (*Webhook) Spec() hcldec.Spec {
 		"event_source": &hcldec.AttrSpec{
 			Name:     "event_source",
 			Type:     cty.String,
-			Required: true,
+			Required: false,
 		},
 		"basic_auth_username": &hcldec.AttrSpec{
 			Name:     "basic_auth_username",
@@ -55,8 +55,10 @@ func (*Webhook) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	eventType := config.GetAttr("event_type").AsString()
 	_ = unstructured.SetNestedField(s.Object, eventType, "spec", "eventType")
 
-	eventSource := config.GetAttr("event_source").AsString()
-	_ = unstructured.SetNestedField(s.Object, eventSource, "spec", "eventSource")
+	if v := config.GetAttr("event_source"); !v.IsNull() {
+		eventSource := v.AsString()
+		_ = unstructured.SetNestedField(s.Object, eventSource, "spec", "eventSource")
+	}
 
 	basicAuthUsername := config.GetAttr("basic_auth_username")
 	if !basicAuthUsername.IsNull() {

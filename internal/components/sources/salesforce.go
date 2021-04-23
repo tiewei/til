@@ -6,6 +6,7 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/validation"
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
@@ -25,10 +26,13 @@ func (*Salesforce) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"replay_ID": &hcldec.AttrSpec{
-			Name:     "replay_ID",
-			Type:     cty.String,
-			Required: false,
+		"replay_ID": &hcldec.ValidateSpec{
+			Wrapped: &hcldec.AttrSpec{
+				Name:     "replay_ID",
+				Type:     cty.Number,
+				Required: false,
+			},
+			Func: validation.IsInt(),
 		},
 		"client_ID": &hcldec.AttrSpec{
 			Name:     "client_ID",
@@ -38,7 +42,7 @@ func (*Salesforce) Spec() hcldec.Spec {
 		"server": &hcldec.AttrSpec{
 			Name:     "server",
 			Type:     cty.String,
-			Required: false,
+			Required: true,
 		},
 		"user": &hcldec.AttrSpec{
 			Name:     "user",
@@ -65,18 +69,16 @@ func (*Salesforce) Manifests(id string, config, eventDst cty.Value) []interface{
 	channel := config.GetAttr("channel").AsString()
 	_ = unstructured.SetNestedField(s.Object, channel, "spec", "subscription", "channel")
 
-	replayID := config.GetAttr("replay_ID")
-	if !replayID.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, replayID.AsString(), "spec", "subscription", "replayID")
+	if v := config.GetAttr("replay_ID"); !v.IsNull() {
+		replayID, _ := config.GetAttr("replay_ID").AsBigFloat().Int64()
+		_ = unstructured.SetNestedField(s.Object, replayID, "spec", "subscription", "replayID")
 	}
 
 	clientID := config.GetAttr("client_ID").AsString()
 	_ = unstructured.SetNestedField(s.Object, clientID, "spec", "auth", "clientID")
 
-	server := config.GetAttr("server")
-	if !server.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, server.AsString(), "spec", "auth", "server")
-	}
+	server := config.GetAttr("server").AsString()
+	_ = unstructured.SetNestedField(s.Object, server, "spec", "auth", "server")
 
 	user := config.GetAttr("user").AsString()
 	_ = unstructured.SetNestedField(s.Object, user, "spec", "auth", "user")

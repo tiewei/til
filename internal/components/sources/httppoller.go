@@ -38,12 +38,12 @@ func (*HTTPPoller) Spec() hcldec.Spec {
 		"method": &hcldec.AttrSpec{
 			Name:     "method",
 			Type:     cty.String,
-			Required: false,
+			Required: true,
 		},
 		"interval": &hcldec.AttrSpec{
 			Name:     "interval",
 			Type:     cty.String,
-			Required: false,
+			Required: true,
 		},
 	}
 }
@@ -60,23 +60,19 @@ func (*HTTPPoller) Manifests(id string, config, eventDst cty.Value) []interface{
 	eventType := config.GetAttr("event_type").AsString()
 	_ = unstructured.SetNestedField(s.Object, eventType, "spec", "eventType")
 
-	eventSource := config.GetAttr("event_source")
-	if !eventSource.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, eventSource.AsString(), "spec", "eventSource")
+	if v := config.GetAttr("event_source"); !v.IsNull() {
+		eventSource := v.AsString()
+		_ = unstructured.SetNestedField(s.Object, eventSource, "spec", "eventSource")
 	}
 
 	endpoint := config.GetAttr("endpoint").AsString()
 	_ = unstructured.SetNestedField(s.Object, endpoint, "spec", "endpoint")
 
-	method := config.GetAttr("method")
-	if !method.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, method.AsString(), "spec", "method")
-	}
+	method := config.GetAttr("method").AsString()
+	_ = unstructured.SetNestedField(s.Object, method, "spec", "method")
 
-	interval := config.GetAttr("interval")
-	if !interval.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, interval.AsString(), "spec", "interval")
-	}
+	interval := config.GetAttr("interval").AsString()
+	_ = unstructured.SetNestedField(s.Object, interval, "spec", "interval")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{

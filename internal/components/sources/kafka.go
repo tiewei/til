@@ -23,7 +23,7 @@ func (*Kafka) Spec() hcldec.Spec {
 		"consumer_group": &hcldec.AttrSpec{
 			Name:     "consumer_group",
 			Type:     cty.String,
-			Required: true,
+			Required: false,
 		},
 		"bootstrap_servers": &hcldec.AttrSpec{
 			Name:     "bootstrap_servers",
@@ -47,8 +47,10 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	s.SetKind("KafkaSource")
 	s.SetName(k8s.RFC1123Name(id))
 
-	consumerGroup := config.GetAttr("consumer_group").AsString()
-	_ = unstructured.SetNestedField(s.Object, consumerGroup, "spec", "consumerGroup")
+	if v := config.GetAttr("consumer_group"); !v.IsNull() {
+		consumerGroup := v.AsString()
+		_ = unstructured.SetNestedField(s.Object, consumerGroup, "spec", "consumerGroup")
+	}
 
 	var bootstrapServers []interface{}
 	bSrvsIter := config.GetAttr("bootstrap_servers").ElementIterator()
