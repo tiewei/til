@@ -11,15 +11,15 @@ import (
 	"bridgedl/translation"
 )
 
-type Github struct{}
+type GitHub struct{}
 
 var (
-	_ translation.Decodable    = (*Github)(nil)
-	_ translation.Translatable = (*Github)(nil)
+	_ translation.Decodable    = (*GitHub)(nil)
+	_ translation.Translatable = (*GitHub)(nil)
 )
 
 // Spec implements translation.Decodable.
-func (*Github) Spec() hcldec.Spec {
+func (*GitHub) Spec() hcldec.Spec {
 	return &hcldec.ObjectSpec{
 		"event_types": &hcldec.AttrSpec{
 			Name:     "event_types",
@@ -40,7 +40,7 @@ func (*Github) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Github) Manifests(id string, config, eventDst cty.Value) []interface{} {
+func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
 	s := &unstructured.Unstructured{}
@@ -60,7 +60,7 @@ func (*Github) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	_ = unstructured.SetNestedField(s.Object, ownerAndRepository, "spec", "ownerAndRepository")
 
 	secret := config.GetAttr("secret").GetAttr("name").AsString()
-	accTokenSecretRef, secTokenSecretRef := secrets.SecretKeyRefsGithub(secret)
+	accTokenSecretRef, secTokenSecretRef := secrets.SecretKeyRefsGitHub(secret)
 	_ = unstructured.SetNestedMap(s.Object, secTokenSecretRef, "spec", "secretToken", "secretKeyRef")
 	_ = unstructured.SetNestedMap(s.Object, accTokenSecretRef, "spec", "accessToken", "secretKeyRef")
 

@@ -42,8 +42,8 @@ const (
 
 // Secret class "github"
 const (
-	secrClassGithubAccessToken = "accessToken"
-	secrClassGithubSecretToken = "secretToken"
+	secrClassGitHubAccessToken = "accessToken"
+	secrClassGitHubSecretToken = "secretToken"
 )
 
 // Secret class "zendesk"

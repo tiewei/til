@@ -8,7 +8,7 @@ var All = map[string]interface{}{
 	"aws_kinesis":          (*AWSKinesis)(nil),
 	"aws_s3":               (*AWSS3)(nil),
 	"aws_sqs":              (*AWSSQS)(nil),
-	"github":               (*Github)(nil),
+	"github":               (*GitHub)(nil),
 	"httppoller":           (*HTTPPoller)(nil),
 	"kafka":                (*Kafka)(nil),
 	"ping":                 (*Ping)(nil),

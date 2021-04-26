@@ -49,10 +49,10 @@ func SecretKeyRefsTLS(secretName string) (cert, key, caCert secretKeySelector) {
 		newSecretKeySelector(secretName, secrClassTLSCACert)
 }
 
-// SecretKeyRefsGithub returns secret key selectors for the "github" secret class.
-func SecretKeyRefsGithub(secretName string) (accessToken, secretToken secretKeySelector) {
-	return newSecretKeySelector(secretName, secrClassGithubAccessToken),
-		newSecretKeySelector(secretName, secrClassGithubSecretToken)
+// SecretKeyRefsGitHub returns secret key selectors for the "github" secret class.
+func SecretKeyRefsGitHub(secretName string) (accessToken, secretToken secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassGitHubAccessToken),
+		newSecretKeySelector(secretName, secrClassGitHubSecretToken)
 }
 
 // SecretKeyRefsZendesk returns secret key selectors for the "zendesk" secret class.
