@@ -40,6 +40,12 @@ const (
 	secrClassTLSCACert = "ca_certificate"
 )
 
+// Secret class "github"
+const (
+	secrClassGithubAccessToken = "accessToken"
+	secrClassGithubSecretToken = "secretToken"
+)
+
 // Secret class "zendesk"
 const (
 	secrClassZendeskToken = "token"
