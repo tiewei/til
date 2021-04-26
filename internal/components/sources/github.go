@@ -31,8 +31,8 @@ func (*GitHub) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"secret": &hcldec.AttrSpec{
-			Name:     "secret",
+		"tokens": &hcldec.AttrSpec{
+			Name:     "tokens",
 			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
@@ -59,10 +59,10 @@ func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	ownerAndRepository := config.GetAttr("owner_and_repository").AsString()
 	_ = unstructured.SetNestedField(s.Object, ownerAndRepository, "spec", "ownerAndRepository")
 
-	secret := config.GetAttr("secret").GetAttr("name").AsString()
-	accTokenSecretRef, secTokenSecretRef := secrets.SecretKeyRefsGitHub(secret)
-	_ = unstructured.SetNestedMap(s.Object, secTokenSecretRef, "spec", "secretToken", "secretKeyRef")
+	tokens := config.GetAttr("tokens").GetAttr("name").AsString()
+	accTokenSecretRef, webhookSecretRef := secrets.SecretKeyRefsGitHub(tokens)
 	_ = unstructured.SetNestedMap(s.Object, accTokenSecretRef, "spec", "accessToken", "secretKeyRef")
+	_ = unstructured.SetNestedMap(s.Object, webhookSecretRef, "spec", "secretToken", "secretKeyRef")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{

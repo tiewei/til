@@ -16,6 +16,12 @@ const (
 	secrClassBasicAuthPasswd = "password"
 )
 
+// Secret class "github"
+const (
+	secrClassGitHubAccessToken   = "access_token"
+	secrClassGitHubWebhookSecret = "webhook_secret"
+)
+
 // Secret class "kafka_sasl"
 const (
 	secrClassKafkaSASLUser      = "username"
@@ -38,12 +44,6 @@ const (
 	secrClassTLSCert   = "certificate"
 	secrClassTLSKey    = "key"
 	secrClassTLSCACert = "ca_certificate"
-)
-
-// Secret class "github"
-const (
-	secrClassGitHubAccessToken = "accessToken"
-	secrClassGitHubSecretToken = "secretToken"
 )
 
 // Secret class "zendesk"

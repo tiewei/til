@@ -25,6 +25,12 @@ func SecretKeyRefsBasicAuth(secretName string) (usr, passwd secretKeySelector) {
 		newSecretKeySelector(secretName, secrClassBasicAuthPasswd)
 }
 
+// SecretKeyRefsGitHub returns secret key selectors for the "github" secret class.
+func SecretKeyRefsGitHub(secretName string) (accessToken, webhookSecret secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassGitHubAccessToken),
+		newSecretKeySelector(secretName, secrClassGitHubWebhookSecret)
+}
+
 // SecretKeyRefsSalesforceOAuthJWT returns secret key selectors for the "salesforce_oauth_jwt" secret class.
 func SecretKeyRefsSalesforceOAuthJWT(secretName string) (key secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSalesforceOAuthJWTKey)
@@ -47,12 +53,6 @@ func SecretKeyRefsTLS(secretName string) (cert, key, caCert secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassTLSCert),
 		newSecretKeySelector(secretName, secrClassTLSKey),
 		newSecretKeySelector(secretName, secrClassTLSCACert)
-}
-
-// SecretKeyRefsGitHub returns secret key selectors for the "github" secret class.
-func SecretKeyRefsGitHub(secretName string) (accessToken, secretToken secretKeySelector) {
-	return newSecretKeySelector(secretName, secrClassGitHubAccessToken),
-		newSecretKeySelector(secretName, secrClassGitHubSecretToken)
 }
 
 // SecretKeyRefsZendesk returns secret key selectors for the "zendesk" secret class.
