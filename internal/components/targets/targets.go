@@ -2,9 +2,14 @@ package targets
 
 // All includes all "target" component types supported by TriggerMesh.
 var All = map[string]interface{}{
-	"confluent": (*Confluent)(nil),
-	"container": (*Container)(nil),
-	"function":  (*Function)(nil),
-	"kafka":     (*Kafka)(nil),
-	"zendesk":   (*Zendesk)(nil),
+	"aws_kinesis": (*AWSKinesis)(nil),
+	"aws_lambda":  (*AWSLambda)(nil),
+	"aws_s3":      (*AWSS3)(nil),
+	"aws_sns":     (*AWSSNS)(nil),
+	"aws_sqs":     (*AWSSQS)(nil),
+	"confluent":   (*Confluent)(nil),
+	"container":   (*Container)(nil),
+	"function":    (*Function)(nil),
+	"kafka":       (*Kafka)(nil),
+	"zendesk":     (*Zendesk)(nil),
 }
