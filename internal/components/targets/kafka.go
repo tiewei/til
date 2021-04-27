@@ -4,13 +4,12 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
 	"bridgedl/k8s"
 	"bridgedl/translation"
 )
 
-// TODO(antoineco): this is a mock implementation. It exists only to allow
-// testing the generator manually using the config.brg.hcl file at the root of
-// the repo while this code is still at the stage of prototype.
 type Kafka struct{}
 
 var (
@@ -27,12 +26,43 @@ func (*Kafka) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
+		"bootstrap_servers": &hcldec.AttrSpec{
+			Name:     "bootstrap_servers",
+			Type:     cty.List(cty.String),
+			Required: true,
+		},
+		"auth": &hcldec.AttrSpec{
+			Name:     "auth",
+			Type:     k8s.ObjectReferenceCty,
+			Required: true,
+		},
 	}
 }
 
 // Manifests implements translation.Translatable.
 func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
-	return nil
+	var manifests []interface{}
+
+	s := &unstructured.Unstructured{}
+	s.SetAPIVersion("eventing.knative.dev/v1alpha1")
+	s.SetKind("KafkaSink")
+	s.SetName(k8s.RFC1123Name(id))
+
+	topic := config.GetAttr("topic").AsString()
+	_ = unstructured.SetNestedField(s.Object, topic, "spec", "topic")
+
+	var bootstrapServers []interface{}
+	bSrvsIter := config.GetAttr("bootstrap_servers").ElementIterator()
+	for bSrvsIter.Next() {
+		_, srv := bSrvsIter.Element()
+		bootstrapServers = append(bootstrapServers, srv.AsString())
+	}
+	_ = unstructured.SetNestedSlice(s.Object, bootstrapServers, "spec", "bootstrapServers")
+
+	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
+	_ = unstructured.SetNestedField(s.Object, authSecretName, "spec", "auth", "secret", "ref", "name")
+
+	return append(manifests, s)
 }
 
 // Address implements translation.Addressable.

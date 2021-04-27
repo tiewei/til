@@ -7,7 +7,6 @@ var All = map[string]interface{}{
 	"aws_s3":      (*AWSS3)(nil),
 	"aws_sns":     (*AWSSNS)(nil),
 	"aws_sqs":     (*AWSSQS)(nil),
-	"confluent":   (*Confluent)(nil),
 	"container":   (*Container)(nil),
 	"function":    (*Function)(nil),
 	"kafka":       (*Kafka)(nil),

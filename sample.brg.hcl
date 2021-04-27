@@ -68,6 +68,9 @@ transformer "bumblebee" "my_transformation" {
 
 target "kafka" "my_kafka_topic" {
   topic = "myapp"
+  bootstrap_servers = ["server1:9092", "server2:9092"]
+
+  auth = secret_name("kafka-security-settings")
 }
 
 target "function" "custom_logic" {
