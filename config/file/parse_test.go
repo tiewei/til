@@ -22,6 +22,7 @@ const (
 	bridgeBadBlkHdrs   = "bad_blk_hdrs.brg.hcl"
 	bridgeMissingAttrs = "missing_attrs.brg.hcl"
 	bridgeDuplIDs      = "dupl_ids.brg.hcl"
+	bridgeDuplGlobals  = "dupl_globals.brg.hcl"
 )
 
 func TestLoadBridge(t *testing.T) {
@@ -237,6 +238,29 @@ func TestLoadBridge(t *testing.T) {
 			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all other components to be empty. Parsed bridge:\n%+v", brg)
+		}
+	})
+
+	t.Run("with duplicated global settings", func(t *testing.T) {
+		brg, diags := p.LoadBridge(bridgeDuplGlobals)
+
+		errDiags := diags.Errs()
+
+		const expectNumErrDiags = 1
+		if len(errDiags) != expectNumErrDiags {
+			t.Fatalf("Expected %d error diagnostic:\n%s", expectNumErrDiags, errDiagsAsString(diags))
+		}
+
+		if errDiags[0].(*hcl.Diagnostic).Summary != "Redefined global config" {
+			t.Fatal("Unexpected type of error diagnostic:", errDiags[0])
+		}
+
+		if errDiags[0].(*hcl.Diagnostic).Subject.Start.Line != 6 {
+			t.Fatal("Unexpected location of error diagnostic:", errDiags[0])
+		}
+
+		if n := len(brg.Sources); n != 1 {
+			t.Error("Expected 1 source, got", n)
 		}
 	})
 }

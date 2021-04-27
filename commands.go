@@ -7,6 +7,7 @@ import (
 
 	"bridgedl/config/file"
 	"bridgedl/core"
+	"bridgedl/encoding"
 	"bridgedl/graph/dot"
 )
 
@@ -108,6 +109,10 @@ func (c *GenerateCommand) Run(args ...string) error {
 	}
 	filePath := pos[0]
 
+	// value to use as the Bridge identifier in case none is defined in the
+	// parsed Bridge description
+	const defaultBridgeIdentifier = "bridgedl_generated"
+
 	brg, diags := file.NewParser().LoadBridge(filePath)
 	if diags.HasErrors() {
 		return diags
@@ -123,17 +128,23 @@ func (c *GenerateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	var w manifestsWriterFunc
+	brgID := brg.Identifier
+	if brgID == "" {
+		brgID = defaultBridgeIdentifier
+	}
+	s := encoding.NewSerializer(brgID)
+
+	var w encoding.ManifestsWriterFunc
 
 	switch {
 	case c.bridge && c.yaml:
-		w = writeBridgeYAML
+		w = s.WriteBridgeYAML
 	case c.bridge:
-		w = writeBridgeJSON
+		w = s.WriteBridgeJSON
 	case c.yaml:
-		w = writeManifestsYAML
+		w = s.WriteManifestsYAML
 	default:
-		w = writeManifestsJSON
+		w = s.WriteManifestsJSON
 	}
 
 	return w(c.stdout, manifests)

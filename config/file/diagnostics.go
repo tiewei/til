@@ -26,7 +26,18 @@ func duplicateBlockDiagnostic(cat config.ComponentCategory, identifier string, s
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Duplicate block",
-		Detail:   fmt.Sprintf("Found a duplicate %q block with the identifier %q", cat, identifier),
+		Detail:   fmt.Sprintf("Found a duplicate %q block with the identifier %q.", cat, identifier),
+		Subject:  subj.Ptr(),
+	}
+}
+
+// tooManyBridgeBlocksDiagnostic returns a hcl.Diagnostic which indicates that
+// more than one "bridge" block was defined.
+func tooManyBridgeBlocksDiagnostic(subj hcl.Range) *hcl.Diagnostic {
+	return &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "Redefined global config",
+		Detail:   `A Bridge description must contain at most one "bridge" block.`,
 		Subject:  subj.Ptr(),
 	}
 }

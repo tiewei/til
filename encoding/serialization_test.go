@@ -1,4 +1,6 @@
-package main
+package encoding_test
+
+import . "bridgedl/encoding"
 
 import (
 	"strings"
@@ -10,24 +12,28 @@ import (
 )
 
 func TestWriteManifests(t *testing.T) {
+	const testBrgID = "Test_Bridge"
+
+	s := NewSerializer(testBrgID)
+
 	testCases := map[string] /*output*/ struct {
-		writerFunc   manifestsWriterFunc
+		writerFunc   ManifestsWriterFunc
 		expectOutput string
 	}{
 		"JSON List-manifest": {
-			writerFunc:   writeManifestsJSON,
+			writerFunc:   s.WriteManifestsJSON,
 			expectOutput: expectOutputJSON,
 		},
 		"YAML documents": {
-			writerFunc:   writeManifestsYAML,
+			writerFunc:   s.WriteManifestsYAML,
 			expectOutput: expectOutputYAML,
 		},
 		"JSON Bridge": {
-			writerFunc:   writeBridgeJSON,
+			writerFunc:   s.WriteBridgeJSON,
 			expectOutput: expectOutputBridgeJSON,
 		},
 		"YAML Bridge": {
-			writerFunc:   writeBridgeYAML,
+			writerFunc:   s.WriteBridgeYAML,
 			expectOutput: expectOutputBridgeYAML,
 		},
 	}
@@ -65,6 +71,9 @@ const expectOutputJSON = "" +
 	`      "apiVersion": "fake/v0",` + "\n" +
 	`      "kind": "Foo",` + "\n" +
 	`      "metadata": {` + "\n" +
+	`        "labels": {` + "\n" +
+	`          "bridges.triggermesh.io/id": "Test_Bridge"` + "\n" +
+	`        },` + "\n" +
 	`        "name": "object-1"` + "\n" +
 	`      }` + "\n" +
 	`    },` + "\n" +
@@ -72,6 +81,9 @@ const expectOutputJSON = "" +
 	`      "apiVersion": "fake/v0",` + "\n" +
 	`      "kind": "Bar",` + "\n" +
 	`      "metadata": {` + "\n" +
+	`        "labels": {` + "\n" +
+	`          "bridges.triggermesh.io/id": "Test_Bridge"` + "\n" +
+	`        },` + "\n" +
 	`        "name": "object-2"` + "\n" +
 	`      }` + "\n" +
 	`    }` + "\n" +
@@ -83,11 +95,15 @@ const expectOutputYAML = "" +
 	"apiVersion: fake/v0\n" +
 	"kind: Foo\n" +
 	"metadata:\n" +
+	"  labels:\n" +
+	"    bridges.triggermesh.io/id: Test_Bridge\n" +
 	"  name: object-1\n" +
 	"---\n" +
 	"apiVersion: fake/v0\n" +
 	"kind: Bar\n" +
 	"metadata:\n" +
+	"  labels:\n" +
+	"    bridges.triggermesh.io/id: Test_Bridge\n" +
 	"  name: object-2\n"
 
 const expectOutputBridgeJSON = "" +
@@ -95,7 +111,7 @@ const expectOutputBridgeJSON = "" +
 	`  "apiVersion": "flow.triggermesh.io/v1alpha1",` + "\n" +
 	`  "kind": "Bridge",` + "\n" +
 	`  "metadata": {` + "\n" +
-	`    "name": "bridgedl-generated"` + "\n" +
+	`    "name": "test-bridge"` + "\n" +
 	`  },` + "\n" +
 	`  "spec": {` + "\n" +
 	`    "components": [` + "\n" +
@@ -125,7 +141,7 @@ const expectOutputBridgeYAML = "" +
 	"apiVersion: flow.triggermesh.io/v1alpha1\n" +
 	"kind: Bridge\n" +
 	"metadata:\n" +
-	"  name: bridgedl-generated\n" +
+	"  name: test-bridge\n" +
 	"spec:\n" +
 	"  components:\n" +
 	"  - object:\n" +

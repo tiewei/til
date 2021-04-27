@@ -10,7 +10,8 @@ offer a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
 1. [Blocks Labels](#block-labels)
 1. [Component Identifiers](#component-identifiers)
 1. [Block References](#block-references)
-1. [Block Types (Component Categories)](#block-types-component-categories)
+1. [Global Configurations](#global-configurations)
+1. [Component Categories](#component-categories)
    * [channel](#channel)
    * [router](#router)
    * [transformer](#transformer)
@@ -34,16 +35,20 @@ We suggest using the two extensions `.brg.hcl` with Bridge Description Files for
 
 The language does not support any top-level [attribute][hcl-elems].
 
+The following [block][hcl-elems] type must appear _at most once_ in a configuration file. It contains configurations
+which pertain to an entire Bridge. Details are presented in the [Global Configurations](#global-configurations) section.
+
+* `bridge`
+
 The following [block][hcl-elems] types can appear in a configuration file in any order and number of occurrences. Each
-of them represents a different _component category_.
+of them represents a different _component category_. Details are presented in the [Component
+Categories](#component-categories) section.
 
 * `channel`
 * `router`
 * `transformer`
 * `source`
 * `target`
-
-Each of these block types is described in the [Block Types](#block-types-component-categories) section.
 
 ## Block Labels
 
@@ -69,7 +74,18 @@ operator][hcl-attrop].
 
 * `channel.my_channel` is a syntactically valid block reference.
 
-## Block Types (Component Categories)
+## Global Configurations
+
+```hcl
+bridge <BRIDGE IDENTIFIER> {
+    // no other configurations are currently supported
+}
+```
+
+A `bridge` block has exactly one label, which represents its _identifier_. This identifier is used to sets the Bridge's
+components apart from other resources in the destination environment.
+
+## Component Categories
 
 Unless otherwise specified, each documented top-level attribute is _required_.
 

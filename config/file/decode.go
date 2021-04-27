@@ -30,8 +30,26 @@ func decodeBridge(b hcl.Body, brg *config.Bridge) hcl.Diagnostics {
 	content, contentDiags := b.Content(config.BridgeSchema)
 	diags = diags.Extend(contentDiags)
 
+	visitedBridgeGlobals := false
+
 	for _, blk := range content.Blocks {
 		switch t := blk.Type; t {
+		case config.BlkBridge:
+			if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
+				diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
+			}
+
+			_, contentDiags := blk.Body.Content(config.BridgeBlockSchema)
+			diags = diags.Extend(contentDiags)
+
+			if visitedBridgeGlobals {
+				diags = diags.Append(tooManyBridgeBlocksDiagnostic(blk.DefRange))
+				continue
+			}
+			visitedBridgeGlobals = true
+
+			brg.Identifier = blk.Labels[0]
+
 		case config.BlkChannel:
 			addDiags := addChannelBlock(brg, blk)
 			diags = diags.Extend(addDiags)

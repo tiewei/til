@@ -28,6 +28,8 @@
                                  monitoring
 */
 
+bridge "s3_blob_to_slack" {}
+
 // ---- Event Sources ----
 
 source "aws_s3" "my_bucket" {
@@ -107,6 +109,10 @@ transformer "function" "s3_slack_message" {
     }
   EOF
 
+  ce_context {
+    type = "com.slack.webapi.chat.postMessage"
+  }
+
   to = target.chat_notifications
 }
 
@@ -120,6 +126,10 @@ transformer "function" "blob_slack_message" {
       "text": f"Event from Azure Storage: `{event['api']}`"
     }
   EOF
+
+  ce_context {
+    type = "com.slack.webapi.chat.postMessage"
+  }
 
   to = target.chat_notifications
 }
