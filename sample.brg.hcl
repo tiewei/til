@@ -63,7 +63,7 @@ transformer "bumblebee" "my_transformation" {
     }
   }
 
-  to = target.custom_logic
+  to = target.my_kafka_topic
 }
 
 target "kafka" "my_kafka_topic" {

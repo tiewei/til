@@ -20,7 +20,7 @@ func SecretKeyRefsAWS(secretName string) (accessKeyID, secretAccessKey secretKey
 }
 
 // SecretKeyRefsBasicAuth returns secret key selectors for the "basic_auth" secret class.
-func SecretKeyRefsBasicAuth(secretName string) (usr, passwd secretKeySelector) {
+func SecretKeyRefsBasicAuth(secretName string) (user, passwd secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassBasicAuthUser),
 		newSecretKeySelector(secretName, secrClassBasicAuthPasswd)
 }
@@ -41,11 +41,14 @@ func SecretKeyRefsSlackApp(secretName string) (signSecr secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSlackAppSignSecr)
 }
 
-// SecretKeyRefsKafkaSASL returns secret key selectors for the "kafka_sasl" secret class.
-func SecretKeyRefsKafkaSASL(secretName string) (usr, passwd, mechanism secretKeySelector) {
-	return newSecretKeySelector(secretName, secrClassKafkaSASLUser),
+// SecretKeyRefsKafka returns secret key selectors for the "kafka" secret class.
+func SecretKeyRefsKafka(secretName string) (saslMech, saslUser, saslPasswd, caCert, cert, key secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassKafkaSASLMechanism),
+		newSecretKeySelector(secretName, secrClassKafkaSASLUser),
 		newSecretKeySelector(secretName, secrClassKafkaSASLPasswd),
-		newSecretKeySelector(secretName, secrClassKafkaSASLMechanism)
+		newSecretKeySelector(secretName, secrClassKafkaTLSCACert),
+		newSecretKeySelector(secretName, secrClassKafkaTLSCert),
+		newSecretKeySelector(secretName, secrClassKafkaTLSKey)
 }
 
 // SecretKeyRefsTLS returns secret key selectors for the "tls" secret class.

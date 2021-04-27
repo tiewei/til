@@ -81,20 +81,20 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 
 	if v := config.GetAttr("sasl_auth"); !v.IsNull() {
 		saslAuthSecretName := v.GetAttr("name").AsString()
-		user, password, mechanism := secrets.SecretKeyRefsKafkaSASL(saslAuthSecretName)
+		saslMech, saslUser, saslPasswd, _, _, _ := secrets.SecretKeyRefsKafka(saslAuthSecretName)
 		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "sasl", "enable")
-		_ = unstructured.SetNestedMap(s.Object, user, "spec", "net", "sasl", "user", "secretKeyRef")
-		_ = unstructured.SetNestedMap(s.Object, password, "spec", "net", "sasl", "password", "secretKeyRef")
-		_ = unstructured.SetNestedMap(s.Object, mechanism, "spec", "net", "sasl", "type", "secretKeyRef")
+		_ = unstructured.SetNestedMap(s.Object, saslMech, "spec", "net", "sasl", "type", "secretKeyRef")
+		_ = unstructured.SetNestedMap(s.Object, saslUser, "spec", "net", "sasl", "user", "secretKeyRef")
+		_ = unstructured.SetNestedMap(s.Object, saslPasswd, "spec", "net", "sasl", "password", "secretKeyRef")
 	}
 
 	if v := config.GetAttr("tls"); !v.IsNull() {
 		tlsSecretName := v.GetAttr("name").AsString()
-		cert, key, caCert := secrets.SecretKeyRefsTLS(tlsSecretName)
+		_, _, _, caCert, cert, key := secrets.SecretKeyRefsKafka(tlsSecretName)
 		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "enable")
+		_ = unstructured.SetNestedMap(s.Object, caCert, "spec", "net", "tls", "caCert", "secretKeyRef")
 		_ = unstructured.SetNestedMap(s.Object, cert, "spec", "net", "tls", "cert", "secretKeyRef")
 		_ = unstructured.SetNestedMap(s.Object, key, "spec", "net", "tls", "key", "secretKeyRef")
-		_ = unstructured.SetNestedMap(s.Object, caCert, "spec", "net", "tls", "caCert", "secretKeyRef")
 	}
 
 	sinkRef := eventDst.GetAttr("ref")

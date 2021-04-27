@@ -22,11 +22,14 @@ const (
 	secrClassGitHubWebhookSecret = "webhook_secret"
 )
 
-// Secret class "kafka_sasl"
+// Secret class "kafka"
 const (
-	secrClassKafkaSASLUser      = "username"
+	secrClassKafkaSASLMechanism = "sasl.mechanism"
+	secrClassKafkaSASLUser      = "user"
 	secrClassKafkaSASLPasswd    = "password"
-	secrClassKafkaSASLMechanism = "mechanism"
+	secrClassKafkaTLSCACert     = "ca.crt"
+	secrClassKafkaTLSCert       = "user.crt"
+	secrClassKafkaTLSKey        = "user.key"
 )
 
 // Secret class "salesforce_oauth_jwt"
