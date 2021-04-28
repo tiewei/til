@@ -16,6 +16,11 @@ const (
 	secrClassBasicAuthPasswd = "password"
 )
 
+// Secret class "gcloud_service_account"
+const (
+	secrClassGCloudSvcAccountKey = "key.json"
+)
+
 // Secret class "github"
 const (
 	secrClassGitHubAccessToken   = "access_token"

@@ -25,6 +25,11 @@ func SecretKeyRefsBasicAuth(secretName string) (user, passwd secretKeySelector) 
 		newSecretKeySelector(secretName, secrClassBasicAuthPasswd)
 }
 
+// SecretKeyRefsGCloudServiceAccount returns secret key selectors for the "gcloud_service_account" secret class.
+func SecretKeyRefsGCloudServiceAccount(secretName string) (key secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassGCloudSvcAccountKey)
+}
+
 // SecretKeyRefsGitHub returns secret key selectors for the "github" secret class.
 func SecretKeyRefsGitHub(secretName string) (accessToken, webhookSecret secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassGitHubAccessToken),
