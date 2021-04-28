@@ -46,6 +46,11 @@ func SecretKeyRefsKafka(secretName string) (saslMech, saslUser, saslPasswd, caCe
 		newSecretKeySelector(secretName, secrClassKafkaTLSKey)
 }
 
+// SecretKeyRefsLogz returns secret key selectors for the "logz" secret class.
+func SecretKeyRefsLogz(secretName string) (apiToken secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassLogzAPIToken)
+}
+
 // SecretKeyRefsSalesforceOAuthJWT returns secret key selectors for the "salesforce_oauth_jwt" secret class.
 func SecretKeyRefsSalesforceOAuthJWT(secretName string) (key secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSalesforceOAuthJWTKey)

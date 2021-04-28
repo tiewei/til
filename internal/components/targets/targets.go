@@ -11,6 +11,7 @@ var All = map[string]interface{}{
 	"function":       (*Function)(nil),
 	"gcloud_storage": (*GCloudStorage)(nil),
 	"kafka":          (*Kafka)(nil),
+	"logz":           (*Logz)(nil),
 	"slack":          (*Slack)(nil),
 	"zendesk":        (*Zendesk)(nil),
 }

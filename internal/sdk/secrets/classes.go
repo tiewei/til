@@ -37,6 +37,11 @@ const (
 	secrClassKafkaTLSKey        = "user.key"
 )
 
+// Secret class "logz"
+const (
+	secrClassLogzAPIToken = "token"
+)
+
 // Secret class "salesforce_oauth_jwt"
 const (
 	secrClassSalesforceOAuthJWTKey = "secret_key"
