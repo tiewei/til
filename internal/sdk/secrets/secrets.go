@@ -31,16 +31,6 @@ func SecretKeyRefsGitHub(secretName string) (accessToken, webhookSecret secretKe
 		newSecretKeySelector(secretName, secrClassGitHubWebhookSecret)
 }
 
-// SecretKeyRefsSalesforceOAuthJWT returns secret key selectors for the "salesforce_oauth_jwt" secret class.
-func SecretKeyRefsSalesforceOAuthJWT(secretName string) (key secretKeySelector) {
-	return newSecretKeySelector(secretName, secrClassSalesforceOAuthJWTKey)
-}
-
-// SecretKeyRefsSlackApp returns secret key selectors for the "slack_app" secret class.
-func SecretKeyRefsSlackApp(secretName string) (signSecr secretKeySelector) {
-	return newSecretKeySelector(secretName, secrClassSlackAppSignSecr)
-}
-
 // SecretKeyRefsKafka returns secret key selectors for the "kafka" secret class.
 func SecretKeyRefsKafka(secretName string) (saslMech, saslUser, saslPasswd, caCert, cert, key secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassKafkaSASLMechanism),
@@ -49,6 +39,21 @@ func SecretKeyRefsKafka(secretName string) (saslMech, saslUser, saslPasswd, caCe
 		newSecretKeySelector(secretName, secrClassKafkaTLSCACert),
 		newSecretKeySelector(secretName, secrClassKafkaTLSCert),
 		newSecretKeySelector(secretName, secrClassKafkaTLSKey)
+}
+
+// SecretKeyRefsSalesforceOAuthJWT returns secret key selectors for the "salesforce_oauth_jwt" secret class.
+func SecretKeyRefsSalesforceOAuthJWT(secretName string) (key secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSalesforceOAuthJWTKey)
+}
+
+// SecretKeyRefsSlack returns secret key selectors for the "slack" secret class.
+func SecretKeyRefsSlack(secretName string) (apiToken secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSlackAPIToken)
+}
+
+// SecretKeyRefsSlackApp returns secret key selectors for the "slack_app" secret class.
+func SecretKeyRefsSlackApp(secretName string) (signSecr secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSlackAppSignSecr)
 }
 
 // SecretKeyRefsTLS returns secret key selectors for the "tls" secret class.

@@ -37,6 +37,11 @@ const (
 	secrClassSalesforceOAuthJWTKey = "secret_key"
 )
 
+// Secret class "slack"
+const (
+	secrClassSlackAPIToken = "token"
+)
+
 // Secret class "slack_app"
 const (
 	secrClassSlackAppSignSecr = "signing_secret"
