@@ -27,16 +27,16 @@ func (*Salesforce) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"replay_ID": &hcldec.ValidateSpec{
+		"replay_id": &hcldec.ValidateSpec{
 			Wrapped: &hcldec.AttrSpec{
-				Name:     "replay_ID",
+				Name:     "replay_id",
 				Type:     cty.Number,
 				Required: false,
 			},
 			Func: validation.IsInt(),
 		},
-		"client_ID": &hcldec.AttrSpec{
-			Name:     "client_ID",
+		"client_id": &hcldec.AttrSpec{
+			Name:     "client_id",
 			Type:     cty.String,
 			Required: true,
 		},
@@ -70,12 +70,12 @@ func (*Salesforce) Manifests(id string, config, eventDst cty.Value) []interface{
 	channel := config.GetAttr("channel").AsString()
 	_ = unstructured.SetNestedField(s.Object, channel, "spec", "subscription", "channel")
 
-	if v := config.GetAttr("replay_ID"); !v.IsNull() {
-		replayID, _ := config.GetAttr("replay_ID").AsBigFloat().Int64()
+	if v := config.GetAttr("replay_id"); !v.IsNull() {
+		replayID, _ := v.AsBigFloat().Int64()
 		_ = unstructured.SetNestedField(s.Object, replayID, "spec", "subscription", "replayID")
 	}
 
-	clientID := config.GetAttr("client_ID").AsString()
+	clientID := config.GetAttr("client_id").AsString()
 	_ = unstructured.SetNestedField(s.Object, clientID, "spec", "auth", "clientID")
 
 	server := config.GetAttr("server").AsString()

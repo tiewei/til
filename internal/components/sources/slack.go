@@ -26,8 +26,8 @@ func (*Slack) Spec() hcldec.Spec {
 			Type:     k8s.ObjectReferenceCty,
 			Required: false,
 		},
-		"app_ID": &hcldec.AttrSpec{
-			Name:     "app_ID",
+		"app_id": &hcldec.AttrSpec{
+			Name:     "app_id",
 			Type:     cty.String,
 			Required: false,
 		},
@@ -49,7 +49,7 @@ func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		_ = unstructured.SetNestedMap(s.Object, signingSecret, "spec", "signingSecret", "valueFromSecret")
 	}
 
-	appID := config.GetAttr("app_ID")
+	appID := config.GetAttr("app_id")
 	if !appID.IsNull() {
 		_ = unstructured.SetNestedField(s.Object, appID.AsString(), "spec", "appID")
 	}

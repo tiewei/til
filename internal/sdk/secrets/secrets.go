@@ -19,6 +19,13 @@ func SecretKeyRefsAWS(secretName string) (accessKeyID, secretAccessKey secretKey
 		newSecretKeySelector(secretName, secrClassAWSSecretAccessKey)
 }
 
+// SecretKeyRefsAzureSP returns secret key selectors for the "azure_sp" secret class.
+func SecretKeyRefsAzureSP(secretName string) (tenantID, clientID, clientSecret secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassAzureSPTenantID),
+		newSecretKeySelector(secretName, secrClassAzureSPClientID),
+		newSecretKeySelector(secretName, secrClassAzureSPClientSecret)
+}
+
 // SecretKeyRefsBasicAuth returns secret key selectors for the "basic_auth" secret class.
 func SecretKeyRefsBasicAuth(secretName string) (user, passwd secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassBasicAuthUser),

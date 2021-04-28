@@ -9,6 +9,13 @@ const (
 	secrClassAWSSecretAccessKey = "secret_access_key"
 )
 
+// Secret class "azure_sp"
+const (
+	secrClassAzureSPTenantID     = "tenant_id"
+	secrClassAzureSPClientID     = "client_id"
+	secrClassAzureSPClientSecret = "client_secret"
+)
+
 // Secret class "basic_auth"
 // https://kubernetes.io/docs/concepts/configuration/secret/#basic-authentication-secret
 const (
