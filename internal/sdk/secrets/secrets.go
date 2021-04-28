@@ -73,6 +73,12 @@ func SecretKeyRefsTLS(secretName string) (cert, key, caCert secretKeySelector) {
 		newSecretKeySelector(secretName, secrClassTLSCACert)
 }
 
+// SecretKeyRefsTwilio returns secret key selectors for the "twilio" secret class.
+func SecretKeyRefsTwilio(secretName string) (sid, token secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassTwilioSid),
+		newSecretKeySelector(secretName, secrClassTwilioToken)
+}
+
 // SecretKeyRefsZendesk returns secret key selectors for the "zendesk" secret class.
 func SecretKeyRefsZendesk(secretName string) (token secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassZendeskToken)

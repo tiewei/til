@@ -13,5 +13,6 @@ var All = map[string]interface{}{
 	"kafka":          (*Kafka)(nil),
 	"logz":           (*Logz)(nil),
 	"slack":          (*Slack)(nil),
+	"twilio":         (*Twilio)(nil),
 	"zendesk":        (*Zendesk)(nil),
 }

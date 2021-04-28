@@ -64,6 +64,12 @@ const (
 	secrClassTLSCACert = "ca_certificate"
 )
 
+// Secret class "twilio"
+const (
+	secrClassTwilioSid   = "sid"
+	secrClassTwilioToken = "token"
+)
+
 // Secret class "zendesk"
 const (
 	secrClassZendeskToken = "token"
