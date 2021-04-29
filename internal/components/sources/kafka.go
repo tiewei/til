@@ -1,6 +1,7 @@
 package sources
 
 import (
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
@@ -41,10 +42,13 @@ func (*Kafka) Spec() hcldec.Spec {
 			Type:     k8s.ObjectReferenceCty,
 			Required: false,
 		},
-		"tls": &hcldec.AttrSpec{
-			Name:     "tls",
-			Type:     k8s.ObjectReferenceCty,
-			Required: false,
+		"tls": &hcldec.ValidateSpec{
+			Wrapped: &hcldec.AttrSpec{
+				Name:     "tls",
+				Type:     cty.DynamicPseudoType,
+				Required: false,
+			},
+			Func: validateKafkaAttrTLS,
 		},
 	}
 }
@@ -89,20 +93,24 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	}
 
 	if v := config.GetAttr("tls"); !v.IsNull() {
-		tlsSecretName := v.GetAttr("name").AsString()
-		_, _, _, caCert, cert, key := secrets.SecretKeyRefsKafka(tlsSecretName)
-		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "enable")
-		_ = unstructured.SetNestedMap(s.Object, caCert, "spec", "net", "tls", "caCert", "secretKeyRef")
-		_ = unstructured.SetNestedMap(s.Object, cert, "spec", "net", "tls", "cert", "secretKeyRef")
-		_ = unstructured.SetNestedMap(s.Object, key, "spec", "net", "tls", "key", "secretKeyRef")
-		// The protocol selection happens at runtime, based on the
-		// presence or not of the above keys in the referenced Secret.
-		// By marking each of these keys as optional, we attempt to
-		// provide configuration parity with the "kafka" target, which
-		// uses this same approach.
-		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "caCert", "secretKeyRef", "optional")
-		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "cert", "secretKeyRef", "optional")
-		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "key", "secretKeyRef", "optional")
+		if k8s.IsObjectReference(v) {
+			tlsSecretName := v.GetAttr("name").AsString()
+			_, _, _, caCert, cert, key := secrets.SecretKeyRefsKafka(tlsSecretName)
+			_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "enable")
+			_ = unstructured.SetNestedMap(s.Object, caCert, "spec", "net", "tls", "caCert", "secretKeyRef")
+			_ = unstructured.SetNestedMap(s.Object, cert, "spec", "net", "tls", "cert", "secretKeyRef")
+			_ = unstructured.SetNestedMap(s.Object, key, "spec", "net", "tls", "key", "secretKeyRef")
+			// The protocol selection happens at runtime, based on the
+			// presence or not of the above keys in the referenced Secret.
+			// By marking each of these keys as optional, we attempt to
+			// provide configuration parity with the "kafka" target, which
+			// uses this same approach.
+			_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "caCert", "secretKeyRef", "optional")
+			_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "cert", "secretKeyRef", "optional")
+			_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "key", "secretKeyRef", "optional")
+		} else if v.True() {
+			_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "enable")
+		}
 	}
 
 	sinkRef := eventDst.GetAttr("ref")
@@ -114,4 +122,18 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
 
 	return append(manifests, s)
+}
+
+func validateKafkaAttrTLS(val cty.Value) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	if !(k8s.IsObjectReference(val) || val.Type() == cty.Bool) {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid attributes type",
+			Detail:   `The "tls" attribute accepts either a secret reference or a boolean.`,
+		})
+	}
+
+	return diags
 }
