@@ -95,6 +95,14 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		_ = unstructured.SetNestedMap(s.Object, caCert, "spec", "net", "tls", "caCert", "secretKeyRef")
 		_ = unstructured.SetNestedMap(s.Object, cert, "spec", "net", "tls", "cert", "secretKeyRef")
 		_ = unstructured.SetNestedMap(s.Object, key, "spec", "net", "tls", "key", "secretKeyRef")
+		// The protocol selection happens at runtime, based on the
+		// presence or not of the above keys in the referenced Secret.
+		// By marking each of these keys as optional, we attempt to
+		// provide configuration parity with the "kafka" target, which
+		// uses this same approach.
+		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "caCert", "secretKeyRef", "optional")
+		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "cert", "secretKeyRef", "optional")
+		_ = unstructured.SetNestedField(s.Object, true, "spec", "net", "tls", "key", "secretKeyRef", "optional")
 	}
 
 	sinkRef := eventDst.GetAttr("ref")
