@@ -22,33 +22,42 @@ const (
 
 // usage is a usageFn for the top level command.
 func usage(cmdName string) string {
-	return "Usage: " + cmdName + " <command>\n" +
+	return "Interpreter for TriggerMesh's Bridge Description Language.\n" +
 		"\n" +
-		"Commands:\n" +
-		"  " + cmdGenerate + "     generate Kubernetes manifests for deploying a Bridge\n" +
-		"  " + cmdValidate + "     validate the syntax of a Bridge Description File\n" +
-		"  " + cmdGraph + "        represent a Bridge as a directed graph in DOT format\n"
+		"USAGE:\n" +
+		"    " + cmdName + " <command>\n" +
+		"\n" +
+		"COMMANDS:\n" +
+		"    " + cmdGenerate + "     generate Kubernetes manifests for deploying a Bridge\n" +
+		"    " + cmdValidate + "     validate the syntax of a Bridge Description File\n" +
+		"    " + cmdGraph + "        represent a Bridge as a directed graph in DOT format\n"
 }
 
 // usageGenerate is a usageFn for the "generate" subcommand.
 func usageGenerate(cmdName string) string {
-	return "Usage: " + cmdName + " " + cmdGenerate + " FILE\n" +
-		"Generates the Kubernetes manifests that allow the Bridge to be deployed " +
-		"to TriggerMesh, and writes them to standard output.\n"
+	return "Generates the Kubernetes manifests which allow a Bridge to be deployed " +
+		"to TriggerMesh, and writes them to standard output.\n" +
+		"\n" +
+		"USAGE:\n" +
+		"    " + cmdName + " " + cmdGenerate + " FILE\n"
 }
 
 // usageValidate is a usageFn for the "validate" subcommand.
 func usageValidate(cmdName string) string {
-	return "Usage: " + cmdName + " " + cmdValidate + " FILE\n" +
-		"Returns with an exit code of 0 if FILE is a syntactically valid Bridge " +
-		"Description File, with an exit code of 1 otherwise.\n"
+	return "Verifies that a Bridge Description File is syntactically valid. Returns " +
+		"with an exit code of 0 in case of success, with an exit code of 1 otherwise.\n" +
+		"\n" +
+		"USAGE:\n" +
+		"    " + cmdName + " " + cmdValidate + " FILE\n"
 }
 
 // usageGraph is a usageFn for the "usage" subcommand.
 func usageGraph(cmdName string) string {
-	return "Usage: " + cmdName + " " + cmdGraph + " FILE\n" +
-		"Generates a DOT representation of the Bridge parsed from FILE and writes " +
-		"it to standard output.\n"
+	return "Generates a DOT representation of a Bridge and writes it to standard " +
+		"output.\n" +
+		"\n" +
+		"USAGE:\n" +
+		"    " + cmdName + " " + cmdGraph + " FILE\n"
 }
 
 type usageFn func(cmdName string) string
