@@ -3,7 +3,9 @@ module bridgedl
 go 1.16
 
 require (
+	github.com/google/go-cmp v0.5.2
 	github.com/hashicorp/hcl/v2 v2.10.0
 	github.com/zclconf/go-cty v1.8.2
 	k8s.io/apimachinery v0.20.4
+	sigs.k8s.io/yaml v1.2.0
 )

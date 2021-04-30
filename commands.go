@@ -1,12 +1,9 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
-
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"bridgedl/config/file"
 	"bridgedl/core"
@@ -39,7 +36,10 @@ func usageGenerate(cmdName string) string {
 		"to TriggerMesh, and writes them to standard output.\n" +
 		"\n" +
 		"USAGE:\n" +
-		"    " + cmdName + " " + cmdGenerate + " FILE\n"
+		"    " + cmdName + " " + cmdGenerate + " FILE [OPTION]...\n" +
+		"\n" +
+		"OPTIONS:\n" +
+		"    --yaml     Output generated manifests as a sequence of YAML documents.\n"
 }
 
 // usageValidate is a usageFn for the "validate" subcommand.
@@ -87,11 +87,15 @@ type GenericCommand struct {
 
 type GenerateCommand struct {
 	GenericCommand
+
+	// flags
+	yaml bool
 }
 
 // Run implements Command.
 func (c *GenerateCommand) Run(args ...string) error {
 	setUsageFn(c.flagSet, usageGenerate)
+	c.flagSet.BoolVar(&c.yaml, "yaml", false, "")
 
 	pos, flags := splitArgs(1, args)
 	_ = c.flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
@@ -116,27 +120,12 @@ func (c *GenerateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	// NOTE(antoineco): We assume for the time being that all generated
-	// manifests are unstructured.Unstructured objects. This might change
-	// in the future. See translation.Translatable.
-	list := &unstructured.UnstructuredList{}
-	list.SetAPIVersion("v1")
-	list.SetKind("List")
-
-	for _, m := range manifests {
-		list.Items = append(list.Items, *m.(*unstructured.Unstructured))
+	w := writeManifestsJSON
+	if c.yaml {
+		w = writeManifestsYAML
 	}
 
-	b, err := json.MarshalIndent(list, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshaling manifests to JSON: %w", err)
-	}
-
-	if _, err := c.stdout.Write(b); err != nil {
-		return fmt.Errorf("writing generated manifests: %w", err)
-	}
-
-	return nil
+	return w(c.stdout, manifests)
 }
 
 type ValidateCommand struct {
