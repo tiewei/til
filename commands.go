@@ -25,9 +25,9 @@ func usage(cmdName string) string {
 		"    " + cmdName + " <command>\n" +
 		"\n" +
 		"COMMANDS:\n" +
-		"    " + cmdGenerate + "     generate Kubernetes manifests for deploying a Bridge\n" +
-		"    " + cmdValidate + "     validate the syntax of a Bridge Description File\n" +
-		"    " + cmdGraph + "        represent a Bridge as a directed graph in DOT format\n"
+		"    " + cmdGenerate + "     Generate Kubernetes manifests for deploying a Bridge.\n" +
+		"    " + cmdValidate + "     Validate the syntax of a Bridge Description File.\n" +
+		"    " + cmdGraph + "        Represent a Bridge as a directed graph in DOT format.\n"
 }
 
 // usageGenerate is a usageFn for the "generate" subcommand.
@@ -39,7 +39,8 @@ func usageGenerate(cmdName string) string {
 		"    " + cmdName + " " + cmdGenerate + " FILE [OPTION]...\n" +
 		"\n" +
 		"OPTIONS:\n" +
-		"    --yaml     Output generated manifests as a sequence of YAML documents.\n"
+		"    --bridge     Output a Bridge object instead of a List-manifest.\n" +
+		"    --yaml       Output generated manifests in YAML format.\n"
 }
 
 // usageValidate is a usageFn for the "validate" subcommand.
@@ -89,12 +90,14 @@ type GenerateCommand struct {
 	GenericCommand
 
 	// flags
-	yaml bool
+	bridge bool
+	yaml   bool
 }
 
 // Run implements Command.
 func (c *GenerateCommand) Run(args ...string) error {
 	setUsageFn(c.flagSet, usageGenerate)
+	c.flagSet.BoolVar(&c.bridge, "bridge", false, "")
 	c.flagSet.BoolVar(&c.yaml, "yaml", false, "")
 
 	pos, flags := splitArgs(1, args)
@@ -120,9 +123,17 @@ func (c *GenerateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	w := writeManifestsJSON
-	if c.yaml {
+	var w manifestsWriterFunc
+
+	switch {
+	case c.bridge && c.yaml:
+		w = writeBridgeYAML
+	case c.bridge:
+		w = writeBridgeJSON
+	case c.yaml:
 		w = writeManifestsYAML
+	default:
+		w = writeManifestsJSON
 	}
 
 	return w(c.stdout, manifests)

@@ -22,6 +22,14 @@ func TestWriteManifests(t *testing.T) {
 			writerFunc:   writeManifestsYAML,
 			expectOutput: expectOutputYAML,
 		},
+		"JSON Bridge": {
+			writerFunc:   writeBridgeJSON,
+			expectOutput: expectOutputBridgeJSON,
+		},
+		"YAML Bridge": {
+			writerFunc:   writeBridgeYAML,
+			expectOutput: expectOutputBridgeYAML,
+		},
 	}
 
 	for n, tc := range testCases {
@@ -81,6 +89,55 @@ const expectOutputYAML = "" +
 	"kind: Bar\n" +
 	"metadata:\n" +
 	"  name: object-2\n"
+
+const expectOutputBridgeJSON = "" +
+	`{` + "\n" +
+	`  "apiVersion": "flow.triggermesh.io/v1alpha1",` + "\n" +
+	`  "kind": "Bridge",` + "\n" +
+	`  "metadata": {` + "\n" +
+	`    "name": "bridgedl-generated"` + "\n" +
+	`  },` + "\n" +
+	`  "spec": {` + "\n" +
+	`    "components": [` + "\n" +
+	`      {` + "\n" +
+	`        "object": {` + "\n" +
+	`          "apiVersion": "fake/v0",` + "\n" +
+	`          "kind": "Foo",` + "\n" +
+	`          "metadata": {` + "\n" +
+	`            "name": "object-1"` + "\n" +
+	`          }` + "\n" +
+	`        }` + "\n" +
+	`      },` + "\n" +
+	`      {` + "\n" +
+	`        "object": {` + "\n" +
+	`          "apiVersion": "fake/v0",` + "\n" +
+	`          "kind": "Bar",` + "\n" +
+	`          "metadata": {` + "\n" +
+	`            "name": "object-2"` + "\n" +
+	`          }` + "\n" +
+	`        }` + "\n" +
+	`      }` + "\n" +
+	`    ]` + "\n" +
+	`  }` + "\n" +
+	`}` + "\n"
+
+const expectOutputBridgeYAML = "" +
+	"apiVersion: flow.triggermesh.io/v1alpha1\n" +
+	"kind: Bridge\n" +
+	"metadata:\n" +
+	"  name: bridgedl-generated\n" +
+	"spec:\n" +
+	"  components:\n" +
+	"  - object:\n" +
+	"      apiVersion: fake/v0\n" +
+	"      kind: Foo\n" +
+	"      metadata:\n" +
+	"        name: object-1\n" +
+	"  - object:\n" +
+	"      apiVersion: fake/v0\n" +
+	"      kind: Bar\n" +
+	"      metadata:\n" +
+	"        name: object-2\n"
 
 func newUnstructured(apiVersion, kind, name string) *unstructured.Unstructured {
 	o := &unstructured.Unstructured{}
