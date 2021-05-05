@@ -3,6 +3,7 @@ package transformers
 import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"bridgedl/k8s"
 	"bridgedl/translation"
@@ -28,24 +29,21 @@ func (*Bumblebee) Spec() hcldec.Spec {
 				Index: 0,
 				Name:  "operation",
 			},
-			"path": &hcldec.BlockSpec{
+			"path": &hcldec.BlockListSpec{
 				TypeName: "path",
+				MinItems: 1,
 				Nested: &hcldec.ObjectSpec{
 					"key": &hcldec.AttrSpec{
-						Name:     "key",
-						Type:     cty.String,
-						Required: true,
+						Name: "key",
+						Type: cty.String,
 					},
 					"value": &hcldec.AttrSpec{
-						Name:     "value",
-						Type:     cty.String,
-						Required: true,
+						Name: "value",
+						Type: cty.String,
 					},
 				},
-				Required: true,
 			},
 		},
-		MinItems: 1,
 	}
 
 	return &hcldec.ObjectSpec{
@@ -58,36 +56,54 @@ func (*Bumblebee) Spec() hcldec.Spec {
 			Nested:   nestedSpec,
 		},
 	}
-
-	/*
-		Example of value decoded from the spec above, for a "context"
-		and a "data" block, both containing two nested "operation" blocks:
-
-		v: (map[string]interface {}) (len=2) {
-		 "context": ([]interface {}) (len=2) {
-		  (map[string]interface {}) (len=2) {
-		   "operation": (string) "store",
-		   "path": (map[string]interface {}) (len=2) {
-		    "key": (string) "$id",
-		    "value": (string) "id"
-		   }
-		  },
-		  (map[string]interface {}) (len=2) {
-		   "operation": (string) "add",
-		   "path": (map[string]interface {}) (len=2) {
-		    "key": (string) "id",
-		    "value": (string) "${person}-${id}"
-		   }
-		  }
-		 },
-		 "data": ([]interface {}) (len=2) { ... }
-		}
-	*/
 }
 
 // Manifests implements translation.Translatable.
 func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{} {
-	return nil
+	var manifests []interface{}
+
+	s := &unstructured.Unstructured{}
+	s.SetAPIVersion("flow.triggermesh.io/v1alpha1")
+	s.SetKind("Transformation")
+	s.SetName(k8s.RFC1123Name(id))
+
+	context := parseBumblebeeOperations(config.GetAttr("context").AsValueSlice())
+	_ = unstructured.SetNestedSlice(s.Object, context, "spec", "context")
+
+	data := parseBumblebeeOperations(config.GetAttr("data").AsValueSlice())
+	_ = unstructured.SetNestedSlice(s.Object, data, "spec", "data")
+
+	sinkRef := eventDst.GetAttr("ref")
+	sink := map[string]interface{}{
+		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
+		"kind":       sinkRef.GetAttr("kind").AsString(),
+		"name":       sinkRef.GetAttr("name").AsString(),
+	}
+	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+
+	return append(manifests, s)
+}
+
+func parseBumblebeeOperations(values []cty.Value) []interface{} {
+	var operations []interface{}
+	for _, operation := range values {
+		var paths []interface{}
+		for _, path := range operation.AsValueMap()["path"].AsValueSlice() {
+			p := make(map[string]interface{})
+			if key := path.AsValueMap()["key"]; !key.IsNull() {
+				p["key"] = key.AsString()
+			}
+			if value := path.AsValueMap()["value"]; !value.IsNull() {
+				p["value"] = value.AsString()
+			}
+			paths = append(paths, p)
+		}
+		operations = append(operations, map[string]interface{}{
+			"operation": operation.AsValueMap()["operation"].AsString(),
+			"paths":     paths,
+		})
+	}
+	return operations
 }
 
 // Address implements translation.Addressable.
