@@ -13,6 +13,8 @@ complete messaging systems on the TriggerMesh platform.
 For instructions about the usage of the language and its tooling, please refer to the [Wiki][wiki] _(temporary
 location)_.
 
+For a catalog of sample Bridge descriptions, please refer to the [`docs/samples/`](./docs/samples/) directory.
+
 For details about the language specification and other technical documents about the interpreter, please refer to the
 [`docs/`](./docs) directory.
 
