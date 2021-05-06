@@ -12,8 +12,8 @@ import (
 
 	"bridgedl/config/file"
 	"bridgedl/fs"
-	"bridgedl/k8s"
 	. "bridgedl/lang"
+	"bridgedl/lang/k8s"
 )
 
 // List of available fixture files.

@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/k8s"
+	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
 

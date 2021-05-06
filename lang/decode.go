@@ -6,7 +6,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
-	"bridgedl/k8s"
+	"bridgedl/lang/k8s"
 )
 
 // DecodeSafe attempts to decode the given hcl.Body with the information

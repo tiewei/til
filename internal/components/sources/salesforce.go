@@ -6,9 +6,9 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/internal/sdk/validation"
-	"bridgedl/k8s"
 	"bridgedl/translation"
 )
 

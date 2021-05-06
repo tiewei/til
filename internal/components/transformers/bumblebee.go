@@ -5,7 +5,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"bridgedl/k8s"
+	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
 

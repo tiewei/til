@@ -8,8 +8,8 @@ import (
 	"bridgedl/config"
 	"bridgedl/config/addr"
 	"bridgedl/graph"
-	"bridgedl/k8s"
 	"bridgedl/lang"
+	"bridgedl/lang/k8s"
 	"bridgedl/translation"
 )
 

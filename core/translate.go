@@ -6,7 +6,7 @@ import (
 
 	"bridgedl/fs"
 	"bridgedl/graph"
-	"bridgedl/k8s"
+	"bridgedl/lang/k8s"
 	"bridgedl/translation"
 )
 
