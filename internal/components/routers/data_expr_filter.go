@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -38,15 +36,10 @@ func (*DataExprFilter) Spec() hcldec.Spec {
 func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
 	var manifests []interface{}
 
-	name := k8s.RFC1123Name(id)
-
-	filter := &unstructured.Unstructured{}
-	filter.SetAPIVersion("routing.triggermesh.io/v1alpha1")
-	filter.SetKind("Filter")
-	filter.SetName(name)
+	f := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Filter", id)
 
 	expr := config.GetAttr("condition").AsString()
-	_ = unstructured.SetNestedField(filter.Object, expr, "spec", "expression")
+	f.SetNestedField(expr, "spec", "expression")
 
 	sinkRef := config.GetAttr("to").GetAttr("ref")
 
@@ -55,9 +48,9 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(filter.Object, sink, "spec", "sink", "ref")
+	f.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, filter)
+	return append(manifests, f.Unstructured())
 }
 
 // Address implements translation.Addressable.

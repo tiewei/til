@@ -68,21 +68,3 @@ func (o *Object) SetNestedMap(value map[string]interface{}, fields ...string) {
 		panic(err)
 	}
 }
-
-// SetNestedStringSlice invokes unstructured.SetNestedStringSlice on the underlying
-// object's data.
-func (o *Object) SetNestedStringSlice(value []string, fields ...string) {
-	err := unstructured.SetNestedStringSlice(o.u.Object, value, fields...)
-	if err != nil {
-		panic(err)
-	}
-}
-
-// SetNestedStringMap invokes unstructured.SetNestedStringMap on the underlying
-// object's data.
-func (o *Object) SetNestedStringMap(value map[string]string, fields ...string) {
-	err := unstructured.SetNestedStringMap(o.u.Object, value, fields...)
-	if err != nil {
-		panic(err)
-	}
-}

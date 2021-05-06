@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -59,21 +57,16 @@ func (*Splitter) Spec() hcldec.Spec {
 func (*Splitter) Manifests(id string, config, _ cty.Value) []interface{} {
 	var manifests []interface{}
 
-	name := k8s.RFC1123Name(id)
-
-	splitter := &unstructured.Unstructured{}
-	splitter.SetAPIVersion("routing.triggermesh.io/v1alpha1")
-	splitter.SetKind("Splitter")
-	splitter.SetName(name)
+	s := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Splitter", id)
 
 	path := config.GetAttr("path").AsString()
-	_ = unstructured.SetNestedField(splitter.Object, path, "spec", "path")
+	s.SetNestedField(path, "spec", "path")
 
 	typ := config.GetAttr("ce_context").GetAttr("type").AsString()
-	_ = unstructured.SetNestedField(splitter.Object, typ, "spec", "ceContext", "type")
+	s.SetNestedField(typ, "spec", "ceContext", "type")
 
 	src := config.GetAttr("ce_context").GetAttr("source").AsString()
-	_ = unstructured.SetNestedField(splitter.Object, src, "spec", "ceContext", "source")
+	s.SetNestedField(src, "spec", "ceContext", "source")
 
 	if extsVal := config.GetAttr("ce_context").GetAttr("extensions"); !extsVal.IsNull() {
 		exts := make(map[string]interface{}, extsVal.LengthInt())
@@ -82,7 +75,7 @@ func (*Splitter) Manifests(id string, config, _ cty.Value) []interface{} {
 			attr, val := extsIter.Element()
 			exts[attr.AsString()] = val.AsString()
 		}
-		_ = unstructured.SetNestedMap(splitter.Object, exts, "spec", "ceContext", "extensions")
+		s.SetNestedMap(exts, "spec", "ceContext", "extensions")
 	}
 
 	sinkRef := config.GetAttr("to").GetAttr("ref")
@@ -91,9 +84,9 @@ func (*Splitter) Manifests(id string, config, _ cty.Value) []interface{} {
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(splitter.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, splitter)
+	return append(manifests, s.Unstructured())
 }
 
 // Address implements translation.Addressable.
