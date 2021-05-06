@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -94,16 +92,13 @@ func (*Bumblebee) Spec() hcldec.Spec {
 func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	transf := &unstructured.Unstructured{}
-	transf.SetAPIVersion("flow.triggermesh.io/v1alpha1")
-	transf.SetKind("Transformation")
-	transf.SetName(k8s.RFC1123Name(id))
+	t := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Transformation", id)
 
 	context := parseBumblebeeOperations(config.GetAttr("context").AsValueSlice())
-	_ = unstructured.SetNestedSlice(transf.Object, context, "spec", "context")
+	t.SetNestedSlice(context, "spec", "context")
 
 	data := parseBumblebeeOperations(config.GetAttr("data").AsValueSlice())
-	_ = unstructured.SetNestedSlice(transf.Object, data, "spec", "data")
+	t.SetNestedSlice(data, "spec", "data")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -111,9 +106,9 @@ func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{}
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(transf.Object, sink, "spec", "sink", "ref")
+	t.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, transf)
+	return append(manifests, t.Unstructured())
 }
 
 // Address implements translation.Addressable.

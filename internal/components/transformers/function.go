@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -48,19 +46,19 @@ func (*Function) Spec() hcldec.Spec {
 func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("flow.triggermesh.io/v1alpha1")
-	s.SetKind("Function")
-	s.SetName(k8s.RFC1123Name(id))
+	f := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Function", id)
 
 	runtime := config.GetAttr("runtime").AsString()
-	_ = unstructured.SetNestedField(s.Object, runtime, "spec", "runtime")
+	f.SetNestedField(runtime, "spec", "runtime")
+
 	public := config.GetAttr("public").True()
-	_ = unstructured.SetNestedField(s.Object, public, "spec", "public")
+	f.SetNestedField(public, "spec", "public")
+
 	entrypoint := config.GetAttr("entrypoint").AsString()
-	_ = unstructured.SetNestedField(s.Object, entrypoint, "spec", "entrypoint")
+	f.SetNestedField(entrypoint, "spec", "entrypoint")
+
 	code := config.GetAttr("code").AsString()
-	_ = unstructured.SetNestedField(s.Object, code, "spec", "code")
+	f.SetNestedField(code, "spec", "code")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -68,9 +66,9 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	f.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, f.Unstructured())
 }
 
 // Address implements translation.Addressable.
