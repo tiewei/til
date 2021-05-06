@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -38,20 +36,17 @@ func (*Slack) Spec() hcldec.Spec {
 func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("SlackSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "SlackSource", id)
 
 	if v := config.GetAttr("signing_secret"); !v.IsNull() {
 		signingSecretSecretName := v.GetAttr("name").AsString()
 		signingSecret := secrets.SecretKeyRefsSlackApp(signingSecretSecretName)
-		_ = unstructured.SetNestedMap(s.Object, signingSecret, "spec", "signingSecret", "valueFromSecret")
+		s.SetNestedMap(signingSecret, "spec", "signingSecret", "valueFromSecret")
 	}
 
 	appID := config.GetAttr("app_id")
 	if !appID.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, appID.AsString(), "spec", "appID")
+		s.SetNestedField(appID.AsString(), "spec", "appID")
 	}
 
 	sinkRef := eventDst.GetAttr("ref")
@@ -60,7 +55,7 @@ func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

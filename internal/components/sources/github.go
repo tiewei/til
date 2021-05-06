@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -43,26 +41,22 @@ func (*GitHub) Spec() hcldec.Spec {
 func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.knative.dev/v1alpha1")
-	s.SetKind("GitHubSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", id)
 
-	var eventTypes []interface{}
-	eTIter := config.GetAttr("event_types").ElementIterator()
-	for eTIter.Next() {
-		_, srv := eTIter.Element()
-		eventTypes = append(eventTypes, srv.AsString())
+	eventTypesVals := config.GetAttr("event_types").AsValueSlice()
+	eventTypes := make([]interface{}, 0, len(eventTypesVals))
+	for _, v := range eventTypesVals {
+		eventTypes = append(eventTypes, v.AsString())
 	}
-	_ = unstructured.SetNestedSlice(s.Object, eventTypes, "spec", "eventTypes")
+	s.SetNestedSlice(eventTypes, "spec", "eventTypes")
 
 	ownerAndRepository := config.GetAttr("owner_and_repository").AsString()
-	_ = unstructured.SetNestedField(s.Object, ownerAndRepository, "spec", "ownerAndRepository")
+	s.SetNestedField(ownerAndRepository, "spec", "ownerAndRepository")
 
 	tokens := config.GetAttr("tokens").GetAttr("name").AsString()
 	accTokenSecretRef, webhookSecretRef := secrets.SecretKeyRefsGitHub(tokens)
-	_ = unstructured.SetNestedMap(s.Object, accTokenSecretRef, "spec", "accessToken", "secretKeyRef")
-	_ = unstructured.SetNestedMap(s.Object, webhookSecretRef, "spec", "secretToken", "secretKeyRef")
+	s.SetNestedMap(accTokenSecretRef, "spec", "accessToken", "secretKeyRef")
+	s.SetNestedMap(webhookSecretRef, "spec", "secretToken", "secretKeyRef")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -70,7 +64,7 @@ func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -43,22 +41,19 @@ func (*AzureEventHubs) Spec() hcldec.Spec {
 func (*AzureEventHubs) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AzureEventHubSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureEventHubSource", id)
 
 	hubNamespace := config.GetAttr("hub_namespace").AsString()
-	_ = unstructured.SetNestedField(s.Object, hubNamespace, "spec", "hubNamespace")
+	s.SetNestedField(hubNamespace, "spec", "hubNamespace")
 
 	hubName := config.GetAttr("hub_name").AsString()
-	_ = unstructured.SetNestedField(s.Object, hubName, "spec", "hubName")
+	s.SetNestedField(hubName, "spec", "hubName")
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	tenantIDSecretRef, clientIDSecretRef, clientSecrSecretRef := secrets.SecretKeyRefsAzureSP(authSecretName)
-	_ = unstructured.SetNestedMap(s.Object, tenantIDSecretRef, "spec", "auth", "servicePrincipal", "tenantID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
+	s.SetNestedMap(tenantIDSecretRef, "spec", "auth", "servicePrincipal", "tenantID", "valueFromSecret")
+	s.SetNestedMap(clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
+	s.SetNestedMap(clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -66,7 +61,7 @@ func (*AzureEventHubs) Manifests(id string, config, eventDst cty.Value) []interf
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

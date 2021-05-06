@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -48,28 +46,25 @@ func (*AWSCodeCommit) Spec() hcldec.Spec {
 func (*AWSCodeCommit) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AWSCodeCommitSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AWSCodeCommitSource", id)
 
 	arn := config.GetAttr("arn").AsString()
-	_ = unstructured.SetNestedField(s.Object, arn, "spec", "arn")
+	s.SetNestedField(arn, "spec", "arn")
 
 	branch := config.GetAttr("branch").AsString()
-	_ = unstructured.SetNestedField(s.Object, branch, "spec", "branch")
+	s.SetNestedField(branch, "spec", "branch")
 
-	eventTypes := config.GetAttr("event_types").AsValueSlice()
-	var stringSlice []string
-	for _, v := range eventTypes {
-		stringSlice = append(stringSlice, v.AsString())
+	eventTypesVals := config.GetAttr("event_types").AsValueSlice()
+	eventTypes := make([]interface{}, 0, len(eventTypesVals))
+	for _, v := range eventTypesVals {
+		eventTypes = append(eventTypes, v.AsString())
 	}
-	_ = unstructured.SetNestedStringSlice(s.Object, stringSlice, "spec", "eventTypes")
+	s.SetNestedSlice(eventTypes, "spec", "eventTypes")
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
-	_ = unstructured.SetNestedMap(s.Object, accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
+	s.SetNestedMap(accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
+	s.SetNestedMap(secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -77,7 +72,7 @@ func (*AWSCodeCommit) Manifests(id string, config, eventDst cty.Value) []interfa
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

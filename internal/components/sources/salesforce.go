@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/internal/sdk/validation"
@@ -62,31 +60,28 @@ func (*Salesforce) Spec() hcldec.Spec {
 func (*Salesforce) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("SalesforceSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "SalesforceSource", id)
 
 	channel := config.GetAttr("channel").AsString()
-	_ = unstructured.SetNestedField(s.Object, channel, "spec", "subscription", "channel")
+	s.SetNestedField(channel, "spec", "subscription", "channel")
 
 	if v := config.GetAttr("replay_id"); !v.IsNull() {
 		replayID, _ := v.AsBigFloat().Int64()
-		_ = unstructured.SetNestedField(s.Object, replayID, "spec", "subscription", "replayID")
+		s.SetNestedField(replayID, "spec", "subscription", "replayID")
 	}
 
 	clientID := config.GetAttr("client_id").AsString()
-	_ = unstructured.SetNestedField(s.Object, clientID, "spec", "auth", "clientID")
+	s.SetNestedField(clientID, "spec", "auth", "clientID")
 
 	server := config.GetAttr("server").AsString()
-	_ = unstructured.SetNestedField(s.Object, server, "spec", "auth", "server")
+	s.SetNestedField(server, "spec", "auth", "server")
 
 	user := config.GetAttr("user").AsString()
-	_ = unstructured.SetNestedField(s.Object, user, "spec", "auth", "user")
+	s.SetNestedField(user, "spec", "auth", "user")
 
 	secrKeySecretName := config.GetAttr("secret_key").GetAttr("name").AsString()
 	secrKeySecretRef := secrets.SecretKeyRefsSalesforceOAuthJWT(secrKeySecretName)
-	_ = unstructured.SetNestedMap(s.Object, secrKeySecretRef, "spec", "auth", "certKey", "valueFromSecret")
+	s.SetNestedMap(secrKeySecretRef, "spec", "auth", "certKey", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -94,7 +89,7 @@ func (*Salesforce) Manifests(id string, config, eventDst cty.Value) []interface{
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

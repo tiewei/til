@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -48,33 +46,30 @@ func (*AzureActivityLogs) Spec() hcldec.Spec {
 func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AzureActivityLogsSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureActivityLogsSource", id)
 
 	eventHubID := config.GetAttr("event_hub_id").AsString()
-	_ = unstructured.SetNestedField(s.Object, eventHubID, "spec", "eventHubID")
+	s.SetNestedField(eventHubID, "spec", "eventHubID")
 
 	if v := config.GetAttr("event_hubs_sas_policy"); !v.IsNull() {
 		eventHubsSASPolicy := v.AsString()
-		_ = unstructured.SetNestedField(s.Object, eventHubsSASPolicy, "spec", "eventHubsSASPolicy")
+		s.SetNestedField(eventHubsSASPolicy, "spec", "eventHubsSASPolicy")
 	}
 
 	if v := config.GetAttr("categories"); !v.IsNull() {
 		categoriesVals := v.AsValueSlice()
-		categories := make([]string, 0, len(categoriesVals))
+		categories := make([]interface{}, 0, len(categoriesVals))
 		for _, v := range categoriesVals {
 			categories = append(categories, v.AsString())
 		}
-		_ = unstructured.SetNestedStringSlice(s.Object, categories, "spec", "categories")
+		s.SetNestedSlice(categories, "spec", "categories")
 	}
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	tenantIDSecretRef, clientIDSecretRef, clientSecrSecretRef := secrets.SecretKeyRefsAzureSP(authSecretName)
-	_ = unstructured.SetNestedMap(s.Object, tenantIDSecretRef, "spec", "auth", "servicePrincipal", "tenantID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
+	s.SetNestedMap(tenantIDSecretRef, "spec", "auth", "servicePrincipal", "tenantID", "valueFromSecret")
+	s.SetNestedMap(clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
+	s.SetNestedMap(clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -82,7 +77,7 @@ func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value) []int
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

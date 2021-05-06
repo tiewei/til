@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -48,31 +46,28 @@ func (*AzureBlobStorage) Spec() hcldec.Spec {
 func (*AzureBlobStorage) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AzureBlobStorageSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureBlobStorageSource", id)
 
 	storAccID := config.GetAttr("storage_account_id").AsString()
-	_ = unstructured.SetNestedField(s.Object, storAccID, "spec", "storageAccountID")
+	s.SetNestedField(storAccID, "spec", "storageAccountID")
 
 	eventHubID := config.GetAttr("event_hub_id").AsString()
-	_ = unstructured.SetNestedField(s.Object, eventHubID, "spec", "eventHubID")
+	s.SetNestedField(eventHubID, "spec", "eventHubID")
 
 	if v := config.GetAttr("event_types"); !v.IsNull() {
 		eventTypesVals := v.AsValueSlice()
-		eventTypes := make([]string, 0, len(eventTypesVals))
+		eventTypes := make([]interface{}, 0, len(eventTypesVals))
 		for _, v := range eventTypesVals {
 			eventTypes = append(eventTypes, v.AsString())
 		}
-		_ = unstructured.SetNestedStringSlice(s.Object, eventTypes, "spec", "eventTypes")
+		s.SetNestedSlice(eventTypes, "spec", "eventTypes")
 	}
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	tenantIDSecretRef, clientIDSecretRef, clientSecrSecretRef := secrets.SecretKeyRefsAzureSP(authSecretName)
-	_ = unstructured.SetNestedMap(s.Object, tenantIDSecretRef, "spec", "auth", "servicePrincipal", "tenantID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
+	s.SetNestedMap(tenantIDSecretRef, "spec", "auth", "servicePrincipal", "tenantID", "valueFromSecret")
+	s.SetNestedMap(clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
+	s.SetNestedMap(clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -80,7 +75,7 @@ func (*AzureBlobStorage) Manifests(id string, config, eventDst cty.Value) []inte
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

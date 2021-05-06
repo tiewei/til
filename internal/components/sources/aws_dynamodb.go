@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -38,18 +36,15 @@ func (*AWSDynamoDB) Spec() hcldec.Spec {
 func (*AWSDynamoDB) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("AWSDynamoDBSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AWSDynamoDBSource", id)
 
 	arn := config.GetAttr("arn").AsString()
-	_ = unstructured.SetNestedField(s.Object, arn, "spec", "arn")
+	s.SetNestedField(arn, "spec", "arn")
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
-	_ = unstructured.SetNestedMap(s.Object, accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
-	_ = unstructured.SetNestedMap(s.Object, secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
+	s.SetNestedMap(accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
+	s.SetNestedMap(secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -57,7 +52,7 @@ func (*AWSDynamoDB) Manifests(id string, config, eventDst cty.Value) []interface
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

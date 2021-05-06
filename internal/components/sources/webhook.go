@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -47,27 +45,24 @@ func (*Webhook) Spec() hcldec.Spec {
 func (*Webhook) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("WebhookSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "WebhookSource", id)
 
 	eventType := config.GetAttr("event_type").AsString()
-	_ = unstructured.SetNestedField(s.Object, eventType, "spec", "eventType")
+	s.SetNestedField(eventType, "spec", "eventType")
 
 	if v := config.GetAttr("event_source"); !v.IsNull() {
 		eventSource := v.AsString()
-		_ = unstructured.SetNestedField(s.Object, eventSource, "spec", "eventSource")
+		s.SetNestedField(eventSource, "spec", "eventSource")
 	}
 
 	basicAuthUsername := config.GetAttr("basic_auth_username")
 	if !basicAuthUsername.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, basicAuthUsername.AsString(), "spec", "basicAuthUsername")
+		s.SetNestedField(basicAuthUsername.AsString(), "spec", "basicAuthUsername")
 	}
 
 	basicAuthPassword := config.GetAttr("basic_auth_password")
 	if !basicAuthPassword.IsNull() {
-		_ = unstructured.SetNestedField(s.Object, basicAuthPassword.AsString(), "spec", "basicAuthPassword", "value")
+		s.SetNestedField(basicAuthPassword.AsString(), "spec", "basicAuthPassword", "value")
 	}
 
 	sinkRef := eventDst.GetAttr("ref")
@@ -76,7 +71,7 @@ func (*Webhook) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }

@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -53,26 +51,23 @@ func (*Zendesk) Spec() hcldec.Spec {
 func (*Zendesk) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("sources.triggermesh.io/v1alpha1")
-	s.SetKind("ZendeskSource")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "ZendeskSource", id)
 
 	email := config.GetAttr("email").AsString()
-	_ = unstructured.SetNestedField(s.Object, email, "spec", "email")
+	s.SetNestedField(email, "spec", "email")
 
 	subdomain := config.GetAttr("subdomain").AsString()
-	_ = unstructured.SetNestedField(s.Object, subdomain, "spec", "subdomain")
+	s.SetNestedField(subdomain, "spec", "subdomain")
 
 	apiAuthSecretName := config.GetAttr("api_auth").GetAttr("name").AsString()
 	tokenSecretRef := secrets.SecretKeyRefsZendesk(apiAuthSecretName)
-	_ = unstructured.SetNestedMap(s.Object, tokenSecretRef, "spec", "token", "valueFromSecret")
+	s.SetNestedMap(tokenSecretRef, "spec", "token", "valueFromSecret")
 
 	webhookUsername := config.GetAttr("webhook_username").AsString()
-	_ = unstructured.SetNestedField(s.Object, webhookUsername, "spec", "webhookUsername")
+	s.SetNestedField(webhookUsername, "spec", "webhookUsername")
 
 	webhookPassword := config.GetAttr("webhook_password").AsString()
-	_ = unstructured.SetNestedField(s.Object, webhookPassword, "spec", "webhookPassword", "value")
+	s.SetNestedField(webhookPassword, "spec", "webhookPassword", "value")
 
 	sinkRef := eventDst.GetAttr("ref")
 	sink := map[string]interface{}{
@@ -80,7 +75,7 @@ func (*Zendesk) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		"kind":       sinkRef.GetAttr("kind").AsString(),
 		"name":       sinkRef.GetAttr("name").AsString(),
 	}
-	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "sink", "ref")
+	s.SetNestedMap(sink, "spec", "sink", "ref")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }
