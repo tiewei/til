@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -39,19 +37,16 @@ func (*Logz) Spec() hcldec.Spec {
 func (*Logz) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("targets.triggermesh.io/v1alpha1")
-	s.SetKind("LogzTarget")
-	s.SetName(k8s.RFC1123Name(id))
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "LogzTarget", id)
 
 	logsListenerURL := config.GetAttr("logs_listener_url").AsString()
-	_ = unstructured.SetNestedField(s.Object, logsListenerURL, "spec", "logsListenerURL")
+	t.SetNestedField(logsListenerURL, "spec", "logsListenerURL")
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	apiTokenSecretRef := secrets.SecretKeyRefsLogz(authSecretName)
-	_ = unstructured.SetNestedMap(s.Object, apiTokenSecretRef, "spec", "token", "secretKeyRef")
+	t.SetNestedMap(apiTokenSecretRef, "spec", "token", "secretKeyRef")
 
-	return append(manifests, s)
+	return append(manifests, t.Unstructured())
 }
 
 // Address implements translation.Addressable.

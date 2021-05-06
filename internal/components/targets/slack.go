@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -34,16 +32,13 @@ func (*Slack) Spec() hcldec.Spec {
 func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("targets.triggermesh.io/v1alpha1")
-	s.SetKind("SlackTarget")
-	s.SetName(k8s.RFC1123Name(id))
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "SlackTarget", id)
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	apiTokenSecretRef := secrets.SecretKeyRefsSlack(authSecretName)
-	_ = unstructured.SetNestedMap(s.Object, apiTokenSecretRef, "spec", "token", "secretKeyRef")
+	t.SetNestedMap(apiTokenSecretRef, "spec", "token", "secretKeyRef")
 
-	return append(manifests, s)
+	return append(manifests, t.Unstructured())
 }
 
 // Address implements translation.Addressable.

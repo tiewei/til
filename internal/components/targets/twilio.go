@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -44,27 +42,24 @@ func (*Twilio) Spec() hcldec.Spec {
 func (*Twilio) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("targets.triggermesh.io/v1alpha1")
-	s.SetKind("TwilioTarget")
-	s.SetName(k8s.RFC1123Name(id))
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "TwilioTarget", id)
 
 	if v := config.GetAttr("default_phone_from"); !v.IsNull() {
 		defaultPhoneFrom := config.GetAttr("default_phone_from").AsString()
-		_ = unstructured.SetNestedField(s.Object, defaultPhoneFrom, "spec", "defaultPhoneFrom")
+		t.SetNestedField(defaultPhoneFrom, "spec", "defaultPhoneFrom")
 	}
 
 	if v := config.GetAttr("default_phone_to"); !v.IsNull() {
 		defaultPhoneTo := config.GetAttr("default_phone_to").AsString()
-		_ = unstructured.SetNestedField(s.Object, defaultPhoneTo, "spec", "defaultPhoneTo")
+		t.SetNestedField(defaultPhoneTo, "spec", "defaultPhoneTo")
 	}
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	sidSecretRef, tokenSecretRef := secrets.SecretKeyRefsTwilio(authSecretName)
-	_ = unstructured.SetNestedMap(s.Object, sidSecretRef, "spec", "sid", "secretKeyRef")
-	_ = unstructured.SetNestedMap(s.Object, tokenSecretRef, "spec", "token", "secretKeyRef")
+	t.SetNestedMap(sidSecretRef, "spec", "sid", "secretKeyRef")
+	t.SetNestedMap(tokenSecretRef, "spec", "token", "secretKeyRef")
 
-	return append(manifests, s)
+	return append(manifests, t.Unstructured())
 }
 
 // Address implements translation.Addressable.

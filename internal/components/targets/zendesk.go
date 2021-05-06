@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -49,25 +47,22 @@ func (*Zendesk) Spec() hcldec.Spec {
 func (*Zendesk) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("targets.triggermesh.io/v1alpha1")
-	s.SetKind("ZendeskTarget")
-	s.SetName(k8s.RFC1123Name(id))
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "ZendeskTarget", id)
 
 	subject := config.GetAttr("subject").AsString()
-	_ = unstructured.SetNestedField(s.Object, subject, "spec", "subject")
+	t.SetNestedField(subject, "spec", "subject")
 
 	subdomain := config.GetAttr("subdomain").AsString()
-	_ = unstructured.SetNestedField(s.Object, subdomain, "spec", "subdomain")
+	t.SetNestedField(subdomain, "spec", "subdomain")
 
 	email := config.GetAttr("email").AsString()
-	_ = unstructured.SetNestedField(s.Object, email, "spec", "email")
+	t.SetNestedField(email, "spec", "email")
 
 	apiAuthSecretName := config.GetAttr("api_auth").GetAttr("name").AsString()
 	tokenSecretRef := secrets.SecretKeyRefsZendesk(apiAuthSecretName)
-	_ = unstructured.SetNestedMap(s.Object, tokenSecretRef, "spec", "token", "secretKeyRef")
+	t.SetNestedMap(tokenSecretRef, "spec", "token", "secretKeyRef")
 
-	return append(manifests, s)
+	return append(manifests, t.Unstructured())
 }
 
 // Address implements translation.Addressable.

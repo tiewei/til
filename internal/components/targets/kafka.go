@@ -4,8 +4,6 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -43,26 +41,22 @@ func (*Kafka) Spec() hcldec.Spec {
 func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := &unstructured.Unstructured{}
-	s.SetAPIVersion("eventing.knative.dev/v1alpha1")
-	s.SetKind("KafkaSink")
-	s.SetName(k8s.RFC1123Name(id))
+	s := k8s.NewObject("eventing.knative.dev/v1alpha1", "KafkaSink", id)
 
 	topic := config.GetAttr("topic").AsString()
-	_ = unstructured.SetNestedField(s.Object, topic, "spec", "topic")
+	s.SetNestedField(topic, "spec", "topic")
 
-	var bootstrapServers []interface{}
-	bSrvsIter := config.GetAttr("bootstrap_servers").ElementIterator()
-	for bSrvsIter.Next() {
-		_, srv := bSrvsIter.Element()
-		bootstrapServers = append(bootstrapServers, srv.AsString())
+	bootstrapServersVals := config.GetAttr("bootstrap_servers").AsValueSlice()
+	bootstrapServers := make([]interface{}, 0, len(bootstrapServersVals))
+	for _, v := range bootstrapServersVals {
+		bootstrapServers = append(bootstrapServers, v.AsString())
 	}
-	_ = unstructured.SetNestedSlice(s.Object, bootstrapServers, "spec", "bootstrapServers")
+	s.SetNestedSlice(bootstrapServers, "spec", "bootstrapServers")
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
-	_ = unstructured.SetNestedField(s.Object, authSecretName, "spec", "auth", "secret", "ref", "name")
+	s.SetNestedField(authSecretName, "spec", "auth", "secret", "ref", "name")
 
-	return append(manifests, s)
+	return append(manifests, s.Unstructured())
 }
 
 // Address implements translation.Addressable.
