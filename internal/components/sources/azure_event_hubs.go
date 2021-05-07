@@ -55,12 +55,7 @@ func (*AzureEventHubs) Manifests(id string, config, eventDst cty.Value) []interf
 	s.SetNestedMap(clientIDSecretRef, "spec", "auth", "servicePrincipal", "clientID", "valueFromSecret")
 	s.SetNestedMap(clientSecrSecretRef, "spec", "auth", "servicePrincipal", "clientSecret", "valueFromSecret")
 
-	sinkRef := eventDst.GetAttr("ref")
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, s.Unstructured())

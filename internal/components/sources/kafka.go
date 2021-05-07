@@ -99,12 +99,7 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		}
 	}
 
-	sinkRef := eventDst.GetAttr("ref")
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, s.Unstructured())

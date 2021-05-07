@@ -100,12 +100,7 @@ func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{}
 	data := parseBumblebeeOperations(config.GetAttr("data").AsValueSlice())
 	t.SetNestedSlice(data, "spec", "data")
 
-	sinkRef := eventDst.GetAttr("ref")
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := k8s.DecodeDestination(eventDst)
 	t.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, t.Unstructured())

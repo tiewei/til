@@ -60,12 +60,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 	code := config.GetAttr("code").AsString()
 	f.SetNestedField(code, "spec", "code")
 
-	sinkRef := eventDst.GetAttr("ref")
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := k8s.DecodeDestination(eventDst)
 	f.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, f.Unstructured())

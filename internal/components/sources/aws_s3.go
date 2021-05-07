@@ -65,12 +65,7 @@ func (*AWSS3) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	s.SetNestedMap(accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
 	s.SetNestedMap(secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
 
-	sinkRef := eventDst.GetAttr("ref")
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, s.Unstructured())

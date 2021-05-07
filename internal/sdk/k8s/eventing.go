@@ -10,6 +10,24 @@ const (
 	APIMessaging = "messaging.knative.dev/v1"
 )
 
+// DecodeDestination returns a JSON-serializable representation of a the given
+// k8s.DestinationCty, in a format that is compatible with the "unstructured"
+// package from k8s.io/apimachinery.
+// Panics if the receiver is not a non-null k8s.DestinationCty.
+//
+// This helper is intended to be used for populating "sink" attributes, or
+// other attributes with similar semantics.
+func DecodeDestination(dst cty.Value) map[string]interface{} {
+	dstRef := dst.GetAttr("ref")
+	out := map[string]interface{}{
+		"apiVersion": dstRef.GetAttr("apiVersion").AsString(),
+		"kind":       dstRef.GetAttr("kind").AsString(),
+		"name":       dstRef.GetAttr("name").AsString(),
+	}
+
+	return out
+}
+
 // NewBroker returns a new Knative Broker.
 func NewBroker(name string) *unstructured.Unstructured {
 	b := &unstructured.Unstructured{}
@@ -31,13 +49,7 @@ func NewTrigger(name, broker string, dst cty.Value, filter map[string]interface{
 
 	_ = unstructured.SetNestedField(t.Object, broker, "spec", "broker")
 
-	sinkRef := dst.GetAttr("ref")
-
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := DecodeDestination(dst)
 	_ = unstructured.SetNestedMap(t.Object, sink, "spec", "subscriber", "ref")
 
 	if len(filter) != 0 {
@@ -73,23 +85,11 @@ func NewSubscription(name, channel string, dst, replyDst cty.Value) *unstructure
 	}
 	_ = unstructured.SetNestedMap(s.Object, ch, "spec", "channel")
 
-	sinkRef := dst.GetAttr("ref")
-
-	sink := map[string]interface{}{
-		"apiVersion": sinkRef.GetAttr("apiVersion").AsString(),
-		"kind":       sinkRef.GetAttr("kind").AsString(),
-		"name":       sinkRef.GetAttr("name").AsString(),
-	}
+	sink := DecodeDestination(dst)
 	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "subscriber", "ref")
 
-	replyRef := replyDst.GetAttr("ref")
-
-	if !replyRef.IsNull() {
-		reply := map[string]interface{}{
-			"apiVersion": replyRef.GetAttr("apiVersion").AsString(),
-			"kind":       replyRef.GetAttr("kind").AsString(),
-			"name":       replyRef.GetAttr("name").AsString(),
-		}
+	if !replyDst.IsNull() {
+		reply := DecodeDestination(replyDst)
 		_ = unstructured.SetNestedMap(s.Object, reply, "spec", "reply", "ref")
 	}
 
