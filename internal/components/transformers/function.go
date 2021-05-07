@@ -62,6 +62,13 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		code := config.GetAttr("code").AsString()
 		_ = unstructured.SetNestedField(s.Object, code, "spec", "script", "code")
 
+		name := k8s.RFC1123Name(id)
+		if !eventDst.IsNull() {
+			ch := k8s.NewChannel(name)
+			subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIServing, "Service", name), eventDst)
+			manifests = append(manifests, ch, subs)
+		}
+
 		return append(manifests, s)
 	}
 
