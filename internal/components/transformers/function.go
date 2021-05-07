@@ -88,6 +88,12 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 }
 
 // Address implements translation.Addressable.
-func (*Function) Address(id string, _, _ cty.Value) cty.Value {
+func (*Function) Address(id string, config, _ cty.Value) cty.Value {
+
+	runtime := config.GetAttr("runtime").AsString()
+
+	if runtime == "js" {
+		return k8s.NewDestination("targets.triggermesh.io/v1alpha1", "InfraTarget", k8s.RFC1123Name(id))
+	}
 	return k8s.NewDestination("flow.triggermesh.io/v1alpha1", "Function", k8s.RFC1123Name(id))
 }
