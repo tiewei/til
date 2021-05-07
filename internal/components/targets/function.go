@@ -24,20 +24,20 @@ func (*Function) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"public": &hcldec.AttrSpec{
-			Name:     "public",
-			Type:     cty.Bool,
-			Required: false,
-		},
-		"entrypoint": &hcldec.AttrSpec{
-			Name:     "entrypoint",
-			Type:     cty.String,
-			Required: true,
-		},
 		"code": &hcldec.AttrSpec{
 			Name:     "code",
 			Type:     cty.String,
 			Required: true,
+		},
+		"entrypoint": &hcldec.AttrSpec{
+			Name:     "entrypoint",
+			Type:     cty.String,
+			Required: false,
+		},
+		"public": &hcldec.AttrSpec{
+			Name:     "public",
+			Type:     cty.Bool,
+			Required: false,
 		},
 	}
 }
@@ -51,14 +51,17 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 	runtime := config.GetAttr("runtime").AsString()
 	f.SetNestedField(runtime, "spec", "runtime")
 
-	public := config.GetAttr("public").True()
-	f.SetNestedField(public, "spec", "public")
-
-	entrypoint := config.GetAttr("entrypoint").AsString()
-	f.SetNestedField(entrypoint, "spec", "entrypoint")
-
 	code := config.GetAttr("code").AsString()
 	f.SetNestedField(code, "spec", "code")
+
+	entrypoint := "main"
+	if v := config.GetAttr("entrypoint"); !v.IsNull() {
+		entrypoint = v.AsString()
+	}
+	f.SetNestedField(entrypoint, "spec", "entrypoint")
+
+	public := config.GetAttr("public").True()
+	f.SetNestedField(public, "spec", "public")
 
 	return append(manifests, f.Unstructured())
 }

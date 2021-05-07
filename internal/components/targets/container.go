@@ -91,10 +91,12 @@ func (*Container) Manifests(id string, config, eventDst cty.Value) []interface{}
 
 // Address implements translation.Addressable.
 func (*Container) Address(id string, _, eventDst cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
 	if eventDst.IsNull() {
-		return k8s.NewDestination(k8s.APIServing, "Service", k8s.RFC1123Name(id))
+		return k8s.NewDestination(k8s.APIServing, "Service", name)
 	}
-	return k8s.NewDestination(k8s.APIMessaging, "Channel", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }
 
 func validateContainerAttrEnvVars(val cty.Value) hcl.Diagnostics {
