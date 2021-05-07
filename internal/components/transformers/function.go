@@ -3,6 +3,7 @@ package transformers
 import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
@@ -32,7 +33,7 @@ func (*Function) Spec() hcldec.Spec {
 		"entrypoint": &hcldec.AttrSpec{
 			Name:     "entrypoint",
 			Type:     cty.String,
-			Required: true,
+			Required: false,
 		},
 		"code": &hcldec.AttrSpec{
 			Name:     "code",
@@ -50,6 +51,19 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 	runtime := config.GetAttr("runtime").AsString()
 	f.SetNestedField(runtime, "spec", "runtime")
+
+	if runtime == "js" {
+
+		s := &unstructured.Unstructured{}
+		s.SetAPIVersion("targets.triggermesh.io/v1alpha1")
+		s.SetKind("InfraTarget")
+		s.SetName(k8s.RFC1123Name(id))
+
+		code := config.GetAttr("code").AsString()
+		_ = unstructured.SetNestedField(s.Object, code, "spec", "script", "code")
+
+		return append(manifests, s)
+	}
 
 	public := config.GetAttr("public").True()
 	f.SetNestedField(public, "spec", "public")

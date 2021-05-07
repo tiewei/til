@@ -4,5 +4,4 @@ package transformers
 var All = map[string]interface{}{
 	"bumblebee": (*Bumblebee)(nil),
 	"function":  (*Function)(nil),
-	"infrajs":   (*Infra)(nil),
 }
