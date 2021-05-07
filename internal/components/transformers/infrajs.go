@@ -1,4 +1,4 @@
-package targets
+package transformers
 
 import (
 	"github.com/hashicorp/hcl/v2/hcldec"
