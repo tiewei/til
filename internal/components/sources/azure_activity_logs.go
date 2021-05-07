@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -57,11 +58,7 @@ func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value) []int
 	}
 
 	if v := config.GetAttr("categories"); !v.IsNull() {
-		categoriesVals := v.AsValueSlice()
-		categories := make([]interface{}, 0, len(categoriesVals))
-		for _, v := range categoriesVals {
-			categories = append(categories, v.AsString())
-		}
+		categories := sdk.DecodeStringSlice(v)
 		s.SetNestedSlice(categories, "spec", "categories")
 	}
 

@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -43,11 +44,7 @@ func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
 
 	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", id)
 
-	eventTypesVals := config.GetAttr("event_types").AsValueSlice()
-	eventTypes := make([]interface{}, 0, len(eventTypesVals))
-	for _, v := range eventTypesVals {
-		eventTypes = append(eventTypes, v.AsString())
-	}
+	eventTypes := sdk.DecodeStringSlice(config.GetAttr("event_types"))
 	s.SetNestedSlice(eventTypes, "spec", "eventTypes")
 
 	ownerAndRepository := config.GetAttr("owner_and_repository").AsString()

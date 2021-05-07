@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -46,11 +47,7 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	topic := config.GetAttr("topic").AsString()
 	s.SetNestedField(topic, "spec", "topic")
 
-	bootstrapServersVals := config.GetAttr("bootstrap_servers").AsValueSlice()
-	bootstrapServers := make([]interface{}, 0, len(bootstrapServersVals))
-	for _, v := range bootstrapServersVals {
-		bootstrapServers = append(bootstrapServers, v.AsString())
-	}
+	bootstrapServers := sdk.DecodeStringSlice(config.GetAttr("bootstrap_servers"))
 	s.SetNestedSlice(bootstrapServers, "spec", "bootstrapServers")
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()

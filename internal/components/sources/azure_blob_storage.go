@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -55,11 +56,7 @@ func (*AzureBlobStorage) Manifests(id string, config, eventDst cty.Value) []inte
 	s.SetNestedField(eventHubID, "spec", "eventHubID")
 
 	if v := config.GetAttr("event_types"); !v.IsNull() {
-		eventTypesVals := v.AsValueSlice()
-		eventTypes := make([]interface{}, 0, len(eventTypesVals))
-		for _, v := range eventTypesVals {
-			eventTypes = append(eventTypes, v.AsString())
-		}
+		eventTypes := sdk.DecodeStringSlice(v)
 		s.SetNestedSlice(eventTypes, "spec", "eventTypes")
 	}
 
