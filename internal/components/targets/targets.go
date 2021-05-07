@@ -10,6 +10,7 @@ var All = map[string]interface{}{
 	"container":      (*Container)(nil),
 	"function":       (*Function)(nil),
 	"gcloud_storage": (*GCloudStorage)(nil),
+	"infrajs":        (*Infra)(nil),
 	"kafka":          (*Kafka)(nil),
 	"logz":           (*Logz)(nil),
 	"slack":          (*Slack)(nil),
