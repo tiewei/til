@@ -39,6 +39,24 @@ func (*Function) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"ce_context": &hcldec.BlockSpec{
+			TypeName: "ce_context",
+			Nested: &hcldec.ObjectSpec{
+				"type": &hcldec.AttrSpec{
+					Name:     "type",
+					Type:     cty.String,
+					Required: true,
+				},
+				"source": &hcldec.AttrSpec{
+					Name: "source",
+					Type: cty.String,
+				},
+				"subject": &hcldec.AttrSpec{
+					Name: "subject",
+					Type: cty.String,
+				},
+			},
+		},
 	}
 }
 
@@ -76,6 +94,18 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 			entrypoint = v.AsString()
 		}
 		f.SetNestedField(entrypoint, "spec", "entrypoint")
+
+		if extsVal := config.GetAttr("ce_context"); !extsVal.IsNull() {
+			exts := make(map[string]interface{}, extsVal.LengthInt())
+			extsIter := extsVal.ElementIterator()
+			for extsIter.Next() {
+				attr, val := extsIter.Element()
+				if !val.IsNull() {
+					exts[attr.AsString()] = val.AsString()
+				}
+			}
+			f.SetNestedMap(exts, "spec", "ceOverrides", "extensions")
+		}
 
 		sink := k8s.DecodeDestination(eventDst)
 		f.SetNestedMap(sink, "spec", "sink", "ref")
