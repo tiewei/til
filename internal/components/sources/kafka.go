@@ -111,7 +111,7 @@ func validateKafkaAttrTLS(val cty.Value) hcl.Diagnostics {
 	if !(k8s.IsObjectReference(val) || val.Type() == cty.Bool) {
 		diags = diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,
-			Summary:  "Invalid attributes type",
+			Summary:  "Invalid attribute type",
 			Detail:   `The "tls" attribute accepts either a secret reference or a boolean.`,
 		})
 	}

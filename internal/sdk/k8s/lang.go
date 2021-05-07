@@ -11,3 +11,5 @@ var DestinationCty = k8s.DestinationCty
 
 var ObjectReferenceCty = k8s.ObjectReferenceCty
 var IsObjectReference = k8s.IsObjectReference
+
+var IsSecretKeySelector = k8s.IsSecretKeySelector

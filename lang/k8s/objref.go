@@ -27,3 +27,28 @@ func NewObjectReference(name string) cty.Value {
 func IsObjectReference(v cty.Value) bool {
 	return v.Type().Equals(ObjectReferenceCty)
 }
+
+// SecretKeySelectorCty is a non-primitive cty.Type that represents a Kubernetes
+// corev1.SecretKeySelector.
+//
+// It can be used to indicate that the value of an environment variable should
+// be read from a Kubernetes Secret.
+var SecretKeySelectorCty = cty.Object(map[string]cty.Type{
+	"name": cty.String,
+	"key":  cty.String,
+})
+
+// NewSecretKeySelector returns a new Kubernetes corev1.SecretKeySelector as a
+// cty.Value which satisfies the SecretKeySelectorCty type.
+func NewSecretKeySelector(name, key string) cty.Value {
+	return cty.ObjectVal(map[string]cty.Value{
+		"name": cty.StringVal(name),
+		"key":  cty.StringVal(key),
+	})
+}
+
+// IsSecretKeySelector verifies that the given cty.Value conforms to the
+// SecretKeySelectorCty type.
+func IsSecretKeySelector(v cty.Value) bool {
+	return v.Type().Equals(SecretKeySelectorCty)
+}

@@ -14,5 +14,6 @@ func Functions(basedir string, fs fs.FS) map[string]function.Function {
 	return map[string]function.Function{
 		"file":        funcs.FileFunc(basedir, fs),
 		"secret_name": funcs.SecretNameFunc(),
+		"secret_ref":  funcs.SecretRefFunc(),
 	}
 }

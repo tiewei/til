@@ -1,6 +1,7 @@
 package targets
 
 import (
+	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
@@ -29,6 +30,26 @@ func (*Container) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"env_vars": &hcldec.ValidateSpec{
+			Wrapped: &hcldec.AttrSpec{
+				Name:     "env_vars",
+				Type:     cty.Map(cty.DynamicPseudoType),
+				Required: false,
+			},
+			Func: validateContainerAttrEnvVars,
+		},
+		"env_var": &hcldec.BlockObjectSpec{
+			TypeName:   "env_var",
+			LabelNames: []string{"name"},
+			Nested: &hcldec.ValidateSpec{
+				Wrapped: &hcldec.AttrSpec{
+					Name:     "value",
+					Type:     cty.DynamicPseudoType,
+					Required: true,
+				},
+				Func: validateContainerAttrEnvVars,
+			},
+		},
 	}
 }
 
@@ -40,7 +61,23 @@ func (*Container) Manifests(id string, config, eventDst cty.Value) []interface{}
 
 	img := config.GetAttr("image").AsString()
 	public := config.GetAttr("public").True()
-	ksvc := k8s.NewKnService(name, img, public)
+
+	envVars := make(map[string]cty.Value)
+	// Compact syntax (map)
+	if v := config.GetAttr("env_vars"); !v.IsNull() {
+		for name, value := range v.AsValueMap() {
+			envVars[name] = value
+		}
+	}
+	// Verbose syntax (block)
+	for name, value := range config.GetAttr("env_var").AsValueMap() {
+		envVars[name] = value
+	}
+
+	var ksvcOpts []k8s.KnServiceOption
+	ksvcOpts = append(ksvcOpts, k8s.EnvVars(envVars))
+
+	ksvc := k8s.NewKnService(name, img, public, ksvcOpts...)
 	manifests = append(manifests, ksvc)
 
 	if !eventDst.IsNull() {
@@ -58,4 +95,39 @@ func (*Container) Address(id string, _, eventDst cty.Value) cty.Value {
 		return k8s.NewDestination(k8s.APIServing, "Service", k8s.RFC1123Name(id))
 	}
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", k8s.RFC1123Name(id))
+}
+
+func validateContainerAttrEnvVars(val cty.Value) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	switch {
+	case val.IsNull():
+		return diags
+
+	case val.CanIterateElements():
+		envVarsIter := val.ElementIterator()
+		for envVarsIter.Next() {
+			_, v := envVarsIter.Element()
+			diags = diags.Extend(validateContainerAttrEnvVar(v))
+		}
+
+	default:
+		diags = diags.Extend(validateContainerAttrEnvVar(val))
+	}
+
+	return diags
+}
+
+func validateContainerAttrEnvVar(val cty.Value) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	if !(k8s.IsSecretKeySelector(val) || val.Type() == cty.String) {
+		diags = diags.Append(&hcl.Diagnostic{
+			Severity: hcl.DiagError,
+			Summary:  "Invalid value type",
+			Detail:   "The value of an environment variable must be either a secret reference or a string.",
+		})
+	}
+
+	return diags
 }
