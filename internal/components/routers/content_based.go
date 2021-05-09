@@ -29,7 +29,7 @@ func (*ContentBased) Spec() hcldec.Spec {
 			"attributes": &hcldec.AttrSpec{
 				Name:     "attributes",
 				Type:     cty.Map(cty.String),
-				Required: true,
+				Required: false,
 			},
 			"to": &hcldec.AttrSpec{
 				Name:     "to",
@@ -114,6 +114,9 @@ func (*ContentBased) Address(id string, _, _ cty.Value) cty.Value {
 
 func attributesFromRoute(route cty.Value) map[string]interface{} {
 	routeAttr := route.GetAttr("attributes")
+	if routeAttr.IsNull() {
+		return nil
+	}
 
 	filterAttr := make(map[string]interface{}, routeAttr.LengthInt())
 

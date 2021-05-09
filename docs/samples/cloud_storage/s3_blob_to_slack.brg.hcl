@@ -87,7 +87,6 @@ router "content_based" "dispatch" {
   }
 
   route {
-    attributes = {}
     to = target.sockeye
   }
 
