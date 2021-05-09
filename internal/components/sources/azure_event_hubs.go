@@ -41,7 +41,7 @@ func (*AzureEventHubs) Spec() hcldec.Spec {
 func (*AzureEventHubs) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureEventHubSource", id)
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureEventHubSource", k8s.RFC1123Name(id))
 
 	hubNamespace := config.GetAttr("hub_namespace").AsString()
 	s.SetNestedField(hubNamespace, "spec", "hubNamespace")

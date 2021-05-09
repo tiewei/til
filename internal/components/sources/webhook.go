@@ -45,7 +45,7 @@ func (*Webhook) Spec() hcldec.Spec {
 func (*Webhook) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "WebhookSource", id)
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "WebhookSource", k8s.RFC1123Name(id))
 
 	eventType := config.GetAttr("event_type").AsString()
 	s.SetNestedField(eventType, "spec", "eventType")

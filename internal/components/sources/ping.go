@@ -44,7 +44,7 @@ func (*Ping) Manifests(id string, config, eventDst cty.Value) []interface{} {
 
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.knative.dev/v1beta2", "PingSource", id)
+	s := k8s.NewObject("sources.knative.dev/v1beta2", "PingSource", k8s.RFC1123Name(id))
 
 	schedule := defaultSchedule
 	if v := config.GetAttr("schedule"); !v.IsNull() {

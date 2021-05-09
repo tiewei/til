@@ -47,7 +47,7 @@ func (*AWSCodeCommit) Spec() hcldec.Spec {
 func (*AWSCodeCommit) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AWSCodeCommitSource", id)
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AWSCodeCommitSource", k8s.RFC1123Name(id))
 
 	arn := config.GetAttr("arn").AsString()
 	s.SetNestedField(arn, "spec", "arn")

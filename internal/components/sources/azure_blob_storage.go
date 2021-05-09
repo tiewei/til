@@ -47,7 +47,7 @@ func (*AzureBlobStorage) Spec() hcldec.Spec {
 func (*AzureBlobStorage) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureBlobStorageSource", id)
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureBlobStorageSource", k8s.RFC1123Name(id))
 
 	storAccID := config.GetAttr("storage_account_id").AsString()
 	s.SetNestedField(storAccID, "spec", "storageAccountID")

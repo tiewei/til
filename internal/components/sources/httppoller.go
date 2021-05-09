@@ -50,7 +50,7 @@ func (*HTTPPoller) Spec() hcldec.Spec {
 func (*HTTPPoller) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "HTTPPollerSource", id)
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "HTTPPollerSource", k8s.RFC1123Name(id))
 
 	eventType := config.GetAttr("event_type").AsString()
 	s.SetNestedField(eventType, "spec", "eventType")

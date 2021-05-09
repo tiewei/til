@@ -57,7 +57,7 @@ func (*Splitter) Spec() hcldec.Spec {
 func (*Splitter) Manifests(id string, config, _ cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Splitter", id)
+	s := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Splitter", k8s.RFC1123Name(id))
 
 	path := config.GetAttr("path").AsString()
 	s.SetNestedField(path, "spec", "path")

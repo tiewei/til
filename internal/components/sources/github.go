@@ -42,7 +42,7 @@ func (*GitHub) Spec() hcldec.Spec {
 func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", id)
+	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", k8s.RFC1123Name(id))
 
 	eventTypes := sdk.DecodeStringSlice(config.GetAttr("event_types"))
 	s.SetNestedSlice(eventTypes, "spec", "eventTypes")

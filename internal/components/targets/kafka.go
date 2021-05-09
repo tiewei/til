@@ -42,7 +42,7 @@ func (*Kafka) Spec() hcldec.Spec {
 func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("eventing.knative.dev/v1alpha1", "KafkaSink", id)
+	s := k8s.NewObject("eventing.knative.dev/v1alpha1", "KafkaSink", k8s.RFC1123Name(id))
 
 	topic := config.GetAttr("topic").AsString()
 	s.SetNestedField(topic, "spec", "topic")

@@ -46,7 +46,7 @@ func (*Function) Spec() hcldec.Spec {
 func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	f := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Function", id)
+	f := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Function", k8s.RFC1123Name(id))
 
 	runtime := config.GetAttr("runtime").AsString()
 	f.SetNestedField(runtime, "spec", "runtime")

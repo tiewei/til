@@ -47,7 +47,7 @@ func (*AWSS3) Spec() hcldec.Spec {
 func (*AWSS3) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AWSS3Source", id)
+	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AWSS3Source", k8s.RFC1123Name(id))
 
 	arn := config.GetAttr("arn").AsString()
 	s.SetNestedField(arn, "spec", "arn")

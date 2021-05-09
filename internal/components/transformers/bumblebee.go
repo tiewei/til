@@ -92,7 +92,7 @@ func (*Bumblebee) Spec() hcldec.Spec {
 func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Transformation", id)
+	t := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Transformation", k8s.RFC1123Name(id))
 
 	context := parseBumblebeeOperations(config.GetAttr("context").AsValueSlice())
 	t.SetNestedSlice(context, "spec", "context")

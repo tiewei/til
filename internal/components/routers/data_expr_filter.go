@@ -36,7 +36,7 @@ func (*DataExprFilter) Spec() hcldec.Spec {
 func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
 	var manifests []interface{}
 
-	f := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Filter", id)
+	f := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Filter", k8s.RFC1123Name(id))
 
 	expr := config.GetAttr("condition").AsString()
 	f.SetNestedField(expr, "spec", "expression")

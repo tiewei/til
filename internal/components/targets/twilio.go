@@ -42,7 +42,7 @@ func (*Twilio) Spec() hcldec.Spec {
 func (*Twilio) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "TwilioTarget", id)
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "TwilioTarget", k8s.RFC1123Name(id))
 
 	if v := config.GetAttr("default_phone_from"); !v.IsNull() {
 		defaultPhoneFrom := config.GetAttr("default_phone_from").AsString()

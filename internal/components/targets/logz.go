@@ -37,7 +37,7 @@ func (*Logz) Spec() hcldec.Spec {
 func (*Logz) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "LogzTarget", id)
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "LogzTarget", k8s.RFC1123Name(id))
 
 	logsListenerURL := config.GetAttr("logs_listener_url").AsString()
 	t.SetNestedField(logsListenerURL, "spec", "logsListenerURL")

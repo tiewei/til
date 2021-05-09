@@ -37,7 +37,7 @@ func (*GCloudStorage) Spec() hcldec.Spec {
 func (*GCloudStorage) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "GoogleCloudStorageTarget", id)
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "GoogleCloudStorageTarget", k8s.RFC1123Name(id))
 
 	bucketName := config.GetAttr("bucket_name").AsString()
 	t.SetNestedField(bucketName, "spec", "bucketName")

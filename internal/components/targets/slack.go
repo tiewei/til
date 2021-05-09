@@ -32,7 +32,7 @@ func (*Slack) Spec() hcldec.Spec {
 func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "SlackTarget", id)
+	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "SlackTarget", k8s.RFC1123Name(id))
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	apiTokenSecretRef := secrets.SecretKeyRefsSlack(authSecretName)

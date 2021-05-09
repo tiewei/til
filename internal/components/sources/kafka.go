@@ -56,7 +56,7 @@ func (*Kafka) Spec() hcldec.Spec {
 func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.knative.dev/v1beta1", "KafkaSource", id)
+	s := k8s.NewObject("sources.knative.dev/v1beta1", "KafkaSource", k8s.RFC1123Name(id))
 
 	if v := config.GetAttr("consumer_group"); !v.IsNull() {
 		consumerGroup := v.AsString()
