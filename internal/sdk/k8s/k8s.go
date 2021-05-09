@@ -1,9 +1,11 @@
 package k8s
 
 import (
+	"fmt"
 	"strings"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/util/validation"
 )
 
 // RFC1123Name sanitizes the given input string, ensuring it is a valid DNS
@@ -17,6 +19,17 @@ func RFC1123Name(id string) string {
 	return strings.ToLower(strings.ReplaceAll(id, "_", "-"))
 }
 
+// validateDNS1123Subdomain panics if the given value is not a valid Kubernetes
+// object name.
+// It is intended to be used inside constructors for throwing loud errors
+// whenever component implementations forget to sanitize their input.
+func validateDNS1123Subdomain(v string) {
+	errs := validation.IsDNS1123Subdomain(v)
+	if len(errs) > 0 {
+		panic(fmt.Errorf("%q is not a valid Kubernetes object name: %v", v, errs))
+	}
+}
+
 // Object wraps an instance of unstructured.Unstructured to expose convenience
 // field setters.
 type Object struct {
@@ -24,15 +37,18 @@ type Object struct {
 }
 
 // NewObject returns an Object initialized with the given group/version, kind
-// and identifier.
-func NewObject(apiVersion, kind, id string) *Object {
+// and name.
+// Panics if the name parameter is not a valid Kubernetes object name.
+func NewObject(apiVersion, kind, name string) *Object {
+	validateDNS1123Subdomain(name)
+
 	o := &Object{
 		u: &unstructured.Unstructured{},
 	}
 
 	o.u.SetAPIVersion(apiVersion)
 	o.u.SetKind(kind)
-	o.u.SetName(RFC1123Name(id))
+	o.u.SetName(name)
 
 	return o
 }

@@ -6,6 +6,8 @@ const APIServing = "serving.knative.dev/v1"
 
 // NewKnService returns a new Knative Service.
 func NewKnService(name, image string, public bool) *unstructured.Unstructured {
+	validateDNS1123Subdomain(name)
+
 	s := &unstructured.Unstructured{}
 
 	s.SetAPIVersion(APIServing)

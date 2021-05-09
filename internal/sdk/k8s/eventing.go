@@ -41,6 +41,8 @@ func NewBroker(name string) *unstructured.Unstructured {
 
 // NewTrigger returns a new Knative Trigger.
 func NewTrigger(name, broker string, dst cty.Value, filter map[string]interface{}) *unstructured.Unstructured {
+	validateDNS1123Subdomain(name)
+
 	t := &unstructured.Unstructured{}
 
 	t.SetAPIVersion(APIEventing)
@@ -61,17 +63,21 @@ func NewTrigger(name, broker string, dst cty.Value, filter map[string]interface{
 
 // NewChannel returns a new Knative Channel.
 func NewChannel(name string) *unstructured.Unstructured {
-	s := &unstructured.Unstructured{}
+	validateDNS1123Subdomain(name)
 
-	s.SetAPIVersion(APIMessaging)
-	s.SetKind("Channel")
-	s.SetName(name)
+	c := &unstructured.Unstructured{}
 
-	return s
+	c.SetAPIVersion(APIMessaging)
+	c.SetKind("Channel")
+	c.SetName(name)
+
+	return c
 }
 
 // NewSubscription returns a new Knative Subscription.
 func NewSubscription(name, channel string, dst, replyDst cty.Value) *unstructured.Unstructured {
+	validateDNS1123Subdomain(name)
+
 	s := &unstructured.Unstructured{}
 
 	s.SetAPIVersion(APIMessaging)

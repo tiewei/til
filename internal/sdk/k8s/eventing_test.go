@@ -66,11 +66,3 @@ func TestDecodeDestination(t *testing.T) {
 		})
 	}
 }
-
-func handlePanic(t *testing.T, expectPanic bool) {
-	t.Helper()
-
-	if r := recover(); r != nil && !expectPanic {
-		t.Fatal("Unexpected panic:", r)
-	}
-}
