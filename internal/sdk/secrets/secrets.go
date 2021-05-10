@@ -32,6 +32,11 @@ func SecretKeyRefsBasicAuth(secretName string) (user, passwd secretKeySelector) 
 		newSecretKeySelector(secretName, secrClassBasicAuthPasswd)
 }
 
+// SecretKeyRefsDatadog returns secret key selectors for the "datadog" secret class.
+func SecretKeyRefsDatadog(secretName string) (key secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassDatadogAPIKey)
+}
+
 // SecretKeyRefsGCloudServiceAccount returns secret key selectors for the "gcloud_service_account" secret class.
 func SecretKeyRefsGCloudServiceAccount(secretName string) (key secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassGCloudSvcAccountKey)

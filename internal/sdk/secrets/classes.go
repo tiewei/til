@@ -23,6 +23,11 @@ const (
 	secrClassBasicAuthPasswd = "password"
 )
 
+// Secret class "datadog"
+const (
+	secrClassDatadogAPIKey = "apiKey"
+)
+
 // Secret class "gcloud_service_account"
 const (
 	secrClassGCloudSvcAccountKey = "key.json"

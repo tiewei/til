@@ -8,6 +8,7 @@ var All = map[string]interface{}{
 	"aws_sns":        (*AWSSNS)(nil),
 	"aws_sqs":        (*AWSSQS)(nil),
 	"container":      (*Container)(nil),
+	"datadog":        (*Datadog)(nil),
 	"function":       (*Function)(nil),
 	"gcloud_storage": (*GCloudStorage)(nil),
 	"kafka":          (*Kafka)(nil),
