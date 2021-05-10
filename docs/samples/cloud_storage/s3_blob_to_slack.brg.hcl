@@ -107,8 +107,6 @@ transformer "function" "s3_slack_message" {
     }
   EOF
 
-  entrypoint = "main"
-
   to = target.chat_notifications
 }
 
