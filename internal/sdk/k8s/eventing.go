@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	APIEventing  = "eventing.knative.dev/v1"
-	APIMessaging = "messaging.knative.dev/v1"
+	APIEventing         = "eventing.knative.dev/v1"
+	APIEventingV1Alpha1 = "eventing.knative.dev/v1alpha1"
+	APIMessaging        = "messaging.knative.dev/v1"
 )
 
 // DecodeDestination returns a JSON-serializable representation of a the given

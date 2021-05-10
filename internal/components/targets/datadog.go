@@ -36,9 +36,10 @@ func (*Datadog) Spec() hcldec.Spec {
 // Manifests implements translation.Translatable.
 func (*Datadog) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
+
 	name := k8s.RFC1123Name(id)
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "DatadogTarget", name)
+	t := k8s.NewObject(k8s.APITargets, "DatadogTarget", name)
 
 	if v := config.GetAttr("metric_prefix"); !v.IsNull() {
 		mp := config.GetAttr("metric_prefix").AsString()
@@ -53,10 +54,7 @@ func (*Datadog) Manifests(id string, config, eventDst cty.Value) []interface{} {
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name,
-			k8s.NewDestination("targets.triggermesh.io/v1alpha1", "DatadogTarget", name),
-			eventDst,
-		)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "DatadogTarget", name), eventDst)
 		manifests = append(manifests, ch, subs)
 	}
 
@@ -68,7 +66,7 @@ func (*Datadog) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {
-		return k8s.NewDestination("targets.triggermesh.io/v1alpha1", "DatadogTarget", name)
+		return k8s.NewDestination(k8s.APITargets, "DatadogTarget", name)
 	}
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }

@@ -52,21 +52,17 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 	switch runtime := config.GetAttr("runtime").AsString(); runtime {
 	case "js":
-		t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "InfraTarget", name)
+		t := k8s.NewObject(k8s.APITargets, "InfraTarget", name)
 
 		t.SetNestedField(code, "spec", "script", "code")
 
 		// route responses via a channel subscription
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name,
-			k8s.NewDestination("targets.triggermesh.io/v1alpha1", "InfraTarget", name),
-			eventDst,
-		)
-
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "InfraTarget", name), eventDst)
 		manifests = append(manifests, t.Unstructured(), ch, subs)
 
 	default:
-		f := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Function", name)
+		f := k8s.NewObject(k8s.APIFlow, "Function", name)
 
 		f.SetNestedField(runtime, "spec", "runtime")
 		f.SetNestedField(code, "spec", "code")
@@ -77,11 +73,11 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		}
 		f.SetNestedField(entrypoint, "spec", "entrypoint")
 
-		sink := k8s.DecodeDestination(eventDst)
-		f.SetNestedMap(sink, "spec", "sink", "ref")
-
 		public := config.GetAttr("public").True()
 		f.SetNestedField(public, "spec", "public")
+
+		sink := k8s.DecodeDestination(eventDst)
+		f.SetNestedMap(sink, "spec", "sink", "ref")
 
 		manifests = append(manifests, f.Unstructured())
 	}
@@ -96,5 +92,5 @@ func (*Function) Address(id string, config, _ cty.Value) cty.Value {
 	if config.GetAttr("runtime").AsString() == "js" {
 		return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 	}
-	return k8s.NewDestination("flow.triggermesh.io/v1alpha1", "Function", name)
+	return k8s.NewDestination(k8s.APIFlow, "Function", name)
 }

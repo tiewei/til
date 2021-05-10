@@ -42,7 +42,9 @@ func (*Kafka) Spec() hcldec.Spec {
 func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("eventing.knative.dev/v1alpha1", "KafkaSink", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	s := k8s.NewObject(k8s.APIEventingV1Alpha1, "KafkaSink", name)
 
 	topic := config.GetAttr("topic").AsString()
 	s.SetNestedField(topic, "spec", "topic")
@@ -53,10 +55,23 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
 	s.SetNestedField(authSecretName, "spec", "auth", "secret", "ref", "name")
 
-	return append(manifests, s.Unstructured())
+	manifests = append(manifests, s.Unstructured())
+
+	if !eventDst.IsNull() {
+		ch := k8s.NewChannel(name)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIEventingV1Alpha1, "KafkaSink", name), eventDst)
+		manifests = append(manifests, ch, subs)
+	}
+
+	return manifests
 }
 
 // Address implements translation.Addressable.
-func (*Kafka) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("eventing.knative.dev/v1alpha1", "KafkaSink", k8s.RFC1123Name(id))
+func (*Kafka) Address(id string, _, eventDst cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
+	if eventDst.IsNull() {
+		return k8s.NewDestination(k8s.APIEventingV1Alpha1, "KafkaSink", name)
+	}
+	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }

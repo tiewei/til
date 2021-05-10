@@ -37,7 +37,9 @@ func (*AWSSQS) Spec() hcldec.Spec {
 func (*AWSSQS) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "AWSSQSTarget", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	t := k8s.NewObject(k8s.APITargets, "AWSSQSTarget", name)
 
 	arn := config.GetAttr("arn").AsString()
 	t.SetNestedField(arn, "spec", "arn")
@@ -47,10 +49,23 @@ func (*AWSSQS) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	t.SetNestedMap(accKeySecretRef, "spec", "awsApiKey", "secretKeyRef")
 	t.SetNestedMap(secrKeySecretRef, "spec", "awsApiSecret", "secretKeyRef")
 
-	return append(manifests, t.Unstructured())
+	manifests = append(manifests, t.Unstructured())
+
+	if !eventDst.IsNull() {
+		ch := k8s.NewChannel(name)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "AWSSQSTarget", name), eventDst)
+		manifests = append(manifests, ch, subs)
+	}
+
+	return manifests
 }
 
 // Address implements translation.Addressable.
-func (*AWSSQS) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("targets.triggermesh.io/v1alpha1", "AWSSQSTarget", k8s.RFC1123Name(id))
+func (*AWSSQS) Address(id string, _, eventDst cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
+	if eventDst.IsNull() {
+		return k8s.NewDestination(k8s.APITargets, "AWSSQSTarget", name)
+	}
+	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }
