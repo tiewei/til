@@ -78,6 +78,11 @@ func SecretKeyRefsSlackApp(secretName string) (signSecr secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSlackAppSignSecr)
 }
 
+// SecretKeyRefsSplunkHEC returns secret key selectors for the "splunk_hec" secret class.
+func SecretKeyRefsSplunkHEC(secretName string) (hecToken secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSplunkHECToken)
+}
+
 // SecretKeyRefsTLS returns secret key selectors for the "tls" secret class.
 func SecretKeyRefsTLS(secretName string) (cert, key, caCert secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassTLSCert),

@@ -14,6 +14,7 @@ var All = map[string]interface{}{
 	"kafka":          (*Kafka)(nil),
 	"logz":           (*Logz)(nil),
 	"slack":          (*Slack)(nil),
+	"splunk":         (*Splunk)(nil),
 	"twilio":         (*Twilio)(nil),
 	"zendesk":        (*Zendesk)(nil),
 }

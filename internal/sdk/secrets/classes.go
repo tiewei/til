@@ -69,6 +69,11 @@ const (
 	secrClassSlackAppSignSecr = "signing_secret"
 )
 
+// Secret class "splunk_hec"
+const (
+	secrClassSplunkHECToken = "hec_token"
+)
+
 // Secret class "tls"
 const (
 	secrClassTLSCert   = "certificate"

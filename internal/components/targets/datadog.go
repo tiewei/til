@@ -45,17 +45,22 @@ func (*Datadog) Manifests(id string, config, eventDst cty.Value) []interface{} {
 		t.SetNestedField(mp, "spec", "metricPrefix")
 	}
 
-	apiKey := config.GetAttr("auth").GetAttr("name").AsString()
-	apiKeySecretRef := secrets.SecretKeyRefsDatadog(apiKey)
+	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
+	apiKeySecretRef := secrets.SecretKeyRefsDatadog(authSecretName)
 	t.SetNestedMap(apiKeySecretRef, "spec", "apiKey", "secretKeyRef")
+
+	manifests = append(manifests, t.Unstructured())
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination("targets.triggermesh.io/v1alpha1", "DatadogTarget", name), eventDst)
+		subs := k8s.NewSubscription(name, name,
+			k8s.NewDestination("targets.triggermesh.io/v1alpha1", "DatadogTarget", name),
+			eventDst,
+		)
 		manifests = append(manifests, ch, subs)
 	}
 
-	return append(manifests, t.Unstructured())
+	return manifests
 }
 
 // Address implements translation.Addressable.
@@ -65,6 +70,5 @@ func (*Datadog) Address(id string, _, eventDst cty.Value) cty.Value {
 	if eventDst.IsNull() {
 		return k8s.NewDestination("targets.triggermesh.io/v1alpha1", "DatadogTarget", name)
 	}
-
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }
