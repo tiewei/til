@@ -65,6 +65,11 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 	public := config.GetAttr("public").True()
 	f.SetNestedField(public, "spec", "public")
 
+	exts := map[string]interface{}{
+		"type": "io.triggermesh.target.functions." + name,
+	}
+	f.SetNestedMap(exts, "spec", "ceOverrides", "extensions")
+
 	manifests = append(manifests, f.Unstructured())
 
 	if !eventDst.IsNull() {
