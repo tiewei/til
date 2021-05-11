@@ -39,6 +39,24 @@ func (*Function) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"ce_context": &hcldec.BlockSpec{
+			TypeName: "ce_context",
+			Nested: &hcldec.ObjectSpec{
+				"type": &hcldec.AttrSpec{
+					Name:     "type",
+					Type:     cty.String,
+					Required: true,
+				},
+				"source": &hcldec.AttrSpec{
+					Name: "source",
+					Type: cty.String,
+				},
+				"subject": &hcldec.AttrSpec{
+					Name: "subject",
+					Type: cty.String,
+				},
+			},
+		},
 	}
 }
 
@@ -52,17 +70,21 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 	switch runtime := config.GetAttr("runtime").AsString(); runtime {
 	case "js":
-		t := k8s.NewObject(k8s.APITargets, "InfraTarget", name)
+		t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "InfraTarget", name)
 
 		t.SetNestedField(code, "spec", "script", "code")
 
 		// route responses via a channel subscription
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "InfraTarget", name), eventDst)
+		subs := k8s.NewSubscription(name, name,
+			k8s.NewDestination("targets.triggermesh.io/v1alpha1", "InfraTarget", name),
+			eventDst,
+		)
+
 		manifests = append(manifests, t.Unstructured(), ch, subs)
 
 	default:
-		f := k8s.NewObject(k8s.APIFlow, "Function", name)
+		f := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Function", name)
 
 		f.SetNestedField(runtime, "spec", "runtime")
 		f.SetNestedField(code, "spec", "code")
@@ -73,11 +95,23 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		}
 		f.SetNestedField(entrypoint, "spec", "entrypoint")
 
-		public := config.GetAttr("public").True()
-		f.SetNestedField(public, "spec", "public")
+		if extsVal := config.GetAttr("ce_context"); !extsVal.IsNull() {
+			exts := make(map[string]interface{}, extsVal.LengthInt())
+			extsIter := extsVal.ElementIterator()
+			for extsIter.Next() {
+				attr, val := extsIter.Element()
+				if !val.IsNull() {
+					exts[attr.AsString()] = val.AsString()
+				}
+			}
+			f.SetNestedMap(exts, "spec", "ceOverrides", "extensions")
+		}
 
 		sink := k8s.DecodeDestination(eventDst)
 		f.SetNestedMap(sink, "spec", "sink", "ref")
+
+		public := config.GetAttr("public").True()
+		f.SetNestedField(public, "spec", "public")
 
 		manifests = append(manifests, f.Unstructured())
 	}
