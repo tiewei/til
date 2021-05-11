@@ -69,6 +69,11 @@ const (
 	secrClassSlackAppSignSecr = "signing_secret"
 )
 
+// Secret class "sendgrid"
+const (
+	secrClassSendgridAPIKey = "apiKey"
+)
+
 // Secret class "splunk_hec"
 const (
 	secrClassSplunkHECToken = "hec_token"

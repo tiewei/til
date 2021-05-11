@@ -68,6 +68,11 @@ func SecretKeyRefsSalesforceOAuthJWT(secretName string) (key secretKeySelector) 
 	return newSecretKeySelector(secretName, secrClassSalesforceOAuthJWTKey)
 }
 
+// SecretKeyRefsSendgrid returns secret key selectors for the "sendgrid" secret class.
+func SecretKeyRefsSendgrid(secretName string) (apiKey secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSendgridAPIKey)
+}
+
 // SecretKeyRefsSlack returns secret key selectors for the "slack" secret class.
 func SecretKeyRefsSlack(secretName string) (apiToken secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSlackAPIToken)

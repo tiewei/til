@@ -13,6 +13,7 @@ var All = map[string]interface{}{
 	"gcloud_storage": (*GCloudStorage)(nil),
 	"kafka":          (*Kafka)(nil),
 	"logz":           (*Logz)(nil),
+	"sendgrid":       (*Sendgrid)(nil),
 	"slack":          (*Slack)(nil),
 	"splunk":         (*Splunk)(nil),
 	"twilio":         (*Twilio)(nil),
