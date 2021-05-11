@@ -2,7 +2,7 @@
 
 bridge "some_bridge_id" {}
 
-#! this block is the second occurent of a "bridge" block
+#! this block is the second occurence of a "bridge" block
 bridge "other_bridge_id" {}
 
 source "some_source" "MySource" {

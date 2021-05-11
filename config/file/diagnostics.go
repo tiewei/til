@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config"
 )
@@ -47,13 +48,24 @@ func duplicateBlockDiagnostic(cat config.ComponentCategory, identifier string, s
 	}
 }
 
-// tooManyBridgeBlocksDiagnostic returns a hcl.Diagnostic which indicates that
-// more than one "bridge" block was defined.
-func tooManyBridgeBlocksDiagnostic(subj hcl.Range) *hcl.Diagnostic {
+// tooManyGlobalBlocksDiagnostic returns a hcl.Diagnostic which indicates that
+// more than one block of the given type was defined in the global configuration.
+func tooManyGlobalBlocksDiagnostic(blkType string, subj hcl.Range) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Redefined global config",
-		Detail:   `A Bridge description must contain at most one "bridge" block.`,
+		Detail:   fmt.Sprintf("A Bridge description must contain at most one %q block.", blkType),
+		Subject:  subj.Ptr(),
+	}
+}
+
+// wrongTypeDiagnostic returns a validation diagnostic which indicates that the
+// given attribute value doesn't have the expected type.
+func wrongTypeDiagnostic(v cty.Value, expectType string, subj hcl.Range) *hcl.Diagnostic {
+	return &hcl.Diagnostic{
+		Severity: hcl.DiagError,
+		Summary:  "Wrong attribute type",
+		Detail:   "The attribute value is not a " + expectType + ". Type: " + v.Type().FriendlyNameForConstraint(),
 		Subject:  subj.Ptr(),
 	}
 }

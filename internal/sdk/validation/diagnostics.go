@@ -31,7 +31,7 @@ func wrongTypeDiagnostic(v cty.Value, expectType string) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  diagSummaryValidation,
-		Detail:   "The provided value is not a " + expectType + ". Type: " + v.Type().GoString(),
+		Detail:   "The provided value is not a " + expectType + ". Type: " + v.Type().FriendlyNameForConstraint(),
 	}
 }
 

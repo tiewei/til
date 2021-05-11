@@ -64,11 +64,6 @@ var BridgeSchema = &hcl.BodySchema{
 	}},
 }
 
-// BridgeBlockSchema is the shallow structure of the "bridge" block, which is
-// unique per Bridge.
-// Used for validation during decoding.
-var BridgeBlockSchema = &hcl.BodySchema{}
-
 // Bridge represents the body of a Bridge Description File.
 type Bridge struct {
 	// Absolute path of the file this configuration was loaded from.
@@ -76,6 +71,7 @@ type Bridge struct {
 
 	// Bridge globals.
 	Identifier string
+	Delivery   *Delivery
 
 	// Indexed lists of messaging components.
 	// Parsers should index each component with a key that uniquely identifies a block.

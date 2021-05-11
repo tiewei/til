@@ -3,7 +3,12 @@
 # It is used as a "golden file" and should therefore always contain at least
 # one valid occurence of each supported block type and top-level attribute.
 
-bridge "some_bridge" {}
+bridge "some_bridge" {
+  delivery {
+    retries = 2
+    dead_letter_sink = channel.foo
+  }
+}
 
 source "some_source" "MySource" {
   some_block { }

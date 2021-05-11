@@ -78,12 +78,20 @@ operator][hcl-attrop].
 
 ```hcl
 bridge <BRIDGE IDENTIFIER> {
-    // no other configurations are currently supported
+    delivery {
+      retries = <integer> // optional
+      dead_letter_sink = <block reference> // optional
+    }
 }
 ```
 
-A `bridge` block has exactly one label, which represents its _identifier_. This identifier is used to sets the Bridge's
+A `bridge` block has exactly one label, which represents its _identifier_. This identifier is used to set the Bridge's
 components apart from other resources in the destination environment.
+
+A `delivery` block may be set inside a `bridge` block. Its attributes control global aspects of message deliveries:
+
+- `retries`: the minimum number of retries a sender should attempt when sending an event.
+- `dead_letter_sink`: component where events that fail to get delivered are moved to.
 
 ## Component Categories
 
@@ -117,7 +125,7 @@ transformer <TRANSFORMER TYPE> <TRANSFORMER IDENTIFIER> {
 
 ```hcl
 source <SOURCE TYPE> <SOURCE IDENTIFIER> {
-    to = <BLOCK REFERENCE>
+    to = <block reference>
 
     # component-type-specific configuration
 }
@@ -127,7 +135,7 @@ source <SOURCE TYPE> <SOURCE IDENTIFIER> {
 
 ```hcl
 target <TARGET TYPE> <TARGET IDENTIFIER> {
-    reply_to = <BLOCK REFERENCE> // optional
+    reply_to = <block reference> // optional
 
     # component-type-specific configuration
 }

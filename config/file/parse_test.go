@@ -36,6 +36,7 @@ const (
 	bridgeUnknBlkType  = "unkn_blk_type.brg.hcl"
 	bridgeBadBlkRefs   = "bad_blk_refs.brg.hcl"
 	bridgeBadBlkHdrs   = "bad_blk_hdrs.brg.hcl"
+	bridgeBadGlobals   = "bad_globals.brg.hcl"
 	bridgeMissingAttrs = "missing_attrs.brg.hcl"
 	bridgeDuplIDs      = "dupl_ids.brg.hcl"
 	bridgeDuplGlobals  = "dupl_globals.brg.hcl"
@@ -143,18 +144,21 @@ func TestLoadBridge(t *testing.T) {
 
 		errDiags := diags.Errs()
 
-		const expectNumErrDiags = 4
+		const expectNumErrDiags = 5
 		if len(errDiags) != expectNumErrDiags {
 			t.Fatalf("Expected %d error diagnostics:\n%s", expectNumErrDiags, errDiagsAsString(diags))
 		}
 
-		if errDiags[0].(*hcl.Diagnostic).Summary != "Extraneous label for source" {
+		if errDiags[0].(*hcl.Diagnostic).Summary != "Missing identifier for bridge" {
 			t.Fatal("Unexpected type of error diagnostic:", errDiags[0])
 		}
-		if errDiags[1].(*hcl.Diagnostic).Summary != "Missing identifier for source" {
+		if errDiags[1].(*hcl.Diagnostic).Summary != "Extraneous label for source" {
 			t.Fatal("Unexpected type of error diagnostic:", errDiags[1])
 		}
-		for i := 2; i < expectNumErrDiags; i++ {
+		if errDiags[2].(*hcl.Diagnostic).Summary != "Missing identifier for source" {
+			t.Fatal("Unexpected type of error diagnostic:", errDiags[2])
+		}
+		for i := 3; i < expectNumErrDiags; i++ {
 			if errDiags[i].(*hcl.Diagnostic).Summary != "Invalid identifier" {
 				t.Fatal("Unexpected type of error diagnostic:", errDiags[i])
 			}
@@ -163,11 +167,14 @@ func TestLoadBridge(t *testing.T) {
 		if errDiags[0].(*hcl.Diagnostic).Subject.Start.Line != 4 {
 			t.Fatal("Unexpected location of error diagnostic:", errDiags[0])
 		}
-		if errDiags[1].(*hcl.Diagnostic).Subject.Start.Line != 13 {
+		if errDiags[1].(*hcl.Diagnostic).Subject.Start.Line != 7 {
 			t.Fatal("Unexpected location of error diagnostic:", errDiags[1])
 		}
-		for i := 2; i < expectNumErrDiags; i++ {
-			if errDiags[i].(*hcl.Diagnostic).Subject.Start.Line != 22 {
+		if errDiags[2].(*hcl.Diagnostic).Subject.Start.Line != 16 {
+			t.Fatal("Unexpected location of error diagnostic:", errDiags[2])
+		}
+		for i := 3; i < expectNumErrDiags; i++ {
+			if errDiags[i].(*hcl.Diagnostic).Subject.Start.Line != 25 {
 				t.Fatal("Unexpected location of error diagnostic:", errDiags[i])
 			}
 		}
@@ -182,6 +189,31 @@ func TestLoadBridge(t *testing.T) {
 			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all except sources to be empty. Parsed bridge:\n%+v", brg)
+		}
+	})
+
+	t.Run("with malformed global settings", func(t *testing.T) {
+		_, diags := p.LoadBridge(bridgeBadGlobals)
+
+		errDiags := diags.Errs()
+
+		const expectNumErrDiags = 2
+		if len(errDiags) != expectNumErrDiags {
+			t.Fatalf("Expected %d error diagnostics:\n%s", expectNumErrDiags, errDiagsAsString(diags))
+		}
+
+		if errDiags[0].(*hcl.Diagnostic).Summary != "Wrong attribute type" {
+			t.Fatal("Unexpected type of error diagnostic:", errDiags[0])
+		}
+		if errDiags[1].(*hcl.Diagnostic).Summary != "Invalid expression" {
+			t.Fatal("Unexpected type of error diagnostic:", errDiags[1])
+		}
+
+		if errDiags[0].(*hcl.Diagnostic).Subject.Start.Line != 6 {
+			t.Fatal("Unexpected location of error diagnostic:", errDiags[0])
+		}
+		if errDiags[1].(*hcl.Diagnostic).Subject.Start.Line != 8 {
+			t.Fatal("Unexpected location of error diagnostic:", errDiags[1])
 		}
 	})
 

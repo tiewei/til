@@ -51,20 +51,13 @@ func decodeBridge(b hcl.Body, brg *config.Bridge) hcl.Diagnostics {
 	for _, blk := range content.Blocks {
 		switch t := blk.Type; t {
 		case config.BlkBridge:
-			if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
-				diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
-			}
-
-			_, contentDiags := blk.Body.Content(config.BridgeBlockSchema)
-			diags = diags.Extend(contentDiags)
-
 			if visitedBridgeGlobals {
-				diags = diags.Append(tooManyBridgeBlocksDiagnostic(blk.DefRange))
-				continue
+				diags = diags.Append(tooManyGlobalBlocksDiagnostic(t, blk.DefRange))
 			}
 			visitedBridgeGlobals = true
 
-			brg.Identifier = blk.Labels[0]
+			setDiags := setGlobals(brg, blk)
+			diags = diags.Extend(setDiags)
 
 		case config.BlkChannel:
 			addDiags := addChannelBlock(brg, blk)
@@ -92,6 +85,40 @@ func decodeBridge(b hcl.Body, brg *config.Bridge) hcl.Diagnostics {
 			panic(fmt.Sprintf("found unexpected block type %q. The HCL body schema is outdated.", t))
 		}
 	}
+
+	return diags
+}
+
+// setGlobals sets the global properties and options of a Bridge.
+func setGlobals(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
+	var diags hcl.Diagnostics
+
+	if !hclsyntax.ValidIdentifier(blk.Labels[0]) {
+		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[0]))
+	}
+
+	content, contentDiags := blk.Body.Content(config.BridgeBlockSchema)
+	diags = diags.Extend(contentDiags)
+
+	var delivery *config.Delivery
+	visitedDelivery := false
+
+	for _, blk := range content.Blocks {
+		switch t := blk.Type; t {
+		case config.BlkDelivery:
+			if visitedDelivery {
+				diags = diags.Append(tooManyGlobalBlocksDiagnostic(t, blk.DefRange))
+			}
+			visitedDelivery = true
+
+			var decodeDiags hcl.Diagnostics
+			delivery, decodeDiags = decodeBridgeDeliveryBlock(blk)
+			diags = diags.Extend(decodeDiags)
+		}
+	}
+
+	brg.Identifier = blk.Labels[0]
+	brg.Delivery = delivery
 
 	return diags
 }
@@ -224,6 +251,28 @@ func addTargetBlock(brg *config.Bridge, blk *hcl.Block) hcl.Diagnostics {
 	}
 
 	return diags
+}
+
+// decodeBridgeDeliveryBlock performs a decoding of the Body of a
+// "bridge.delivery" block into a Delivery struct.
+func decodeBridgeDeliveryBlock(blk *hcl.Block) (*config.Delivery, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+
+	content, contentDiags := blk.Body.Content(config.DeliveryBlockSchema)
+	diags = diags.Extend(contentDiags)
+
+	retries, decodeDiags := decodeInt64Val(content.Attributes[config.AttrRetries])
+	diags = diags.Extend(decodeDiags)
+
+	dls, decodeDiags := decodeBlockRef(content.Attributes[config.AttrDeadLetterSink])
+	diags = diags.Extend(decodeDiags)
+
+	d := &config.Delivery{
+		Retries:        retries,
+		DeadLetterSink: dls,
+	}
+
+	return d, diags
 }
 
 // decodeChannelBlock performs a partial decoding of the Body of a "channel"
@@ -382,4 +431,26 @@ func decodeBlockRef(attr *hcl.Attribute) (hcl.Traversal, hcl.Diagnostics) {
 	}
 
 	return hcl.AbsTraversalForExpr(attr.Expr)
+}
+
+// decodeInt64Val decodes an integer attribute.
+func decodeInt64Val(attr *hcl.Attribute) (*int64, hcl.Diagnostics) {
+	var diags hcl.Diagnostics
+	var out *int64
+
+	if attr == nil {
+		return out, diags
+	}
+
+	val, evalDiags := attr.Expr.Value(nil)
+	diags = diags.Extend(evalDiags)
+
+	if isInt64(val) {
+		out = new(int64)
+		*out, _ = val.AsBigFloat().Int64()
+	} else {
+		diags = diags.Append(wrongTypeDiagnostic(val, "integer", attr.Expr.Range()))
+	}
+
+	return out, diags
 }
