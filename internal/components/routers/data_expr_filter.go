@@ -41,7 +41,7 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
 	expr := config.GetAttr("condition").AsString()
 	f.SetNestedField(expr, "spec", "expression")
 
-	sink := k8s.DecodeDestination(config.GetAttr("to").GetAttr("ref"))
+	sink := k8s.DecodeDestination(config.GetAttr("to"))
 	f.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, f.Unstructured())

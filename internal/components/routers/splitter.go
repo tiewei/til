@@ -74,7 +74,7 @@ func (*Splitter) Manifests(id string, config, _ cty.Value) []interface{} {
 		s.SetNestedMap(ceExts, "spec", "ceContext", "extensions")
 	}
 
-	sink := k8s.DecodeDestination(config.GetAttr("to").GetAttr("ref"))
+	sink := k8s.DecodeDestination(config.GetAttr("to"))
 	s.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, s.Unstructured())
