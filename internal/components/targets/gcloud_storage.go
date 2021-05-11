@@ -37,7 +37,9 @@ func (*GCloudStorage) Spec() hcldec.Spec {
 func (*GCloudStorage) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "GoogleCloudStorageTarget", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	t := k8s.NewObject(k8s.APITargets, "GoogleCloudStorageTarget", name)
 
 	bucketName := config.GetAttr("bucket_name").AsString()
 	t.SetNestedField(bucketName, "spec", "bucketName")
@@ -46,10 +48,23 @@ func (*GCloudStorage) Manifests(id string, config, eventDst cty.Value) []interfa
 	keySecretRef := secrets.SecretKeyRefsGCloudServiceAccount(svcAccountSecretName)
 	t.SetNestedMap(keySecretRef, "spec", "credentialsJson", "secretKeyRef")
 
-	return append(manifests, t.Unstructured())
+	manifests = append(manifests, t.Unstructured())
+
+	if !eventDst.IsNull() {
+		ch := k8s.NewChannel(name)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "GoogleCloudStorageTarget", name), eventDst)
+		manifests = append(manifests, ch, subs)
+	}
+
+	return manifests
 }
 
 // Address implements translation.Addressable.
-func (*GCloudStorage) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("targets.triggermesh.io/v1alpha1", "GoogleCloudStorageTarget", k8s.RFC1123Name(id))
+func (*GCloudStorage) Address(id string, _, eventDst cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
+	if eventDst.IsNull() {
+		return k8s.NewDestination(k8s.APITargets, "GoogleCloudStorageTarget", name)
+	}
+	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }

@@ -23,6 +23,11 @@ const (
 	secrClassBasicAuthPasswd = "password"
 )
 
+// Secret class "datadog"
+const (
+	secrClassDatadogAPIKey = "apiKey"
+)
+
 // Secret class "gcloud_service_account"
 const (
 	secrClassGCloudSvcAccountKey = "key.json"
@@ -62,6 +67,11 @@ const (
 // Secret class "slack_app"
 const (
 	secrClassSlackAppSignSecr = "signing_secret"
+)
+
+// Secret class "splunk_hec"
+const (
+	secrClassSplunkHECToken = "hec_token"
 )
 
 // Secret class "tls"

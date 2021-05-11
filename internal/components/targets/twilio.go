@@ -42,7 +42,9 @@ func (*Twilio) Spec() hcldec.Spec {
 func (*Twilio) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("targets.triggermesh.io/v1alpha1", "TwilioTarget", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	t := k8s.NewObject(k8s.APITargets, "TwilioTarget", name)
 
 	if v := config.GetAttr("default_phone_from"); !v.IsNull() {
 		defaultPhoneFrom := config.GetAttr("default_phone_from").AsString()
@@ -59,10 +61,23 @@ func (*Twilio) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	t.SetNestedMap(sidSecretRef, "spec", "sid", "secretKeyRef")
 	t.SetNestedMap(tokenSecretRef, "spec", "token", "secretKeyRef")
 
-	return append(manifests, t.Unstructured())
+	manifests = append(manifests, t.Unstructured())
+
+	if !eventDst.IsNull() {
+		ch := k8s.NewChannel(name)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "TwilioTarget", name), eventDst)
+		manifests = append(manifests, ch, subs)
+	}
+
+	return manifests
 }
 
 // Address implements translation.Addressable.
-func (*Twilio) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("targets.triggermesh.io/v1alpha1", "TwilioTarget", k8s.RFC1123Name(id))
+func (*Twilio) Address(id string, _, eventDst cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
+	if eventDst.IsNull() {
+		return k8s.NewDestination(k8s.APITargets, "TwilioTarget", name)
+	}
+	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }

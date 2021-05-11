@@ -121,7 +121,5 @@ transformer "function" "blob_slack_message" {
     }
   EOF
 
-  entrypoint = "main"
-
   to = target.chat_notifications
 }

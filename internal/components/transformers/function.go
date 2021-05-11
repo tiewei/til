@@ -126,5 +126,5 @@ func (*Function) Address(id string, config, _ cty.Value) cty.Value {
 	if config.GetAttr("runtime").AsString() == "js" {
 		return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 	}
-	return k8s.NewDestination("flow.triggermesh.io/v1alpha1", "Function", name)
+	return k8s.NewDestination(k8s.APIFlow, "Function", name)
 }

@@ -92,7 +92,7 @@ func (*Bumblebee) Spec() hcldec.Spec {
 func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	t := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Transformation", k8s.RFC1123Name(id))
+	t := k8s.NewObject(k8s.APIFlow, "Transformation", k8s.RFC1123Name(id))
 
 	context := parseBumblebeeOperations(config.GetAttr("context").AsValueSlice())
 	t.SetNestedSlice(context, "spec", "context")
@@ -108,7 +108,7 @@ func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{}
 
 // Address implements translation.Addressable.
 func (*Bumblebee) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination("flow.triggermesh.io/v1alpha1", "Transformation", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIFlow, "Transformation", k8s.RFC1123Name(id))
 }
 
 func parseBumblebeeOperations(operationVals []cty.Value) []interface{} {

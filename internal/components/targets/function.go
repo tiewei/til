@@ -46,7 +46,9 @@ func (*Function) Spec() hcldec.Spec {
 func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	f := k8s.NewObject("flow.triggermesh.io/v1alpha1", "Function", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	f := k8s.NewObject(k8s.APIFlow, "Function", name)
 
 	runtime := config.GetAttr("runtime").AsString()
 	f.SetNestedField(runtime, "spec", "runtime")
@@ -63,13 +65,23 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 	public := config.GetAttr("public").True()
 	f.SetNestedField(public, "spec", "public")
 
-	return append(manifests, f.Unstructured())
+	manifests = append(manifests, f.Unstructured())
+
+	if !eventDst.IsNull() {
+		ch := k8s.NewChannel(name)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIFlow, "Function", name), eventDst)
+		manifests = append(manifests, ch, subs)
+	}
+
+	return manifests
 }
 
 // Address implements translation.Addressable.
 func (*Function) Address(id string, _, eventDst cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
 	if eventDst.IsNull() {
-		return k8s.NewDestination("flow.triggermesh.io/v1alpha1", "Function", k8s.RFC1123Name(id))
+		return k8s.NewDestination(k8s.APIFlow, "Function", name)
 	}
-	return k8s.NewDestination(k8s.APIMessaging, "Channel", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }

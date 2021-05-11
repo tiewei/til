@@ -32,6 +32,11 @@ func SecretKeyRefsBasicAuth(secretName string) (user, passwd secretKeySelector) 
 		newSecretKeySelector(secretName, secrClassBasicAuthPasswd)
 }
 
+// SecretKeyRefsDatadog returns secret key selectors for the "datadog" secret class.
+func SecretKeyRefsDatadog(secretName string) (key secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassDatadogAPIKey)
+}
+
 // SecretKeyRefsGCloudServiceAccount returns secret key selectors for the "gcloud_service_account" secret class.
 func SecretKeyRefsGCloudServiceAccount(secretName string) (key secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassGCloudSvcAccountKey)
@@ -71,6 +76,11 @@ func SecretKeyRefsSlack(secretName string) (apiToken secretKeySelector) {
 // SecretKeyRefsSlackApp returns secret key selectors for the "slack_app" secret class.
 func SecretKeyRefsSlackApp(secretName string) (signSecr secretKeySelector) {
 	return newSecretKeySelector(secretName, secrClassSlackAppSignSecr)
+}
+
+// SecretKeyRefsSplunkHEC returns secret key selectors for the "splunk_hec" secret class.
+func SecretKeyRefsSplunkHEC(secretName string) (hecToken secretKeySelector) {
+	return newSecretKeySelector(secretName, secrClassSplunkHECToken)
 }
 
 // SecretKeyRefsTLS returns secret key selectors for the "tls" secret class.
