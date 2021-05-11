@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -39,6 +40,27 @@ func (*Function) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"ce_context": &hcldec.BlockSpec{
+			TypeName: "ce_context",
+			Nested: &hcldec.ObjectSpec{
+				"type": &hcldec.AttrSpec{
+					Name:     "type",
+					Type:     cty.String,
+					Required: true,
+				},
+				"source": &hcldec.AttrSpec{
+					Name:     "source",
+					Type:     cty.String,
+					Required: false,
+				},
+				"subject": &hcldec.AttrSpec{
+					Name:     "subject",
+					Type:     cty.String,
+					Required: false,
+				},
+			},
+			Required: false,
+		},
 	}
 }
 
@@ -66,10 +88,10 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		f.SetNestedField(true, "spec", "public")
 	}
 
-	exts := map[string]interface{}{
-		"type": "io.triggermesh.target.functions." + name,
+	if v := config.GetAttr("ce_context"); !v.IsNull() {
+		ceCtx := sdk.DecodeStringMap(v)
+		f.SetNestedMap(ceCtx, "spec", "ceOverrides", "extensions")
 	}
-	f.SetNestedMap(exts, "spec", "ceOverrides", "extensions")
 
 	manifests = append(manifests, f.Unstructured())
 
