@@ -62,8 +62,9 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 	}
 	f.SetNestedField(entrypoint, "spec", "entrypoint")
 
-	public := config.GetAttr("public").True()
-	f.SetNestedField(public, "spec", "public")
+	if config.GetAttr("public").True() {
+		f.SetNestedField(true, "spec", "public")
+	}
 
 	exts := map[string]interface{}{
 		"type": "io.triggermesh.target.functions." + name,
