@@ -48,14 +48,17 @@ func (*Function) Spec() hcldec.Spec {
 					Required: true,
 				},
 				"source": &hcldec.AttrSpec{
-					Name: "source",
-					Type: cty.String,
+					Name:     "source",
+					Type:     cty.String,
+					Required: false,
 				},
 				"subject": &hcldec.AttrSpec{
-					Name: "subject",
-					Type: cty.String,
+					Name:     "subject",
+					Type:     cty.String,
+					Required: false,
 				},
 			},
+			Required: true,
 		},
 	}
 }
@@ -92,6 +95,9 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		}
 		f.SetNestedField(entrypoint, "spec", "entrypoint")
 
+		public := config.GetAttr("public").True()
+		f.SetNestedField(public, "spec", "public")
+
 		if extsVal := config.GetAttr("ce_context"); !extsVal.IsNull() {
 			exts := make(map[string]interface{}, extsVal.LengthInt())
 			extsIter := extsVal.ElementIterator()
@@ -106,9 +112,6 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 		sink := k8s.DecodeDestination(eventDst)
 		f.SetNestedMap(sink, "spec", "sink", "ref")
-
-		public := config.GetAttr("public").True()
-		f.SetNestedField(public, "spec", "public")
 
 		manifests = append(manifests, f.Unstructured())
 	}
