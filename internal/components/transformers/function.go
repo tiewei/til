@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -99,17 +100,8 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 			f.SetNestedField(true, "spec", "public")
 		}
 
-		if extsVal := config.GetAttr("ce_context"); !extsVal.IsNull() {
-			exts := make(map[string]interface{}, extsVal.LengthInt())
-			extsIter := extsVal.ElementIterator()
-			for extsIter.Next() {
-				attr, val := extsIter.Element()
-				if !val.IsNull() {
-					exts[attr.AsString()] = val.AsString()
-				}
-			}
-			f.SetNestedMap(exts, "spec", "ceOverrides", "extensions")
-		}
+		ceCtx := sdk.DecodeStringMap(config.GetAttr("ce_context"))
+		f.SetNestedMap(ceCtx, "spec", "ceOverrides", "extensions")
 
 		sink := k8s.DecodeDestination(eventDst)
 		f.SetNestedMap(sink, "spec", "sink", "ref")

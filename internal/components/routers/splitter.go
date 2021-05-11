@@ -4,6 +4,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -68,14 +69,9 @@ func (*Splitter) Manifests(id string, config, _ cty.Value) []interface{} {
 	src := config.GetAttr("ce_context").GetAttr("source").AsString()
 	s.SetNestedField(src, "spec", "ceContext", "source")
 
-	if extsVal := config.GetAttr("ce_context").GetAttr("extensions"); !extsVal.IsNull() {
-		exts := make(map[string]interface{}, extsVal.LengthInt())
-		extsIter := extsVal.ElementIterator()
-		for extsIter.Next() {
-			attr, val := extsIter.Element()
-			exts[attr.AsString()] = val.AsString()
-		}
-		s.SetNestedMap(exts, "spec", "ceContext", "extensions")
+	if v := config.GetAttr("ce_context").GetAttr("extensions"); !v.IsNull() {
+		ceExts := sdk.DecodeStringMap(v)
+		s.SetNestedMap(ceExts, "spec", "ceContext", "extensions")
 	}
 
 	sink := k8s.DecodeDestination(config.GetAttr("to").GetAttr("ref"))

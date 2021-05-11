@@ -15,3 +15,18 @@ func DecodeStringSlice(val cty.Value) []interface{} {
 
 	return out
 }
+
+// DecodeStringMap decodes a cty.Value into a map of string elements, in a
+// format that is compatible with the "unstructured" package from k8s.io/apimachinery.
+// Panics if the given value is not a non-null collection type containing
+// exclusively string values.
+func DecodeStringMap(val cty.Value) map[string]interface{} {
+	out := make(map[string]interface{}, val.LengthInt())
+	for iter := val.ElementIterator(); iter.Next(); {
+		if k, v := iter.Element(); !v.IsNull() {
+			out[k.AsString()] = v.AsString()
+		}
+	}
+
+	return out
+}

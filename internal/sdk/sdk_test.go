@@ -66,6 +66,84 @@ func TestDecodeStringSlice(t *testing.T) {
 	}
 }
 
+func TestDecodeStringMap(t *testing.T) {
+	testCases := map[string]struct {
+		input       cty.Value
+		expect      map[string]interface{}
+		expectPanic bool
+	}{
+		"object type with string values": {
+			input: cty.ObjectVal(map[string]cty.Value{
+				"key1": cty.StringVal("val1"),
+				"key2": cty.StringVal("val2"),
+			}),
+			expect: map[string]interface{}{"key1": "val1", "key2": "val2"},
+		},
+		"object type with null string values": {
+			input: cty.ObjectVal(map[string]cty.Value{
+				"key1": cty.NullVal(cty.String),
+				"key2": cty.StringVal("val2"),
+			}),
+			expect: map[string]interface{}{"key2": "val2"},
+		},
+		"object type with non-string values": {
+			input: cty.ObjectVal(map[string]cty.Value{
+				"key1": cty.StringVal("val1"),
+				"key2": cty.NumberIntVal(1),
+			}),
+			expectPanic: true,
+		},
+		"map type with string values": {
+			input: cty.MapVal(map[string]cty.Value{
+				"key1": cty.StringVal("val1"),
+				"key2": cty.StringVal("val2"),
+			}),
+			expect: map[string]interface{}{"key1": "val1", "key2": "val2"},
+		},
+		"map type with null string values": {
+			input: cty.MapVal(map[string]cty.Value{
+				"key1": cty.NullVal(cty.String),
+				"key2": cty.StringVal("val2"),
+			}),
+			expect: map[string]interface{}{"key2": "val2"},
+		},
+		"map type with non-string values": {
+			input: cty.MapVal(map[string]cty.Value{
+				"key1": cty.NumberIntVal(1),
+				"key2": cty.NumberIntVal(2),
+			}),
+			expectPanic: true,
+		},
+		"tuple type": {
+			input: cty.TupleVal([]cty.Value{
+				cty.StringVal("val1"),
+				cty.StringVal("val2"),
+			}),
+			expectPanic: true,
+		},
+		"null collection type": {
+			input:       cty.NullVal(cty.Set(cty.String)),
+			expectPanic: true,
+		},
+		"non-collection type": {
+			input:       cty.StringVal("val1"),
+			expectPanic: true,
+		},
+	}
+
+	for n, tc := range testCases {
+		t.Run(n, func(t *testing.T) {
+			defer handlePanic(t, tc.expectPanic)
+
+			out := DecodeStringMap(tc.input)
+
+			if diff := cmp.Diff(tc.expect, out); diff != "" {
+				t.Error("Unexpected diff: (-:expect, +:got)", diff)
+			}
+		})
+	}
+}
+
 func handlePanic(t *testing.T, expectPanic bool) {
 	t.Helper()
 
