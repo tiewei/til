@@ -47,8 +47,8 @@ func (*AWSCloudWatchLogs) Manifests(id string, config, eventDst cty.Value) []int
 	s.SetNestedField(arn, "spec", "arn")
 
 	if v := config.GetAttr("polling_interval"); !v.IsNull() {
-		pi := v.AsString()
-		s.SetNestedField(pi, "spec", "pollingInterval")
+		pollingInterval := v.AsString()
+		s.SetNestedField(pollingInterval, "spec", "pollingInterval")
 	}
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
