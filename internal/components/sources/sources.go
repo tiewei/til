@@ -2,6 +2,7 @@ package sources
 
 // All includes all "source" component types supported by TriggerMesh.
 var All = map[string]interface{}{
+	"aws_cloudwatch_logs":  (*AWSCloudWatchLogs)(nil),
 	"aws_codecommit":       (*AWSCodeCommit)(nil),
 	"aws_cognito_userpool": (*AWSCognitoUserPool)(nil),
 	"aws_dynamodb":         (*AWSDynamoDB)(nil),
