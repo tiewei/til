@@ -45,8 +45,8 @@ func (*Logz) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	t.SetNestedField(logsListenerURL, "spec", "logsListenerURL")
 
 	authSecretName := config.GetAttr("auth").GetAttr("name").AsString()
-	apiTokenSecretRef := secrets.SecretKeyRefsLogz(authSecretName)
-	t.SetNestedMap(apiTokenSecretRef, "spec", "token", "secretKeyRef")
+	shippingTokenSecretRef := secrets.SecretKeyRefsLogz(authSecretName)
+	t.SetNestedMap(shippingTokenSecretRef, "spec", "shippingToken", "secretKeyRef")
 
 	manifests = append(manifests, t.Unstructured())
 
