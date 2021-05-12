@@ -51,7 +51,7 @@ func (*Zendesk) Spec() hcldec.Spec {
 func (*Zendesk) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "ZendeskSource", k8s.RFC1123Name(id))
+	s := k8s.NewObject(k8s.APISources, "ZendeskSource", k8s.RFC1123Name(id))
 
 	email := config.GetAttr("email").AsString()
 	s.SetNestedField(email, "spec", "email")

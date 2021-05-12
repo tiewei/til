@@ -47,7 +47,7 @@ func (*AzureActivityLogs) Spec() hcldec.Spec {
 func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "AzureActivityLogsSource", k8s.RFC1123Name(id))
+	s := k8s.NewObject(k8s.APISources, "AzureActivityLogsSource", k8s.RFC1123Name(id))
 
 	eventHubID := config.GetAttr("event_hub_id").AsString()
 	s.SetNestedField(eventHubID, "spec", "eventHubID")

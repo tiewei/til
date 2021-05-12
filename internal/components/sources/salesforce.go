@@ -60,7 +60,7 @@ func (*Salesforce) Spec() hcldec.Spec {
 func (*Salesforce) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "SalesforceSource", k8s.RFC1123Name(id))
+	s := k8s.NewObject(k8s.APISources, "SalesforceSource", k8s.RFC1123Name(id))
 
 	channel := config.GetAttr("channel").AsString()
 	s.SetNestedField(channel, "spec", "subscription", "channel")

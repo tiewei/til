@@ -36,7 +36,7 @@ func (*Slack) Spec() hcldec.Spec {
 func (*Slack) Manifests(id string, config, eventDst cty.Value) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.triggermesh.io/v1alpha1", "SlackSource", k8s.RFC1123Name(id))
+	s := k8s.NewObject(k8s.APISources, "SlackSource", k8s.RFC1123Name(id))
 
 	if v := config.GetAttr("signing_secret"); !v.IsNull() {
 		signingSecretSecretName := v.GetAttr("name").AsString()
