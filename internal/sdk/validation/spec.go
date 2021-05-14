@@ -75,6 +75,9 @@ func ContainsCEContextAttributes(val cty.Value) hcl.Diagnostics {
 		diags = diags.Append(wrongTypeDiagnostic(val, "collection"))
 		return diags
 	}
+	if val.IsNull() {
+		return diags
+	}
 
 	for iter := val.ElementIterator(); iter.Next(); {
 		var v cty.Value

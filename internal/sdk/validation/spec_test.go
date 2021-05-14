@@ -138,6 +138,10 @@ func TestContainsCEContextAttributes(t *testing.T) {
 			}),
 			expectErr: true,
 		},
+		"null collection": {
+			in:        cty.NullVal(cty.Map(cty.String)),
+			expectErr: false,
+		},
 		"not a collection": {
 			in:        cty.False,
 			expectErr: true,
