@@ -56,7 +56,7 @@ router "content_based" "dispatch" {
 
   route {
     attributes = {
-      type = "com.amazon.logs.log"
+      type: "com.amazon.logs.log"
     }
     to = transformer.cloudwatch_logz
   }

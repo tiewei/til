@@ -78,14 +78,14 @@ router "content_based" "dispatch" {
 
   route {
     attributes = {
-      source = "arn:aws:s3:::my-bucket"
+      source: "arn:aws:s3:::my-bucket"
     }
     to = transformer.s3_slack_message
   }
 
   route {
     attributes = {
-      source = "/subscriptions/1234/resourceGroups/my-group/providers/Microsoft.Storage/storageAccounts/myfiles"
+      source: "/subscriptions/1234/resourceGroups/my-group/providers/Microsoft.Storage/storageAccounts/myfiles"
     }
     to = transformer.blob_slack_message
   }

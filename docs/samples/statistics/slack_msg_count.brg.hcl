@@ -75,14 +75,14 @@ router "content_based" "dispatch" {
   
   route {
     attributes = {
-      type = "com.slack.events"
+      type: "com.slack.events"
     }
     to = transformer.slack_datadog_metric
   }
 
   route {
     attributes = {
-      type = "io.triggermesh.datadog.response"
+      type: "io.triggermesh.datadog.response"
     }
     to = transformer.handle_datadog_responses
   }
