@@ -35,6 +35,11 @@ func (*ContentBased) Spec() hcldec.Spec {
 				},
 				Func: validation.ContainsCEContextAttributes,
 			},
+			"condition": &hcldec.AttrSpec{
+				Name:     "condition",
+				Type:     cty.String,
+				Required: false,
+			},
 			"to": &hcldec.AttrSpec{
 				Name:     "to",
 				Type:     k8s.DestinationCty,
@@ -87,21 +92,43 @@ func (*ContentBased) Spec() hcldec.Spec {
 func (*ContentBased) Manifests(id string, config, _ cty.Value) []interface{} {
 	var manifests []interface{}
 
-	namePrefix := k8s.RFC1123Name(id)
+	name := k8s.RFC1123Name(id)
 
-	broker := k8s.NewBroker(namePrefix)
+	broker := k8s.NewBroker(name)
 	manifests = append(manifests, broker)
 
 	i := 0
-	routeIter := config.ElementIterator()
-	for routeIter.Next() {
+	for routeIter := config.ElementIterator(); routeIter.Next(); {
 		_, route := routeIter.Element()
+
+		routeName := name + "-r" + strconv.Itoa(i)
 
 		routeDst := route.GetAttr("to")
 		filterAttr := attributesFromRoute(route)
 
-		name := namePrefix + "-r" + strconv.Itoa(i)
-		trigger := k8s.NewTrigger(name, namePrefix, routeDst, filterAttr)
+		// By default, the Trigger's subscriber is the "to" destination.
+		// If a "condition" is set, a Filter object is interpolated
+		// between the Trigger and the "to" destination.
+		triggerSubsDst := routeDst
+
+		if v := route.GetAttr("condition"); !v.IsNull() {
+			const filterAPIGroup = "routing.triggermesh.io/v1alpha1"
+			const filterKind = "Filter"
+
+			triggerSubsDst = k8s.NewDestination(filterAPIGroup, filterKind, routeName)
+
+			filter := k8s.NewObject(filterAPIGroup, filterKind, routeName)
+
+			expr := v.AsString()
+			filter.SetNestedField(expr, "spec", "expression")
+
+			sink := k8s.DecodeDestination(routeDst)
+			filter.SetNestedMap(sink, "spec", "sink", "ref")
+
+			manifests = append(manifests, filter.Unstructured())
+		}
+
+		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst, filterAttr)
 
 		manifests = append(manifests, trigger)
 
