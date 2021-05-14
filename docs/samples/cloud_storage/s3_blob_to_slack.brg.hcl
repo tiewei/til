@@ -1,5 +1,7 @@
 /*
   This Bridge describes an integration between Amazon S3 / Azure Storage and Slack.
+  Its purpose is to send a message to a Slack channel whenever an object is
+  created or removed from a storage bucket.
 
   Events originating from Amazon S3 and Azure Storage are dispatched to their
   respective message transformer by a Content-Based router. Message transformers
