@@ -20,6 +20,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config"
+	"bridgedl/config/globals"
 	"bridgedl/fs"
 	"bridgedl/graph"
 	"bridgedl/lang/k8s"
@@ -34,6 +36,9 @@ type BridgeTranslator struct {
 	// used by functions that access the file system
 	BaseDir string
 	FS      fs.FS
+
+	// global Bridge settings
+	Delivery *config.Delivery
 }
 
 // Translate performs the translation.
@@ -42,7 +47,7 @@ func (t *BridgeTranslator) Translate(g *graph.DirectedGraph) ([]interface{}, hcl
 
 	var bridgeManifests []interface{}
 
-	eval := NewEvaluator(t.BaseDir, t.FS)
+	eval := NewEvaluator(t.BaseDir, t.FS, t.Delivery)
 
 	// The returned SCCs are topologically sorted as a byproduct of the
 	// cycle detection algorithm.
@@ -108,7 +113,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 			continue
 		}
 
-		res, translDiags := translate(cmp, cfg, evDst)
+		res, translDiags := translate(cmp, cfg, evDst, e.Globals())
 		diags = diags.Extend(translDiags)
 
 		manifests = append(manifests, res...)
@@ -132,7 +137,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 			continue
 		}
 
-		res, translDiags := translate(cmp, cfg, evDst)
+		res, translDiags := translate(cmp, cfg, evDst, e.Globals())
 		diags = diags.Extend(translDiags)
 
 		manifests = append(manifests, res...)
@@ -142,7 +147,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 }
 
 // translate invokes the translator of the given component.
-func translate(cmp MessagingComponentVertex, cfg, evDst cty.Value) (
+func translate(cmp MessagingComponentVertex, cfg, evDst cty.Value, glb globals.Accessor) (
 	[]interface{}, hcl.Diagnostics) {
 
 	var diags hcl.Diagnostics
@@ -155,7 +160,7 @@ func translate(cmp MessagingComponentVertex, cfg, evDst cty.Value) (
 		return nil, diags
 	}
 
-	return transl.Manifests(cmpAddr.Identifier, cfg, evDst), diags
+	return transl.Manifests(cmpAddr.Identifier, cfg, evDst, glb), diags
 }
 
 // appendToEvaluator appends the event address of the given referenceable

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
@@ -55,7 +56,7 @@ func (*GitHub) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*GitHub) Manifests(id string, config, eventDst cty.Value) []interface{} {
+func (*GitHub) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", k8s.RFC1123Name(id))

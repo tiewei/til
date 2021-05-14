@@ -22,6 +22,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
+	"bridgedl/config"
+	"bridgedl/config/globals"
 	"bridgedl/fs"
 	"bridgedl/lang"
 )
@@ -41,13 +43,18 @@ type Evaluator struct {
 	// cached to avoid re-generating it if no new variable was inserted
 	// since the last retrieval
 	cachedEvalCtx *hcl.EvalContext
+
+	// global Bridge settings
+	delivery *config.Delivery
 }
 
 // NewEvaluator returns an initialized Evaluator.
-func NewEvaluator(baseDir string, fs fs.FS) *Evaluator {
+func NewEvaluator(baseDir string, fs fs.FS, d *config.Delivery) *Evaluator {
 	return &Evaluator{
 		variables: make(variablesIndexedByRoot),
 		functions: lang.Functions(baseDir, fs),
+
+		delivery: d,
 	}
 }
 
@@ -121,6 +128,28 @@ func (e *Evaluator) EvalContext() *hcl.EvalContext {
 	return evalCtx
 }
 
+// Globals returns an accessor to global Bridge settings.
+func (e *Evaluator) Globals() globals.Accessor {
+	var a *globalsAccessor
+
+	if e.delivery == nil {
+		return a
+	}
+
+	a = &globalsAccessor{
+		delivery: &globals.Delivery{
+			Retries: e.delivery.Retries,
+		},
+	}
+
+	if dlsExpr := e.delivery.DeadLetterSink; dlsExpr != nil {
+		dls, _, _ := lang.TraverseAbsSafe(dlsExpr, e.EvalContext())
+		a.delivery.DeadLetterSink = dls
+	}
+
+	return a
+}
+
 // variablesIndexedByRoot is a collection of maps of variables names to values
 // indexed by traversal root. It is intended to be used as a temporary data
 // store for assembling an hcl.EvalContext.
@@ -133,3 +162,18 @@ func (e *Evaluator) EvalContext() *hcl.EvalContext {
 //     "my_channel": <address value>
 //   }
 type variablesIndexedByRoot map[string]map[string]cty.Value
+
+// globalsAccessor is an implementation of globals.Accessor.
+type globalsAccessor struct {
+	delivery *globals.Delivery
+}
+
+var _ globals.Accessor = (*globalsAccessor)(nil)
+
+// Delivery implements globals.Accessor.
+func (a *globalsAccessor) Delivery() *globals.Delivery {
+	if a == nil {
+		return nil
+	}
+	return a.delivery
+}

@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -58,7 +59,7 @@ func (*Webhook) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Webhook) Manifests(id string, config, eventDst cty.Value) []interface{} {
+func (*Webhook) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	s := k8s.NewObject(k8s.APISources, "WebhookSource", k8s.RFC1123Name(id))

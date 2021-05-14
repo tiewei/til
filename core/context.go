@@ -76,6 +76,8 @@ func (c *Context) Generate() ([]interface{}, hcl.Diagnostics) {
 
 		BaseDir: filepath.Dir(c.Bridge.Path),
 		FS:      c.FS,
+
+		Delivery: c.Bridge.Delivery,
 	}
 
 	return t.Translate(g)

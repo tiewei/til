@@ -19,6 +19,8 @@ package translation
 import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
+
+	"bridgedl/config/globals"
 )
 
 // Decodable is implemented by component types that embed a HCL configuration
@@ -42,7 +44,7 @@ type Translatable interface {
 	// time being to be able to experiment with different formats until
 	// this code matures. The initial implementation uses
 	// unstructured.Unstructured from k8s/apimachinery.
-	Manifests(id string, config, eventDst cty.Value) []interface{}
+	Manifests(id string, config, eventDst cty.Value, settings globals.Accessor) []interface{}
 }
 
 // Addressable is implemented by component types that can receive events from
@@ -60,5 +62,5 @@ type Addressable interface {
 
 	// Address of the component expressed as a Knative "duck" destination
 	// in the cty type system.
-	Address(id string, config, eventDst cty.Value) cty.Value
+	Address(id string, config, eventDst cty.Value, settings globals.Accessor) cty.Value
 }

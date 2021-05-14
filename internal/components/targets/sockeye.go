@@ -19,6 +19,7 @@ package targets
 import (
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -31,7 +32,7 @@ var (
 )
 
 // Manifests implements translation.Translatable.
-func (*Sockeye) Manifests(id string, _, _ cty.Value) []interface{} {
+func (*Sockeye) Manifests(id string, _, _ cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	// https://github.com/n3wscott/sockeye/releases
@@ -46,6 +47,6 @@ func (*Sockeye) Manifests(id string, _, _ cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*Sockeye) Address(id string, _, _ cty.Value) cty.Value {
+func (*Sockeye) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
 	return k8s.NewDestination(k8s.APIServing, "Service", k8s.RFC1123Name(id))
 }

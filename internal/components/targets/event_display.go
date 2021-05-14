@@ -19,6 +19,7 @@ package targets
 import (
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -31,7 +32,7 @@ var (
 )
 
 // Manifests implements translation.Translatable.
-func (*EventDisplay) Manifests(id string, _, _ cty.Value) []interface{} {
+func (*EventDisplay) Manifests(id string, _, _ cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	// Knative v0.23.0
@@ -47,6 +48,6 @@ func (*EventDisplay) Manifests(id string, _, _ cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*EventDisplay) Address(id string, _, _ cty.Value) cty.Value {
+func (*EventDisplay) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
 	return k8s.NewDestination(k8s.APIServing, "Service", k8s.RFC1123Name(id))
 }

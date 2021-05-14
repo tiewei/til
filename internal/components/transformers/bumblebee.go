@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -105,7 +106,7 @@ func (*Bumblebee) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{} {
+func (*Bumblebee) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	t := k8s.NewObject(k8s.APIFlow, "Transformation", k8s.RFC1123Name(id))
@@ -123,7 +124,7 @@ func (*Bumblebee) Manifests(id string, config, eventDst cty.Value) []interface{}
 }
 
 // Address implements translation.Addressable.
-func (*Bumblebee) Address(id string, _, _ cty.Value) cty.Value {
+func (*Bumblebee) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
 	return k8s.NewDestination(k8s.APIFlow, "Transformation", k8s.RFC1123Name(id))
 }
 

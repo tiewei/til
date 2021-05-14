@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -55,7 +56,7 @@ func (*Ping) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Ping) Manifests(id string, config, eventDst cty.Value) []interface{} {
+func (*Ping) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
 	const defaultSchedule = "* * * * *" // every minute
 
 	var manifests []interface{}

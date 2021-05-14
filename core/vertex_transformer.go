@@ -86,7 +86,7 @@ func (trsf *TransformerVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.
 	dst, dstComplete, dstDiags := trsf.EventDestination(e)
 	diags = diags.Extend(dstDiags)
 
-	evAddr := addr.Address(trsf.Transformer.Identifier, cfg, dst)
+	evAddr := addr.Address(trsf.Transformer.Identifier, cfg, dst, e.Globals())
 
 	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(trsf.ComponentAddr()))

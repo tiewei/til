@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config"
 	. "bridgedl/core"
 	"bridgedl/fs"
 )
@@ -37,7 +38,7 @@ func TestEvaluator(t *testing.T) {
 		const var1, var2 = "var1", "var2"
 
 		// nil FS is safe b/c test suite does not invoke functions
-		e := NewEvaluator(baseDir, nil)
+		e := NewEvaluator(baseDir, nil, nil)
 
 		if e.HasVariable(root1, var1) {
 			t.Fatal("Expected variable to not exist in the empty Evaluator")
@@ -122,9 +123,9 @@ func TestEvaluator(t *testing.T) {
 			[]byte(fakeFileContents),
 		)
 
-		// Those tests target basic use cases, such as the capacity of the
-		// Evaluator to properly propagate variables and functions to an
-		// EvalContext.
+		// Those tests target basic use cases, such as the ability of
+		// the Evaluator to properly propagate variables and functions
+		// to an EvalContext.
 		// The "lang" package is better suited for testing the decoding
 		// of more complex HCL bodies.
 		testBody := hclBody(t, ``+
@@ -136,7 +137,7 @@ func TestEvaluator(t *testing.T) {
 			"attr_func": &hcldec.AttrSpec{Name: "attr_func", Type: cty.String},
 		})
 
-		e := NewEvaluator(baseDir, testFS)
+		e := NewEvaluator(baseDir, testFS, nil)
 		e.InsertVariable("my", "var", cty.True)
 
 		// decode block
@@ -171,6 +172,50 @@ func TestEvaluator(t *testing.T) {
 			t.Error(`Unexpected value for "attr_var":`, v.GoString())
 		}
 	})
+
+	t.Run("produce global settings", func(t *testing.T) {
+		var deliveryCfg *config.Delivery
+
+		e := NewEvaluator(baseDir, nil, deliveryCfg)
+
+		// returns nil Delivery without panicking if the input was nil
+
+		if d := e.Globals().Delivery(); d != nil {
+			t.Errorf("Expected delivery settings to be nil. Got: %#+v", d)
+		}
+
+		// valid dead-letter sink traversal, but value unknown
+
+		three := int64(3)
+		deliveryCfg = &config.Delivery{
+			Retries: &three,
+			DeadLetterSink: hcl.Traversal{
+				hcl.TraverseRoot{Name: "my"},
+				hcl.TraverseAttr{Name: "var"},
+			},
+		}
+
+		e = NewEvaluator(baseDir, nil, deliveryCfg)
+
+		if d := e.Globals().Delivery(); d == nil {
+			t.Error("Unexpected nil value for delivery settings.")
+		} else {
+			if r := d.Retries; r == nil || *r != 3 {
+				t.Error("Expected Retries to equal 3, got", safeInt64Dereference(r))
+			}
+			if dls := d.DeadLetterSink; dls.IsKnown() {
+				t.Errorf("Expected unknown dead-letter sink, got %#+v", dls)
+			}
+		}
+
+		// value of dead-letter sink traversal becomes known
+
+		e.InsertVariable("my", "var", cty.True)
+
+		if dls := e.Globals().Delivery().DeadLetterSink; !dls.True() {
+			t.Error("Unexpected dead-letter sink value:", dls.GoString())
+		}
+	})
 }
 
 // testVariableValue returns a structured cty value that can be used as
@@ -194,4 +239,11 @@ func hclBody(t *testing.T, code string) hcl.Body {
 	}
 
 	return f.Body
+}
+
+func safeInt64Dereference(v *int64) interface{} {
+	if v != nil {
+		return *v
+	}
+	return v
 }

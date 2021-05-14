@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
@@ -60,7 +61,7 @@ func (*AzureActivityLogs) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value) []interface{} {
+func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	s := k8s.NewObject(k8s.APISources, "AzureActivityLogsSource", k8s.RFC1123Name(id))

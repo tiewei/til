@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/translation"
 )
@@ -49,7 +50,7 @@ func (*DataExprFilter) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
+func (*DataExprFilter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	f := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Filter", k8s.RFC1123Name(id))
@@ -64,6 +65,6 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*DataExprFilter) Address(id string, _, _ cty.Value) cty.Value {
+func (*DataExprFilter) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
 	return k8s.NewDestination("routing.triggermesh.io/v1alpha1", "Filter", k8s.RFC1123Name(id))
 }

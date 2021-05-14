@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
+	"bridgedl/config/globals"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/validation"
 	"bridgedl/translation"
@@ -105,7 +106,7 @@ func (*ContentBased) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*ContentBased) Manifests(id string, config, _ cty.Value) []interface{} {
+func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	name := k8s.RFC1123Name(id)
@@ -155,7 +156,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value) []interface{} {
 }
 
 // Address implements translation.Addressable.
-func (*ContentBased) Address(id string, _, _ cty.Value) cty.Value {
+func (*ContentBased) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
 	return k8s.NewDestination(k8s.APIEventing, "Broker", k8s.RFC1123Name(id))
 }
 
