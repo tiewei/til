@@ -40,7 +40,7 @@ func (*AWSCloudWatch) Spec() hcldec.Spec {
 							Type:     cty.Number,
 							Required: false,
 						},
-						Func: validation.IsInt(),
+						Func: validation.IsInt,
 					},
 					"stat": &hcldec.AttrSpec{
 						Name:     "stat",

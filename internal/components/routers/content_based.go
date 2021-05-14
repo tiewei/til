@@ -7,6 +7,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/internal/sdk/k8s"
+	"bridgedl/internal/sdk/validation"
 	"bridgedl/translation"
 )
 
@@ -26,10 +27,13 @@ func (*ContentBased) Spec() hcldec.Spec {
 	return &hcldec.BlockSetSpec{
 		TypeName: "route",
 		Nested: &hcldec.ObjectSpec{
-			"attributes": &hcldec.AttrSpec{
-				Name:     "attributes",
-				Type:     cty.Map(cty.String),
-				Required: false,
+			"attributes": &hcldec.ValidateSpec{
+				Wrapped: &hcldec.AttrSpec{
+					Name:     "attributes",
+					Type:     cty.Map(cty.String),
+					Required: false,
+				},
+				Func: validation.ContainsCEContextAttributes,
 			},
 			"to": &hcldec.AttrSpec{
 				Name:     "to",

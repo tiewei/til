@@ -6,6 +6,7 @@ import (
 
 	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
+	"bridgedl/internal/sdk/validation"
 	"bridgedl/translation"
 )
 
@@ -38,10 +39,13 @@ func (*Splitter) Spec() hcldec.Spec {
 					Type:     cty.String,
 					Required: true,
 				},
-				"extensions": &hcldec.AttrSpec{
-					Name:     "extensions",
-					Type:     cty.Map(cty.String),
-					Required: false,
+				"extensions": &hcldec.ValidateSpec{
+					Wrapped: &hcldec.AttrSpec{
+						Name:     "extensions",
+						Type:     cty.Map(cty.String),
+						Required: false,
+					},
+					Func: validation.ContainsCEContextAttributes,
 				},
 			},
 			Required: true,

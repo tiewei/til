@@ -31,7 +31,7 @@ func (*Salesforce) Spec() hcldec.Spec {
 				Type:     cty.Number,
 				Required: false,
 			},
-			Func: validation.IsInt(),
+			Func: validation.IsInt,
 		},
 		"client_id": &hcldec.AttrSpec{
 			Name:     "client_id",
