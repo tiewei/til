@@ -1,0 +1,10 @@
+# reviewdog configuration
+
+runner:
+  license:
+    # Uses https://github.com/mattmoor/boilerplate-check
+    cmd: boilerplate-check check --boilerplate=hack/boilerplate/boilerplate.go.txt --file-extension=go
+    # See 'errorformat' documentation at https://vimhelp.org/quickfix.txt.html#error-file-format
+    errorformat:
+      - '%A%f:%l: %m'
+      - '%C%.%#'
