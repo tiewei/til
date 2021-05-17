@@ -17,4 +17,6 @@ limitations under the License.
 package channels
 
 // All includes all "channel" component types supported by TriggerMesh.
-var All = map[string]interface{}{}
+var All = map[string]interface{}{
+	"pubsub": (*PubSub)(nil),
+}
