@@ -238,16 +238,12 @@ func decodeChannelBlock(blk *hcl.Block) (*config.Channel, hcl.Diagnostics) {
 		diags = diags.Append(badIdentifierDiagnostic(blk.LabelRanges[1]))
 	}
 
-	content, remain, contentDiags := blk.Body.PartialContent(config.ChannelBlockSchema)
+	_, remain, contentDiags := blk.Body.PartialContent(config.ChannelBlockSchema)
 	diags = diags.Extend(contentDiags)
-
-	to, decodeDiags := decodeBlockRef(content.Attributes[config.AttrTo])
-	diags = diags.Extend(decodeDiags)
 
 	ch := &config.Channel{
 		Type:        blk.Labels[0],
 		Identifier:  blk.Labels[1],
-		To:          to,
 		Config:      remain,
 		SourceRange: blk.DefRange,
 	}

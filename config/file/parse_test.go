@@ -190,7 +190,7 @@ func TestLoadBridge(t *testing.T) {
 
 		errDiags := diags.Errs()
 
-		const expectNumErrDiags = 3
+		const expectNumErrDiags = 2
 		if len(errDiags) != expectNumErrDiags {
 			t.Fatalf("Expected %d error diagnostics:\n%s", expectNumErrDiags, errDiagsAsString(diags))
 		}
@@ -207,20 +207,15 @@ func TestLoadBridge(t *testing.T) {
 		if errDiags[1].(*hcl.Diagnostic).Subject.Start.Line != 12 {
 			t.Fatal("Unexpected location of error diagnostic:", errDiags[1])
 		}
-		if errDiags[2].(*hcl.Diagnostic).Subject.Start.Line != 20 {
-			t.Fatal("Unexpected location of error diagnostic:", errDiags[2])
-		}
 
-		if n := len(brg.Channels); n != 1 {
-			t.Error("Expected 1 channel, got", n)
-		}
 		if n := len(brg.Transformers); n != 1 {
 			t.Error("Expected 1 transformer, got", n)
 		}
 		if n := len(brg.Sources); n != 1 {
 			t.Error("Expected 1 source, got", n)
 		}
-		if len(brg.Routers) != 0 ||
+		if len(brg.Channels) != 0 ||
+			len(brg.Routers) != 0 ||
 			len(brg.Targets) != 0 {
 
 			t.Errorf("Expected all other components to be empty. Parsed bridge:\n%+v", brg)

@@ -93,8 +93,6 @@ Unless otherwise specified, each documented top-level attribute is _required_.
 
 ```hcl
 channel <CHANNEL TYPE> <CHANNEL IDENTIFIER> {
-    to = <BLOCK REFERENCE>
-
     # component-type-specific configuration
 }
 ```

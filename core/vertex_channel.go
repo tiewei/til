@@ -44,7 +44,6 @@ type ChannelVertex struct {
 var (
 	_ MessagingComponentVertex = (*ChannelVertex)(nil)
 	_ ReferenceableVertex      = (*ChannelVertex)(nil)
-	_ EventSenderVertex        = (*ChannelVertex)(nil)
 	_ AttachableImplVertex     = (*ChannelVertex)(nil)
 	_ DecodableConfigVertex    = (*ChannelVertex)(nil)
 	_ graph.DOTableVertex      = (*ChannelVertex)(nil)
@@ -83,8 +82,8 @@ func (ch *ChannelVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagno
 	cfg, cfgComplete, cfgDiags := ch.DecodedConfig(e)
 	diags = diags.Extend(cfgDiags)
 
-	dst, dstComplete, dstDiags := ch.EventDestination(e)
-	diags = diags.Extend(dstDiags)
+	// channels do not have a "main" event destination
+	dst := cty.NullVal(k8s.DestinationCty)
 
 	evAddr := addr.Address(ch.Channel.Identifier, cfg, dst)
 
@@ -93,14 +92,9 @@ func (ch *ChannelVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagno
 		evAddr = cty.UnknownVal(k8s.DestinationCty)
 	}
 
-	complete := cfgComplete && dstComplete
+	complete := cfgComplete
 
 	return evAddr, complete, diags
-}
-
-// EventDestination implements EventSenderVertex.
-func (ch *ChannelVertex) EventDestination(e *Evaluator) (cty.Value, bool, hcl.Diagnostics) {
-	return e.DecodeTraversal(ch.Channel.To)
 }
 
 // References implements EventSenderVertex.
@@ -112,13 +106,6 @@ func (ch *ChannelVertex) References() ([]*addr.Reference, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
 	var refs []*addr.Reference
-
-	to, toDiags := lang.ParseBlockReference(ch.Channel.To)
-	diags = diags.Extend(toDiags)
-
-	if to != nil {
-		refs = append(refs, to)
-	}
 
 	refsInCfg, refDiags := lang.BlockReferencesInBody(ch.Channel.Config, ch.Spec)
 	diags = diags.Extend(refDiags)

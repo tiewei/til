@@ -31,8 +31,6 @@ channel "some_channel" "MyChannel" {
   some_block { }
 
   some_attribute = "xyz"
-
-  to = transformer.MyTransformer
 }
 
 target "sometarget" "MyTarget" {
