@@ -85,6 +85,12 @@ func (e *Evaluator) HasVariable(root, varname string) bool {
 // configuration body could be decoded without injecting placeholders into the
 // evaluation context.
 func (e *Evaluator) DecodeBlock(b hcl.Body, s hcldec.Spec) (cty.Value, bool, hcl.Diagnostics) {
+	// some component types may not have any configuration body to
+	// decode at all, in which case a nil hcldec.Spec is expected
+	if s == nil {
+		return cty.NullVal(cty.DynamicPseudoType), true, nil
+	}
+
 	return lang.DecodeSafe(b, s, e.EvalContext())
 }
 
