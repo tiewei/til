@@ -108,7 +108,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 			continue
 		}
 
-		res, translDiags := translate(e, cmp, cfg, evDst)
+		res, translDiags := translate(cmp, cfg, evDst)
 		diags = diags.Extend(translDiags)
 
 		manifests = append(manifests, res...)
@@ -132,7 +132,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 			continue
 		}
 
-		res, translDiags := translate(e, cmp, cfg, evDst)
+		res, translDiags := translate(cmp, cfg, evDst)
 		diags = diags.Extend(translDiags)
 
 		manifests = append(manifests, res...)
@@ -142,7 +142,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 }
 
 // translate invokes the translator of the given component.
-func translate(e *Evaluator, cmp MessagingComponentVertex, cfg, evDst cty.Value) (
+func translate(cmp MessagingComponentVertex, cfg, evDst cty.Value) (
 	[]interface{}, hcl.Diagnostics) {
 
 	var diags hcl.Diagnostics
