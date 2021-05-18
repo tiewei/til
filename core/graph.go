@@ -53,6 +53,11 @@ func (b *GraphBuilder) Build() (*graph.DirectedGraph, hcl.Diagnostics) {
 
 		// Resolve references and connect vertices.
 		&ConnectReferencesTransformer{},
+
+		// Connect event senders to the global dead letter sink.
+		&ConnectDeadLetterSinkTransformer{
+			BridgeDeliveryOpts: b.Bridge.Delivery,
+		},
 	}
 
 	g := graph.NewDirectedGraph()
