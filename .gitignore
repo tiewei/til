@@ -1,6 +1,9 @@
 # Build artifacts
 /bridgedl
 
+# Sample Bridge Description Files
+/*.brg.hcl
+
 # Editors and IDEs
 *.swo
 *.swp
