@@ -101,7 +101,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 		manifests = append(manifests, t.Unstructured(), ch, subs)
 
 	default:
-		f := k8s.NewObject(k8s.APIFlow, "Function", name)
+		f := k8s.NewObject(k8s.APIExt, "Function", name)
 
 		f.SetNestedField(runtime, "spec", "runtime")
 		f.SetNestedField(code, "spec", "code")
@@ -135,5 +135,5 @@ func (*Function) Address(id string, config, _ cty.Value) cty.Value {
 	if config.GetAttr("runtime").AsString() == "js" {
 		return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 	}
-	return k8s.NewDestination(k8s.APIFlow, "Function", name)
+	return k8s.NewDestination(k8s.APIExt, "Function", name)
 }

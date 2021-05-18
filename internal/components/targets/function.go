@@ -86,7 +86,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 	name := k8s.RFC1123Name(id)
 
-	f := k8s.NewObject(k8s.APIFlow, "Function", name)
+	f := k8s.NewObject(k8s.APIExt, "Function", name)
 
 	runtime := config.GetAttr("runtime").AsString()
 	f.SetNestedField(runtime, "spec", "runtime")
@@ -113,7 +113,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value) []interface{} 
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIFlow, "Function", name), eventDst)
+		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIExt, "Function", name), eventDst)
 		manifests = append(manifests, ch, subs)
 	}
 
@@ -125,7 +125,7 @@ func (*Function) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {
-		return k8s.NewDestination(k8s.APIFlow, "Function", name)
+		return k8s.NewDestination(k8s.APIExt, "Function", name)
 	}
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }
