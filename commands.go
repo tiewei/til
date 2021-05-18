@@ -43,7 +43,7 @@ func usage(cmdName string) string {
 		"\n" +
 		"COMMANDS:\n" +
 		"    " + cmdGenerate + "     Generate Kubernetes manifests for deploying a Bridge.\n" +
-		"    " + cmdValidate + "     Validate the syntax of a Bridge Description File.\n" +
+		"    " + cmdValidate + "     Validate a Bridge description.\n" +
 		"    " + cmdGraph + "        Represent a Bridge as a directed graph in DOT format.\n"
 }
 
@@ -62,8 +62,9 @@ func usageGenerate(cmdName string) string {
 
 // usageValidate is a usageFn for the "validate" subcommand.
 func usageValidate(cmdName string) string {
-	return "Verifies that a Bridge Description File is syntactically valid. Returns " +
-		"with an exit code of 0 in case of success, with an exit code of 1 otherwise.\n" +
+	return "Verifies that a Bridge is syntactically valid and can be generated. " +
+		"Returns with an exit code of 0 in case of success, with an exit code of 1 " +
+		"otherwise.\n" +
 		"\n" +
 		"USAGE:\n" +
 		"    " + cmdName + " " + cmdValidate + " FILE\n"
@@ -192,7 +193,7 @@ func (c *ValidateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	if _, diags := ctx.Graph(); diags.HasErrors() {
+	if _, diags := ctx.Generate(); diags.HasErrors() {
 		return diags
 	}
 
