@@ -35,8 +35,8 @@ var (
 // Spec implements translation.Decodable.
 func (*AWSPerformanceInsights) Spec() hcldec.Spec {
 	return &hcldec.ObjectSpec{
-		"arn": &hcldec.AttrSpec{
-			Name:     "arn",
+		"region": &hcldec.AttrSpec{
+			Name:     "region",
 			Type:     cty.String,
 			Required: true,
 		},
@@ -60,11 +60,6 @@ func (*AWSPerformanceInsights) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"service_type": &hcldec.AttrSpec{
-			Name:     "service_type",
-			Type:     cty.String,
-			Required: true,
-		},
 	}
 }
 
@@ -74,20 +69,21 @@ func (*AWSPerformanceInsights) Manifests(id string, config, eventDst cty.Value) 
 
 	s := k8s.NewObject(k8s.APISources, "AWSPerformanceInsightsSource", k8s.RFC1123Name(id))
 
-	arn := config.GetAttr("arn").AsString()
-	s.SetNestedField(arn, "spec", "arn")
+	region := config.GetAttr("region").AsString()
+	s.SetNestedField("arn::pi:"+region+"::", "spec", "arn")
 
-	pi := config.GetAttr("polling_interval").AsString()
-	s.SetNestedField(pi, "spec", "pollingInterval")
+	pollingInterval := config.GetAttr("polling_interval").AsString()
+	s.SetNestedField(pollingInterval, "spec", "pollingInterval")
 
-	mq := config.GetAttr("metric_query").AsString()
-	s.SetNestedField(mq, "spec", "metricQuery")
+	metricQuery := config.GetAttr("metric_query").AsString()
+	s.SetNestedField(metricQuery, "spec", "metricQuery")
 
-	i := config.GetAttr("identifier").AsString()
-	s.SetNestedField(i, "spec", "identifier")
+	identifier := config.GetAttr("identifier").AsString()
+	s.SetNestedField(identifier, "spec", "identifier")
 
-	st := config.GetAttr("service_type").AsString()
-	s.SetNestedField(st, "spec", "serviceType")
+	// "RDS" is the only valid service type
+	// https://docs.aws.amazon.com/performance-insights/latest/APIReference/API_GetResourceMetrics.html
+	s.SetNestedField("RDS", "spec", "serviceType")
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
