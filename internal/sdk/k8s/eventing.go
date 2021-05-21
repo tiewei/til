@@ -57,7 +57,7 @@ func NewBroker(name string) *unstructured.Unstructured {
 }
 
 // NewTrigger returns a new Knative Trigger.
-func NewTrigger(name, broker string, dst cty.Value, filter map[string]interface{}) *unstructured.Unstructured {
+func NewTrigger(name, broker string, dst cty.Value, opts ...TriggerOption) *unstructured.Unstructured {
 	validateDNS1123Subdomain(name)
 
 	t := &unstructured.Unstructured{}
@@ -71,11 +71,23 @@ func NewTrigger(name, broker string, dst cty.Value, filter map[string]interface{
 	sink := DecodeDestination(dst)
 	_ = unstructured.SetNestedMap(t.Object, sink, "spec", "subscriber", "ref")
 
-	if len(filter) != 0 {
-		_ = unstructured.SetNestedMap(t.Object, filter, "spec", "filter", "attributes")
+	for _, opt := range opts {
+		opt(t)
 	}
 
 	return t
+}
+
+// TriggerOption is a functional option of a Knative Trigger.
+type TriggerOption func(*unstructured.Unstructured)
+
+// Filter sets the context attributes to filter on.
+func Filter(filter map[string]interface{}) TriggerOption {
+	return func(o *unstructured.Unstructured) {
+		if len(filter) != 0 {
+			_ = unstructured.SetNestedMap(o.Object, filter, "spec", "filter", "attributes")
+		}
+	}
 }
 
 // NewChannel returns a new Knative Channel.

@@ -20,7 +20,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+
 	"github.com/zclconf/go-cty/cty"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
 	. "bridgedl/internal/sdk/k8s"
 )
@@ -80,5 +82,61 @@ func TestDecodeDestination(t *testing.T) {
 				t.Error("Unexpected diff: (-:expect, +:got)", diff)
 			}
 		})
+	}
+}
+
+func TestNewTrigger(t *testing.T) {
+	const (
+		name   = "test"
+		broker = "my-bridge"
+
+		sbAPI  = "test/v0"
+		sbKind = "Test"
+		sbName = "myapp"
+
+		eventtype       = "ticket.v1"
+		ticketid  int64 = 42
+		urgent          = true
+	)
+
+	subscriber := NewDestination(sbAPI, sbKind, sbName)
+
+	trgg := NewTrigger(name, broker, subscriber,
+		Filter(map[string]interface{}{
+			"type":     eventtype,
+			"ticketid": ticketid,
+			"urgent":   urgent,
+		}),
+	)
+
+	expectTrgg := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": APIEventing,
+			"kind":       "Trigger",
+			"metadata": map[string]interface{}{
+				"name": name,
+			},
+			"spec": map[string]interface{}{
+				"broker": broker,
+				"filter": map[string]interface{}{
+					"attributes": map[string]interface{}{
+						"type":     eventtype,
+						"ticketid": ticketid,
+						"urgent":   urgent,
+					},
+				},
+				"subscriber": map[string]interface{}{
+					"ref": map[string]interface{}{
+						"apiVersion": sbAPI,
+						"kind":       sbKind,
+						"name":       sbName,
+					},
+				},
+			},
+		},
+	}
+
+	if d := cmp.Diff(expectTrgg, trgg); d != "" {
+		t.Errorf("Unexpected diff: (-:expect, +:got) %s", d)
 	}
 }

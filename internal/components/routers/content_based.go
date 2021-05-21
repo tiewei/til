@@ -114,8 +114,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accesso
 	broker := k8s.NewBroker(name)
 	manifests = append(manifests, broker)
 
-	i := 0
-	for routeIter := config.ElementIterator(); routeIter.Next(); {
+	for i, routeIter := 0, config.ElementIterator(); routeIter.Next(); i++ {
 		_, route := routeIter.Element()
 
 		routeName := name + "-r" + strconv.Itoa(i)
@@ -145,11 +144,11 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accesso
 			manifests = append(manifests, filter.Unstructured())
 		}
 
-		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst, filterAttr)
+		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst,
+			k8s.Filter(filterAttr),
+		)
 
 		manifests = append(manifests, trigger)
-
-		i++
 	}
 
 	return manifests
