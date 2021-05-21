@@ -69,7 +69,8 @@ func (*GCloudStorage) Manifests(id string, config, eventDst cty.Value, _ globals
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "GoogleCloudStorageTarget", name), eventDst)
+		subscriber := k8s.NewDestination(k8s.APITargets, "GoogleCloudStorageTarget", name)
+		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
 		manifests = append(manifests, ch, subs)
 	}
 

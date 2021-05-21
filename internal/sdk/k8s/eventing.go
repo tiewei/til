@@ -104,7 +104,7 @@ func NewChannel(name string) *unstructured.Unstructured {
 }
 
 // NewSubscription returns a new Knative Subscription.
-func NewSubscription(name, channel string, dst, replyDst cty.Value) *unstructured.Unstructured {
+func NewSubscription(name, channel string, dst cty.Value, opts ...SubscriptionOption) *unstructured.Unstructured {
 	validateDNS1123Subdomain(name)
 
 	s := &unstructured.Unstructured{}
@@ -123,10 +123,22 @@ func NewSubscription(name, channel string, dst, replyDst cty.Value) *unstructure
 	sink := DecodeDestination(dst)
 	_ = unstructured.SetNestedMap(s.Object, sink, "spec", "subscriber", "ref")
 
-	if !replyDst.IsNull() {
-		reply := DecodeDestination(replyDst)
-		_ = unstructured.SetNestedMap(s.Object, reply, "spec", "reply", "ref")
+	for _, opt := range opts {
+		opt(s)
 	}
 
 	return s
+}
+
+// SubscriptionOption is a functional option of a Knative Subscription.
+type SubscriptionOption func(*unstructured.Unstructured)
+
+// ReplyDest sets the destination of event replies.
+func ReplyDest(replyDst cty.Value) SubscriptionOption {
+	return func(o *unstructured.Unstructured) {
+		if !replyDst.IsNull() {
+			reply := DecodeDestination(replyDst)
+			_ = unstructured.SetNestedMap(o.Object, reply, "spec", "reply", "ref")
+		}
+	}
 }

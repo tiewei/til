@@ -144,9 +144,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accesso
 			manifests = append(manifests, filter.Unstructured())
 		}
 
-		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst,
-			k8s.Filter(filterAttr),
-		)
+		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst, k8s.Filter(filterAttr))
 
 		manifests = append(manifests, trigger)
 	}

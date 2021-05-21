@@ -99,7 +99,8 @@ func (*Container) Manifests(id string, config, eventDst cty.Value, _ globals.Acc
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIServing, "Service", name), eventDst)
+		subscriber := k8s.NewDestination(k8s.APIServing, "Service", name)
+		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
 		manifests = append(manifests, ch, subs)
 	}
 

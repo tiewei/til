@@ -76,7 +76,8 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value, _ globals.Accesso
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APIEventingV1Alpha1, "KafkaSink", name), eventDst)
+		subscriber := k8s.NewDestination(k8s.APIEventingV1Alpha1, "KafkaSink", name)
+		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
 		manifests = append(manifests, ch, subs)
 	}
 

@@ -57,7 +57,7 @@ func (*PubSub) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []i
 		subscriberName := name + "-s" + strconv.Itoa(i)
 
 		_, subscriber := subscribersIter.Element()
-		subs := k8s.NewSubscription(subscriberName, name, subscriber, cty.NullVal(k8s.DestinationCty))
+		subs := k8s.NewSubscription(subscriberName, name, subscriber)
 
 		manifests = append(manifests, subs)
 	}

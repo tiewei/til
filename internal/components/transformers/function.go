@@ -97,7 +97,8 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, _ globals.Acce
 
 		// route responses via a channel subscription
 		ch := k8s.NewChannel(name)
-		subs := k8s.NewSubscription(name, name, k8s.NewDestination(k8s.APITargets, "InfraTarget", name), eventDst)
+		subscriber := k8s.NewDestination(k8s.APITargets, "InfraTarget", name)
+		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
 
 		manifests = append(manifests, t.Unstructured(), ch, subs)
 

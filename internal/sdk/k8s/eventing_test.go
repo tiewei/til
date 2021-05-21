@@ -140,3 +140,60 @@ func TestNewTrigger(t *testing.T) {
 		t.Errorf("Unexpected diff: (-:expect, +:got) %s", d)
 	}
 }
+
+func TestNewSubscription(t *testing.T) {
+	const (
+		name    = "test"
+		channel = "my-channel"
+
+		sbAPI  = "test/v0"
+		sbKind = "TestSubscriber"
+		sbName = "event-dest"
+
+		replAPI  = "test/v0"
+		replKind = "TestReply"
+		replName = "reply-dest"
+	)
+
+	subscriber := NewDestination(sbAPI, sbKind, sbName)
+	reply := NewDestination(replAPI, replKind, replName)
+
+	sbsp := NewSubscription(name, channel, subscriber,
+		ReplyDest(reply),
+	)
+
+	expectSbsp := &unstructured.Unstructured{
+		Object: map[string]interface{}{
+			"apiVersion": APIMessaging,
+			"kind":       "Subscription",
+			"metadata": map[string]interface{}{
+				"name": name,
+			},
+			"spec": map[string]interface{}{
+				"channel": map[string]interface{}{
+					"apiVersion": APIMessaging,
+					"kind":       "Channel",
+					"name":       channel,
+				},
+				"subscriber": map[string]interface{}{
+					"ref": map[string]interface{}{
+						"apiVersion": sbAPI,
+						"kind":       sbKind,
+						"name":       sbName,
+					},
+				},
+				"reply": map[string]interface{}{
+					"ref": map[string]interface{}{
+						"apiVersion": replAPI,
+						"kind":       replKind,
+						"name":       replName,
+					},
+				},
+			},
+		},
+	}
+
+	if d := cmp.Diff(expectSbsp, sbsp); d != "" {
+		t.Errorf("Unexpected diff: (-:expect, +:got) %s", d)
+	}
+}
