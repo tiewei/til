@@ -75,8 +75,8 @@ func (*Ping) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor
 	if v := config.GetAttr("content_type"); !v.IsNull() {
 		contentType := v.AsString()
 		s.SetNestedField(contentType, "spec", "contentType")
-	} else if json.Valid([]byte(data)) {
-		contentType := "application/json"
+	} else {
+		contentType := pingContentType([]byte(data))
 		s.SetNestedField(contentType, "spec", "contentType")
 	}
 
@@ -84,4 +84,13 @@ func (*Ping) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor
 	s.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, s.Unstructured())
+}
+
+// pingContentType tries to determine an appropriate content type value for the
+// given data.
+func pingContentType(data []byte) string {
+	if json.Valid(data) {
+		return "application/json"
+	}
+	return "text/plain"
 }
