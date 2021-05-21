@@ -19,6 +19,9 @@ package k8s
 import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	"bridgedl/config/globals"
+	"bridgedl/lang/k8s"
 )
 
 const (
@@ -141,4 +144,80 @@ func ReplyDest(replyDst cty.Value) SubscriptionOption {
 			_ = unstructured.SetNestedMap(o.Object, reply, "spec", "reply", "ref")
 		}
 	}
+}
+
+// Retries sets the number of delivery retries.
+func Retries(n int64) SubscriptionOption {
+	return func(o *unstructured.Unstructured) {
+		if n >= 0 {
+			_ = unstructured.SetNestedField(o.Object, n, "spec", "delivery", "retry")
+		}
+	}
+}
+
+// DeadLetterSink sets the dead-letter sink.
+func DeadLetterSink(deadletterDst cty.Value) SubscriptionOption {
+	return func(o *unstructured.Unstructured) {
+		if !deadletterDst.IsNull() {
+			dls := DecodeDestination(deadletterDst)
+			_ = unstructured.SetNestedMap(o.Object, dls, "spec", "delivery", "deadLetterSink", "ref")
+		}
+	}
+}
+
+// MaybeAppendChannel conditionally appends a Channel and Subscription to a
+// list of manifests, based on the global settings provided by the given
+// globals.Accessor.
+// If a Channel and Subscription are indeed appended, the returned eventDst is
+// a duck Destination matching the Channel.
+//
+// The purpose of this helper is to ease the implementation of global delivery
+// settings across component implementations.
+func MaybeAppendChannel(name string, manifests []interface{}, eventDst cty.Value,
+	glb globals.Accessor) (newManifests []interface{}, newEventDst cty.Value) {
+
+	d := glb.Delivery()
+
+	// do not interpolate a Channel+Subscription if global delivery
+	// settings were omitted
+	if d == nil {
+		return manifests, eventDst
+	}
+
+	name = name + "-" + eventDst.GetAttr("ref").GetAttr("name").AsString()
+
+	ch := NewChannel(name)
+	manifests = append(manifests, ch)
+
+	var sbOpts []SubscriptionOption
+	sbOpts = AppendDeliverySubscriptionOptions(sbOpts, glb)
+
+	sb := NewSubscription(name, name, eventDst, sbOpts...)
+	manifests = append(manifests, sb)
+
+	// a Channel+Subscription were interpolated, the channel becomes the
+	// new event destination
+	eventDst = k8s.NewDestination(APIMessaging, "Channel", name)
+
+	return manifests, eventDst
+}
+
+// AppendDeliverySubscriptionOptions conditionally appends delivery-related
+// options to the given list of SubscriptionOption, based on the global
+// settings provided by the given globals.Accessor.
+func AppendDeliverySubscriptionOptions(sbOpts []SubscriptionOption, glb globals.Accessor) []SubscriptionOption {
+	d := glb.Delivery()
+
+	if d == nil {
+		return sbOpts
+	}
+
+	if r := d.Retries; r != nil {
+		sbOpts = append(sbOpts, Retries(*r))
+	}
+	if dls := d.DeadLetterSink; !dls.IsNull() && dls.IsKnown() {
+		sbOpts = append(sbOpts, DeadLetterSink(dls))
+	}
+
+	return sbOpts
 }

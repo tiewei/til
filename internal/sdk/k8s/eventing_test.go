@@ -17,6 +17,8 @@ limitations under the License.
 package k8s_test
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -24,6 +26,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
+	"bridgedl/config/globals"
 	. "bridgedl/internal/sdk/k8s"
 )
 
@@ -196,4 +199,155 @@ func TestNewSubscription(t *testing.T) {
 	if d := cmp.Diff(expectSbsp, sbsp); d != "" {
 		t.Errorf("Unexpected diff: (-:expect, +:got) %s", d)
 	}
+}
+
+func TestMaybeAppendChannel(t *testing.T) {
+	const (
+		name = "test"
+
+		dstAPI  = "test/v0"
+		dstKind = "TestSubscriber"
+		dstName = "event-dest"
+
+		dlsAPI  = "test/v0"
+		dlsKind = "TestDeadLetter"
+		dlsName = "deadletter-dest"
+	)
+
+	eventDst := NewDestination(dstAPI, dstKind, dstName)
+	deadletterDst := NewDestination(dlsAPI, dlsKind, dlsName)
+
+	commonAssertions := func(t *testing.T, manifests []interface{}, eventDst cty.Value) {
+		if l := len(manifests); l != 2 {
+			t.Fatalf("Expected 2 manifests: a Channel and a Subscription. Got %d: %s", l, prettyPrintManifests(manifests))
+		}
+
+		ch := manifests[0].(*unstructured.Unstructured)
+		sbs := manifests[1].(*unstructured.Unstructured)
+
+		if k := ch.GetKind(); k != "Channel" {
+			t.Error("Expected Channel kind, got", k)
+		}
+		if k := sbs.GetKind(); k != "Subscription" {
+			t.Error("Expected Subscription kind, got", k)
+		}
+
+		// concatenation of 'name' and 'dstName'
+		const expectConcatName = "test-event-dest"
+
+		for _, n := range []string{ch.GetName(), sbs.GetName()} {
+			if n != expectConcatName {
+				t.Error("Expected name to be the concatenation of two names (<sender>-<dest>), got", n)
+			}
+		}
+
+		sbsName, found, err := unstructured.NestedString(sbs.Object, "spec", "channel", "name")
+		if !found || err != nil {
+			t.Error("Channel incorrectly set in Subscription spec:", sbs)
+		} else if sbsName != expectConcatName {
+			t.Error("Incorrect Channel configured in Subscription spec:", sbsName)
+		}
+
+		if eventDstKind := eventDst.GetAttr("ref").GetAttr("kind").AsString(); eventDstKind != "Channel" {
+			t.Error("Expected new event destination to match the Channel, got", eventDstKind)
+		}
+	}
+
+	t.Run("delivery settings not set", func(t *testing.T) {
+		var manifests []interface{}
+
+		glb := globalsAccessorFunc(func() *globals.Delivery {
+			return nil
+		})
+
+		manifests, newEventDst := MaybeAppendChannel(name, manifests, eventDst, glb)
+
+		if l := len(manifests); l != 0 {
+			t.Errorf("Expected no manifest, got %d: %s", l, prettyPrintManifests(manifests))
+		}
+		if !newEventDst.RawEquals(eventDst) {
+			t.Error("Expected event destination to be unchanged, got", newEventDst)
+		}
+	})
+
+	t.Run("with empty delivery settings", func(t *testing.T) {
+		var manifests []interface{}
+
+		glb := globalsAccessorFunc(func() *globals.Delivery {
+			return &globals.Delivery{}
+		})
+
+		manifests, eventDst := MaybeAppendChannel(name, manifests, eventDst, glb)
+
+		commonAssertions(t, manifests, eventDst)
+
+		sbs := manifests[1].(*unstructured.Unstructured)
+
+		delivery, found, err := unstructured.NestedMap(sbs.Object, "spec", "delivery")
+		if err != nil {
+			t.Fatal("Error reading Subscription spec:", err)
+		} else if found {
+			t.Fatal("Expected no delivery attribute in the spec, got:", delivery)
+		}
+	})
+
+	t.Run("with non-empty delivery settings", func(t *testing.T) {
+		var manifests []interface{}
+
+		glb := globalsAccessorFunc(func() *globals.Delivery {
+			three := int64(3)
+			return &globals.Delivery{
+				Retries:        &three,
+				DeadLetterSink: deadletterDst,
+			}
+		})
+
+		manifests, eventDst := MaybeAppendChannel(name, manifests, eventDst, glb)
+
+		commonAssertions(t, manifests, eventDst)
+
+		sbs := manifests[1].(*unstructured.Unstructured)
+
+		delivery, found, err := unstructured.NestedMap(sbs.Object, "spec", "delivery")
+		if err != nil {
+			t.Fatal("Error reading Subscription spec:", err)
+		} else if !found {
+			t.Fatal("Expected a delivery attribute in the spec")
+		}
+
+		retries, found, err := unstructured.NestedInt64(delivery, "retry")
+		if err != nil {
+			t.Fatal("Error reading Subscription spec:", err)
+		} else if !found {
+			t.Error("Expected a retry attribute in the delivery spec")
+		} else if retries != 3 {
+			t.Error("Expected 3 retries, got", retries)
+		}
+
+		dls, found, err := unstructured.NestedMap(delivery, "deadLetterSink", "ref")
+		if err != nil {
+			t.Fatal("Error reading Subscription spec:", err)
+		} else if !found {
+			t.Error("Expected a deadLetterSink attribute in the delivery spec")
+		} else if name := dls["name"]; name != dlsName {
+			t.Error("Unexpected deadLetterSink name:", name)
+		}
+	})
+}
+
+type globalsAccessorFunc func() *globals.Delivery
+
+func (a globalsAccessorFunc) Delivery() *globals.Delivery {
+	return a()
+}
+
+func prettyPrintManifests(manifests []interface{}) string {
+	var b strings.Builder
+
+	for _, m := range manifests {
+		b.WriteByte('\n')
+		b.WriteString(fmt.Sprint(m))
+	}
+
+	return b.String()
 }
