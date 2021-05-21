@@ -96,7 +96,7 @@ router "content_based" "dispatch" {
 // ---- Event Transformers ----
 
 transformer "function" "slack_datadog_metric" {
-  runtime = "js"
+  runtime = "js-otto"
 
   code = <<-EOF
   function handle(input) {
@@ -114,7 +114,7 @@ transformer "function" "slack_datadog_metric" {
 }
 
 transformer "function" "handle_datadog_responses" {
-  runtime = "js"
+  runtime = "js-otto"
 
   code = <<-EOF
   function handle(input) {

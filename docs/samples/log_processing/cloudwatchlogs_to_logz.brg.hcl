@@ -70,7 +70,7 @@ router "content_based" "dispatch" {
 // ---- Event Transformers ----
 
 transformer "function" "cloudwatch_logz" {
-  runtime = "js"
+  runtime = "js-otto"
 
   code = <<-EOF
   function handle(input) {

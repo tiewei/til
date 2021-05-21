@@ -90,7 +90,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, _ globals.Acce
 	code := config.GetAttr("code").AsString()
 
 	switch runtime := config.GetAttr("runtime").AsString(); runtime {
-	case "js":
+	case "js-otto":
 		t := k8s.NewObject(k8s.APITargets, "InfraTarget", name)
 
 		t.SetNestedField(code, "spec", "script", "code")
@@ -134,7 +134,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, _ globals.Acce
 func (*Function) Address(id string, config, _ cty.Value, _ globals.Accessor) cty.Value {
 	name := k8s.RFC1123Name(id)
 
-	if config.GetAttr("runtime").AsString() == "js" {
+	if config.GetAttr("runtime").AsString() == "js-otto" {
 		return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 	}
 	return k8s.NewDestination(k8s.APIExt, "Function", name)
