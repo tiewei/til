@@ -56,10 +56,14 @@ func (*GitHub) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*GitHub) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*GitHub) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject("sources.knative.dev/v1alpha1", "GitHubSource", name)
 
 	eventTypes := sdk.DecodeStringSlice(config.GetAttr("event_types"))
 	s.SetNestedSlice(eventTypes, "spec", "eventTypes")

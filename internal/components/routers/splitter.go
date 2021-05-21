@@ -76,10 +76,15 @@ func (*Splitter) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Splitter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
+func (*Splitter) Manifests(id string, config, _ cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject(k8s.APIFlow, "Splitter", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	eventDst := config.GetAttr("to")
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject(k8s.APIFlow, "Splitter", name)
 
 	path := config.GetAttr("path").AsString()
 	s.SetNestedField(path, "spec", "path")
@@ -95,7 +100,7 @@ func (*Splitter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) [
 		s.SetNestedMap(ceExts, "spec", "ceContext", "extensions")
 	}
 
-	sink := k8s.DecodeDestination(config.GetAttr("to"))
+	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, s.Unstructured())

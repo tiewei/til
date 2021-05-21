@@ -46,7 +46,7 @@ func (*Slack) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Slack) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*Slack) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	name := k8s.RFC1123Name(id)
@@ -61,8 +61,14 @@ func (*Slack) Manifests(id string, config, eventDst cty.Value, _ globals.Accesso
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
+
 		subscriber := k8s.NewDestination(k8s.APITargets, "SlackTarget", name)
-		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
+
+		sbOpts := []k8s.SubscriptionOption{k8s.ReplyDest(eventDst)}
+		sbOpts = k8s.AppendDeliverySubscriptionOptions(sbOpts, glb)
+
+		subs := k8s.NewSubscription(name, name, subscriber, sbOpts...)
+
 		manifests = append(manifests, ch, subs)
 	}
 

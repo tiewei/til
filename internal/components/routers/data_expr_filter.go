@@ -50,15 +50,20 @@ func (*DataExprFilter) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*DataExprFilter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
+func (*DataExprFilter) Manifests(id string, config, _ cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	f := k8s.NewObject(k8s.APIFlow, "Filter", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	eventDst := config.GetAttr("to")
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	f := k8s.NewObject(k8s.APIFlow, "Filter", name)
 
 	expr := config.GetAttr("condition").AsString()
 	f.SetNestedField(expr, "spec", "expression")
 
-	sink := k8s.DecodeDestination(config.GetAttr("to"))
+	sink := k8s.DecodeDestination(eventDst)
 	f.SetNestedMap(sink, "spec", "sink", "ref")
 
 	return append(manifests, f.Unstructured())

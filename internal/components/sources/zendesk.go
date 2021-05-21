@@ -65,10 +65,14 @@ func (*Zendesk) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Zendesk) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*Zendesk) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject(k8s.APISources, "ZendeskSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject(k8s.APISources, "ZendeskSource", name)
 
 	email := config.GetAttr("email").AsString()
 	s.SetNestedField(email, "spec", "email")

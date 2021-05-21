@@ -56,7 +56,7 @@ func (*Kafka) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Kafka) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*Kafka) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	name := k8s.RFC1123Name(id)
@@ -76,8 +76,14 @@ func (*Kafka) Manifests(id string, config, eventDst cty.Value, _ globals.Accesso
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
+
 		subscriber := k8s.NewDestination(k8s.APIEventingV1Alpha1, "KafkaSink", name)
-		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
+
+		sbOpts := []k8s.SubscriptionOption{k8s.ReplyDest(eventDst)}
+		sbOpts = k8s.AppendDeliverySubscriptionOptions(sbOpts, glb)
+
+		subs := k8s.NewSubscription(name, name, subscriber, sbOpts...)
+
 		manifests = append(manifests, ch, subs)
 	}
 

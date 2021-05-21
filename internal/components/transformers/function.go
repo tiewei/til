@@ -82,7 +82,7 @@ func (*Function) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Function) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*Function) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	name := k8s.RFC1123Name(id)
@@ -97,12 +97,19 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, _ globals.Acce
 
 		// route responses via a channel subscription
 		ch := k8s.NewChannel(name)
+
 		subscriber := k8s.NewDestination(k8s.APITargets, "InfraTarget", name)
-		subs := k8s.NewSubscription(name, name, subscriber, k8s.ReplyDest(eventDst))
+
+		sbOpts := []k8s.SubscriptionOption{k8s.ReplyDest(eventDst)}
+		sbOpts = k8s.AppendDeliverySubscriptionOptions(sbOpts, glb)
+
+		subs := k8s.NewSubscription(name, name, subscriber, sbOpts...)
 
 		manifests = append(manifests, t.Unstructured(), ch, subs)
 
 	default:
+		manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
 		f := k8s.NewObject(k8s.APIExt, "Function", name)
 
 		f.SetNestedField(runtime, "spec", "runtime")

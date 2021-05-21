@@ -55,10 +55,14 @@ func (*AzureEventHubs) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*AzureEventHubs) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*AzureEventHubs) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject(k8s.APISources, "AzureEventHubSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject(k8s.APISources, "AzureEventHubSource", name)
 
 	hubNamespace := config.GetAttr("hub_namespace").AsString()
 	s.SetNestedField(hubNamespace, "spec", "hubNamespace")

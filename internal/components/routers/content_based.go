@@ -106,7 +106,7 @@ func (*ContentBased) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
+func (*ContentBased) Manifests(id string, config, _ cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	name := k8s.RFC1123Name(id)
@@ -144,7 +144,12 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accesso
 			manifests = append(manifests, filter.Unstructured())
 		}
 
-		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst, k8s.Filter(filterAttr))
+		trggOpts := []k8s.TriggerOption{k8s.Filter(filterAttr)}
+		for _, sbOpt := range k8s.AppendDeliverySubscriptionOptions(nil, glb) {
+			trggOpts = append(trggOpts, k8s.TriggerOption(sbOpt))
+		}
+
+		trigger := k8s.NewTrigger(routeName, name, triggerSubsDst, trggOpts...)
 
 		manifests = append(manifests, trigger)
 	}

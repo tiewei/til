@@ -70,10 +70,14 @@ func (*Kafka) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Kafka) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*Kafka) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.knative.dev/v1beta1", "KafkaSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject("sources.knative.dev/v1beta1", "KafkaSource", name)
 
 	if v := config.GetAttr("consumer_group"); !v.IsNull() {
 		consumerGroup := v.AsString()

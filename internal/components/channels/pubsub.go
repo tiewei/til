@@ -45,7 +45,7 @@ func (*PubSub) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*PubSub) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
+func (*PubSub) Manifests(id string, config, _ cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
 	name := k8s.RFC1123Name(id)
@@ -57,8 +57,10 @@ func (*PubSub) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []i
 		subscriberName := name + "-s" + strconv.Itoa(i)
 
 		_, subscriber := subscribersIter.Element()
-		subs := k8s.NewSubscription(subscriberName, name, subscriber)
 
+		sbOpts := k8s.AppendDeliverySubscriptionOptions(nil, glb)
+
+		subs := k8s.NewSubscription(subscriberName, name, subscriber, sbOpts...)
 		manifests = append(manifests, subs)
 	}
 

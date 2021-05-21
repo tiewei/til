@@ -64,10 +64,14 @@ func (*HTTPPoller) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*HTTPPoller) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*HTTPPoller) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject(k8s.APISources, "HTTPPollerSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject(k8s.APISources, "HTTPPollerSource", name)
 
 	eventType := config.GetAttr("event_type").AsString()
 	s.SetNestedField(eventType, "spec", "eventType")

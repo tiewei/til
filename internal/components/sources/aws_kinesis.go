@@ -50,10 +50,14 @@ func (*AWSKinesis) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*AWSKinesis) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*AWSKinesis) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject(k8s.APISources, "AWSKinesisSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject(k8s.APISources, "AWSKinesisSource", name)
 
 	arn := config.GetAttr("arn").AsString()
 	s.SetNestedField(arn, "spec", "arn")

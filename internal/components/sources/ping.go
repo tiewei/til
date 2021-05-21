@@ -56,12 +56,16 @@ func (*Ping) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*Ping) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*Ping) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	const defaultSchedule = "* * * * *" // every minute
 
 	var manifests []interface{}
 
-	s := k8s.NewObject("sources.knative.dev/v1beta2", "PingSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject("sources.knative.dev/v1beta2", "PingSource", name)
 
 	schedule := defaultSchedule
 	if v := config.GetAttr("schedule"); !v.IsNull() {

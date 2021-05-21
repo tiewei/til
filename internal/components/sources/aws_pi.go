@@ -65,10 +65,14 @@ func (*AWSPerformanceInsights) Spec() hcldec.Spec {
 }
 
 // Manifests implements translation.Translatable.
-func (*AWSPerformanceInsights) Manifests(id string, config, eventDst cty.Value, _ globals.Accessor) []interface{} {
+func (*AWSPerformanceInsights) Manifests(id string, config, eventDst cty.Value, glb globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject(k8s.APISources, "AWSPerformanceInsightsSource", k8s.RFC1123Name(id))
+	name := k8s.RFC1123Name(id)
+
+	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
+
+	s := k8s.NewObject(k8s.APISources, "AWSPerformanceInsightsSource", name)
 
 	region := config.GetAttr("region").AsString()
 	s.SetNestedField("arn::pi:"+region+"::", "spec", "arn")
