@@ -53,7 +53,7 @@ func (*DataExprFilter) Spec() hcldec.Spec {
 func (*DataExprFilter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	f := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Filter", k8s.RFC1123Name(id))
+	f := k8s.NewObject(k8s.APIFlow, "Filter", k8s.RFC1123Name(id))
 
 	expr := config.GetAttr("condition").AsString()
 	f.SetNestedField(expr, "spec", "expression")
@@ -66,5 +66,5 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value, _ globals.Acces
 
 // Address implements translation.Addressable.
 func (*DataExprFilter) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
-	return k8s.NewDestination("routing.triggermesh.io/v1alpha1", "Filter", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIFlow, "Filter", k8s.RFC1123Name(id))
 }

@@ -128,7 +128,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, _ globals.Accesso
 		triggerSubsDst := routeDst
 
 		if v := route.GetAttr("condition"); !v.IsNull() {
-			const filterAPIGroup = "routing.triggermesh.io/v1alpha1"
+			const filterAPIGroup = k8s.APIFlow
 			const filterKind = "Filter"
 
 			triggerSubsDst = k8s.NewDestination(filterAPIGroup, filterKind, routeName)

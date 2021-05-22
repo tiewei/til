@@ -79,7 +79,7 @@ func (*Splitter) Spec() hcldec.Spec {
 func (*Splitter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) []interface{} {
 	var manifests []interface{}
 
-	s := k8s.NewObject("routing.triggermesh.io/v1alpha1", "Splitter", k8s.RFC1123Name(id))
+	s := k8s.NewObject(k8s.APIFlow, "Splitter", k8s.RFC1123Name(id))
 
 	path := config.GetAttr("path").AsString()
 	s.SetNestedField(path, "spec", "path")
@@ -103,5 +103,5 @@ func (*Splitter) Manifests(id string, config, _ cty.Value, _ globals.Accessor) [
 
 // Address implements translation.Addressable.
 func (*Splitter) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
-	return k8s.NewDestination("routing.triggermesh.io/v1alpha1", "Splitter", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIFlow, "Splitter", k8s.RFC1123Name(id))
 }
