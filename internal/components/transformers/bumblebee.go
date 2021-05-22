@@ -128,7 +128,7 @@ func (*Bumblebee) Manifests(id string, config, eventDst cty.Value, glb globals.A
 }
 
 // Address implements translation.Addressable.
-func (*Bumblebee) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
+func (*Bumblebee) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination(k8s.APIFlow, "Transformation", k8s.RFC1123Name(id))
 }
 

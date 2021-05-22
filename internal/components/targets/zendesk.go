@@ -100,7 +100,7 @@ func (*Zendesk) Manifests(id string, config, eventDst cty.Value, glb globals.Acc
 }
 
 // Address implements translation.Addressable.
-func (*Zendesk) Address(id string, _, eventDst cty.Value, _ globals.Accessor) cty.Value {
+func (*Zendesk) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {

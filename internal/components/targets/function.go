@@ -129,7 +129,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, glb globals.Ac
 }
 
 // Address implements translation.Addressable.
-func (*Function) Address(id string, _, eventDst cty.Value, _ globals.Accessor) cty.Value {
+func (*Function) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {

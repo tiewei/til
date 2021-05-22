@@ -68,6 +68,6 @@ func (*PubSub) Manifests(id string, config, _ cty.Value, glb globals.Accessor) [
 }
 
 // Address implements translation.Addressable.
-func (*PubSub) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
+func (*PubSub) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", k8s.RFC1123Name(id))
 }

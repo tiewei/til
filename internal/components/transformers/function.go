@@ -138,7 +138,7 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, glb globals.Ac
 }
 
 // Address implements translation.Addressable.
-func (*Function) Address(id string, config, _ cty.Value, _ globals.Accessor) cty.Value {
+func (*Function) Address(id string, config, _ cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if config.GetAttr("runtime").AsString() == "js-otto" {

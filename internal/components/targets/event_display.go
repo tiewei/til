@@ -48,6 +48,6 @@ func (*EventDisplay) Manifests(id string, _, _ cty.Value, _ globals.Accessor) []
 }
 
 // Address implements translation.Addressable.
-func (*EventDisplay) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
+func (*EventDisplay) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination(k8s.APIServing, "Service", k8s.RFC1123Name(id))
 }

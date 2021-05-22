@@ -86,7 +86,7 @@ func (trg *TargetVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagno
 	dst, dstComplete, dstDiags := trg.EventDestination(e)
 	diags = diags.Extend(dstDiags)
 
-	evAddr := addr.Address(trg.Target.Identifier, cfg, dst, e.Globals())
+	evAddr := addr.Address(trg.Target.Identifier, cfg, dst)
 
 	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(trg.ComponentAddr()))

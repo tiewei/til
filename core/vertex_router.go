@@ -86,7 +86,7 @@ func (rtr *RouterVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagno
 	// routers do not have a "main" event destination
 	dst := cty.NullVal(k8s.DestinationCty)
 
-	evAddr := addr.Address(rtr.Router.Identifier, cfg, dst, e.Globals())
+	evAddr := addr.Address(rtr.Router.Identifier, cfg, dst)
 
 	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(rtr.ComponentAddr()))

@@ -93,7 +93,7 @@ func (*AWSKinesis) Manifests(id string, config, eventDst cty.Value, glb globals.
 }
 
 // Address implements translation.Addressable.
-func (*AWSKinesis) Address(id string, _, eventDst cty.Value, _ globals.Accessor) cty.Value {
+func (*AWSKinesis) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {

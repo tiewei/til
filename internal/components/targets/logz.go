@@ -84,7 +84,7 @@ func (*Logz) Manifests(id string, config, eventDst cty.Value, glb globals.Access
 }
 
 // Address implements translation.Addressable.
-func (*Logz) Address(id string, _, eventDst cty.Value, _ globals.Accessor) cty.Value {
+func (*Logz) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {

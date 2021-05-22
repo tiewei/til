@@ -85,7 +85,7 @@ func (*AWSS3) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 }
 
 // Address implements translation.Addressable.
-func (*AWSS3) Address(id string, _, eventDst cty.Value, _ globals.Accessor) cty.Value {
+func (*AWSS3) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {

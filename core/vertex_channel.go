@@ -85,7 +85,7 @@ func (ch *ChannelVertex) EventAddress(e *Evaluator) (cty.Value, bool, hcl.Diagno
 	// channels do not have a "main" event destination
 	dst := cty.NullVal(k8s.DestinationCty)
 
-	evAddr := addr.Address(ch.Channel.Identifier, cfg, dst, e.Globals())
+	evAddr := addr.Address(ch.Channel.Identifier, cfg, dst)
 
 	if !k8s.IsDestination(evAddr) {
 		diags = diags.Append(wrongAddressTypeDiagnostic(ch.ComponentAddr()))

@@ -84,7 +84,7 @@ func (*GCloudStorage) Manifests(id string, config, eventDst cty.Value, glb globa
 }
 
 // Address implements translation.Addressable.
-func (*GCloudStorage) Address(id string, _, eventDst cty.Value, _ globals.Accessor) cty.Value {
+func (*GCloudStorage) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {

@@ -70,6 +70,6 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value, glb globals.Acc
 }
 
 // Address implements translation.Addressable.
-func (*DataExprFilter) Address(id string, _, _ cty.Value, _ globals.Accessor) cty.Value {
+func (*DataExprFilter) Address(id string, _, _ cty.Value) cty.Value {
 	return k8s.NewDestination(k8s.APIFlow, "Filter", k8s.RFC1123Name(id))
 }
