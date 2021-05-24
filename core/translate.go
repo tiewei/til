@@ -92,8 +92,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 			continue
 		}
 
-		ref, ok := v.(ReferenceableVertex)
-		if ok {
+		if ref, ok := v.(ReferenceableVertex); ok {
 			evalDiags := appendToEvaluator(e, ref)
 			diags = diags.Extend(evalDiags)
 		}

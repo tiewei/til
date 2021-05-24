@@ -49,6 +49,12 @@ import (
 func DecodeSafe(b hcl.Body, s hcldec.Spec, ctx *hcl.EvalContext) (cty.Value, bool /*complete*/, hcl.Diagnostics) {
 	var diags hcl.Diagnostics
 
+	// Attempt a first "blind" decoding, with the expectation that all
+	// required variables are known to the given EvalContext. Check for
+	// missing variables only in case this step fails.
+	// The expectation is that the first decoding succeeds in a large
+	// majority of cases, as a result of the topological sorting of
+	// Decodable components performed in the core.
 	config, decDiags := hcldec.Decode(b, s, ctx)
 	if !decDiags.HasErrors() {
 		return config, true, diags.Extend(decDiags)
