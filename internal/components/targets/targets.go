@@ -18,6 +18,7 @@ package targets
 
 // All includes all "target" component types supported by TriggerMesh.
 var All = map[string]interface{}{
+	"aws_dynamodb":   (*AWSDynamoDB)(nil),
 	"aws_kinesis":    (*AWSKinesis)(nil),
 	"aws_lambda":     (*AWSLambda)(nil),
 	"aws_s3":         (*AWSS3)(nil),
