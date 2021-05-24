@@ -65,7 +65,7 @@ func (*Ping) Manifests(id string, config, eventDst cty.Value, glb globals.Access
 
 	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
 
-	s := k8s.NewObject("sources.knative.dev/v1beta2", "PingSource", name)
+	s := k8s.NewObject("sources.knative.dev/v1", "PingSource", name)
 
 	schedule := defaultSchedule
 	if v := config.GetAttr("schedule"); !v.IsNull() {
