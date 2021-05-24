@@ -42,11 +42,6 @@ func (*AWSKinesis) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"partition": &hcldec.AttrSpec{
-			Name:     "partition",
-			Type:     cty.String,
-			Required: true,
-		},
 		"credentials": &hcldec.AttrSpec{
 			Name:     "credentials",
 			Type:     k8s.ObjectReferenceCty,
@@ -66,8 +61,8 @@ func (*AWSKinesis) Manifests(id string, config, eventDst cty.Value, glb globals.
 	arn := config.GetAttr("arn").AsString()
 	t.SetNestedField(arn, "spec", "arn")
 
-	partition := config.GetAttr("partition").AsString()
-	t.SetNestedField(partition, "spec", "partition")
+	const partitionKey = "static"
+	t.SetNestedField(partitionKey, "spec", "partition")
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
