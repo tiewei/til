@@ -21,6 +21,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"bridgedl/config/globals"
+	"bridgedl/internal/sdk"
 	"bridgedl/internal/sdk/k8s"
 	"bridgedl/internal/sdk/secrets"
 	"bridgedl/translation"
@@ -36,8 +37,8 @@ var (
 // Spec implements translation.Decodable.
 func (*AWSPerformanceInsights) Spec() hcldec.Spec {
 	return &hcldec.ObjectSpec{
-		"region": &hcldec.AttrSpec{
-			Name:     "region",
+		"arn": &hcldec.AttrSpec{
+			Name:     "arn",
 			Type:     cty.String,
 			Required: true,
 		},
@@ -51,14 +52,9 @@ func (*AWSPerformanceInsights) Spec() hcldec.Spec {
 			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
-		"metric_query": &hcldec.AttrSpec{
-			Name:     "metric_query",
-			Type:     cty.String,
-			Required: true,
-		},
-		"identifier": &hcldec.AttrSpec{
-			Name:     "identifier",
-			Type:     cty.String,
+		"metric_queries": &hcldec.AttrSpec{
+			Name:     "metric_queries",
+			Type:     cty.List(cty.String),
 			Required: true,
 		},
 	}
@@ -74,21 +70,14 @@ func (*AWSPerformanceInsights) Manifests(id string, config, eventDst cty.Value, 
 
 	s := k8s.NewObject(k8s.APISources, "AWSPerformanceInsightsSource", name)
 
-	region := config.GetAttr("region").AsString()
-	s.SetNestedField("arn::pi:"+region+"::", "spec", "arn")
+	arn := config.GetAttr("arn").AsString()
+	s.SetNestedField(arn, "spec", "arn")
 
 	pollingInterval := config.GetAttr("polling_interval").AsString()
 	s.SetNestedField(pollingInterval, "spec", "pollingInterval")
 
-	metricQuery := config.GetAttr("metric_query").AsString()
-	s.SetNestedField(metricQuery, "spec", "metricQuery")
-
-	identifier := config.GetAttr("identifier").AsString()
-	s.SetNestedField(identifier, "spec", "identifier")
-
-	// "RDS" is the only valid service type
-	// https://docs.aws.amazon.com/performance-insights/latest/APIReference/API_GetResourceMetrics.html
-	s.SetNestedField("RDS", "spec", "serviceType")
+	metricQueries := sdk.DecodeStringSlice(config.GetAttr("metric_queries"))
+	s.SetNestedSlice(metricQueries, "spec", "metricQueries")
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
