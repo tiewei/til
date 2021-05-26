@@ -10,7 +10,7 @@ bridge "some_bridge" {
   }
 }
 
-source "some_source" "MySource" {
+source some_source "MySource" {
   some_block { }
 
   some_attribute = "xyz"
@@ -18,13 +18,13 @@ source "some_source" "MySource" {
   to = router.MyRouter
 }
 
-router "some_router" "MyRouter" {
+router some_router "MyRouter" {
   some_block { }
 
   some_attribute = "xyz"
 }
 
-transformer "some_transformer" "MyTransformer" {
+transformer some_transformer "MyTransformer" {
   some_block { }
 
   some_attribute = "xyz"
@@ -32,13 +32,13 @@ transformer "some_transformer" "MyTransformer" {
   to = channel.MyChannel
 }
 
-channel "some_channel" "MyChannel" {
+channel some_channel "MyChannel" {
   some_block { }
 
   some_attribute = "xyz"
 }
 
-target "sometarget" "MyTarget" {
+target sometarget "MyTarget" {
   some_block { }
 
   some_attribute = "xyz"

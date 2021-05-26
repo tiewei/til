@@ -1,6 +1,6 @@
 # This file contains a Bridge description with a block of an unknown type.
 
-source "some_source" "MySource" {
+source some_source "MySource" {
   some_block { }
 
   some_attribute = "xyz"

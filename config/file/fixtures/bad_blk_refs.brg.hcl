@@ -1,6 +1,6 @@
 # This file contains a Bridge description with malformed block references.
 
-source "some_source" "MySource1" {
+source some_source "MySource1" {
   some_block { }
 
   some_attribute = "xyz"
@@ -9,7 +9,7 @@ source "some_source" "MySource1" {
   to = "${foo.bar}"
 }
 
-source "some_source" "MySource2" {
+source some_source "MySource2" {
   some_block { }
 
   some_attribute = "xyz"
@@ -18,7 +18,7 @@ source "some_source" "MySource2" {
   to = foo+bar
 }
 
-source "some_source" "MySource3" {
+source some_source "MySource3" {
   some_block { }
 
   some_attribute = "xyz"

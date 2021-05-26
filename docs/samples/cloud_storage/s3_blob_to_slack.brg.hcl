@@ -34,7 +34,7 @@ bridge "s3_blob_to_slack" {}
 
 // ---- Event Sources ----
 
-source "aws_s3" "my_bucket" {
+source aws_s3 "my_bucket" {
   arn = "arn:aws:s3:us-east-2:123456789012:my-bucket"
 
   event_types = [
@@ -47,7 +47,7 @@ source "aws_s3" "my_bucket" {
   to = router.dispatch
 }
 
-source "azure_blob_storage" "my_files" {
+source azure_blob_storage "my_files" {
   storage_account_id = "/subscriptions/1234/resourceGroups/my-group/providers/Microsoft.Storage/storageAccounts/myfiles"
   event_hub_id = "/subscriptions/1234/resourceGroups/my-group/providers/Microsoft.EventHub/namespaces/myevents"
 
@@ -63,18 +63,18 @@ source "azure_blob_storage" "my_files" {
 
 // ---- Event Targets ----
 
-target "slack" "chat_notifications" {
+target slack "chat_notifications" {
   auth = secret_name("my-slack-app")
 }
 
-target "container" "sockeye" {
+target container "sockeye" {
   image = "docker.io/n3wscott/sockeye:v0.7.0"
   public = true
 }
 
 // ---- Event Routing ----
 
-router "content_based" "dispatch" {
+router content_based "dispatch" {
 
   route {
     attributes = {
@@ -98,7 +98,7 @@ router "content_based" "dispatch" {
 
 // ---- Event Transformers ----
 
-transformer "function" "s3_slack_message" {
+transformer function "s3_slack_message" {
   runtime = "python"
 
   code = <<-EOF
@@ -118,7 +118,7 @@ transformer "function" "s3_slack_message" {
   to = target.chat_notifications
 }
 
-transformer "function" "blob_slack_message" {
+transformer function "blob_slack_message" {
   runtime = "python"
 
   code = <<-EOF

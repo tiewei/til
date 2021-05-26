@@ -4,7 +4,7 @@
 bridge {}
 
 #! this block contains too many labels, it won't be evaluated
-source "some_source" "MySource1" "another_label" {
+source some_source" "MySource1 "another_label" {
   some_block { }
 
   some_attribute = "xyz"

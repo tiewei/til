@@ -28,7 +28,7 @@ bridge "cloudwatchlogs_to_logz" {}
 
 // ---- Event Sources ----
 
-source "aws_cloudwatch_logs" "my_logs" {
+source aws_cloudwatch_logs "my_logs" {
   arn = "arn:aws:logs:us-east-2:123456789012:log-group:/my/log/group:*"
   polling_interval = "1m"
 
@@ -39,20 +39,20 @@ source "aws_cloudwatch_logs" "my_logs" {
 
 // ---- Event Targets ----
 
-target "logz" "my_logs" {
+target logz "my_logs" {
   logs_listener_url = "listener.logz.io"
 
   auth = secret_name("my-logz-credentials")
 }
 
-target "container" "sockeye" {
+target container "sockeye" {
   image = "docker.io/n3wscott/sockeye:v0.7.0"
   public = true
 }
 
 // ---- Event Routing ----
 
-router "content_based" "dispatch" {
+router content_based "dispatch" {
 
   route {
     attributes = {
@@ -69,7 +69,7 @@ router "content_based" "dispatch" {
 
 // ---- Event Transformers ----
 
-transformer "function" "cloudwatch_logz" {
+transformer function "cloudwatch_logz" {
   runtime = "js-otto"
 
   code = <<-EOF

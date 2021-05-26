@@ -39,7 +39,7 @@ bridge "slack_msg_count" {}
 
 // ---- Event Sources ----
 
-source "slack" "general_channel" {
+source slack "general_channel" {
   signing_secret = secret_name("my-slack-app")
   app_id = "A12345"
 
@@ -48,14 +48,14 @@ source "slack" "general_channel" {
 
 // ---- Event Targets ----
 
-target "datadog" "slack_stats" {
+target datadog "slack_stats" {
   metric_prefix = "slackgeneral"
   auth = secret_name("my-datadog-credentials")
 
   reply_to = router.dispatch
 }
 
-target "zendesk" "datadog_errors" {
+target zendesk "datadog_errors" {
   subdomain = "example-corp"
 
   email = "admin@example.com"
@@ -64,14 +64,14 @@ target "zendesk" "datadog_errors" {
   subject = "Ticket from TriggerMesh"
 }
 
-target "container" "sockeye" {
+target container "sockeye" {
   image = "docker.io/n3wscott/sockeye:v0.7.0"
   public = true
 }
 
 // ---- Event Routing ----
 
-router "content_based" "dispatch" {
+router content_based "dispatch" {
   
   route {
     attributes = {
@@ -95,7 +95,7 @@ router "content_based" "dispatch" {
 
 // ---- Event Transformers ----
 
-transformer "function" "slack_datadog_metric" {
+transformer function "slack_datadog_metric" {
   runtime = "js-otto"
 
   code = <<-EOF
@@ -113,7 +113,7 @@ transformer "function" "slack_datadog_metric" {
   to = target.slack_stats
 }
 
-transformer "function" "handle_datadog_responses" {
+transformer function "handle_datadog_responses" {
   runtime = "js-otto"
 
   code = <<-EOF

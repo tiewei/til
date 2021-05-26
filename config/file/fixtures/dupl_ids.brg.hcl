@@ -1,6 +1,6 @@
 # This file contains a Bridge description with duplicated block identifiers.
 
-source "some_source" "MySource" {
+source some_source "MySource" {
   some_block { }
 
   some_attribute = "xyz"
@@ -9,7 +9,7 @@ source "some_source" "MySource" {
 }
 
 #! this block uses the same identifier as the block above
-source "other_source" "MySource" {
+source other_source "MySource" {
   some_block { }
 
   some_attribute = "xyz"
