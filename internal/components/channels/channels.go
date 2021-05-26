@@ -18,5 +18,6 @@ package channels
 
 // All includes all "channel" component types supported by TriggerMesh.
 var All = map[string]interface{}{
-	"pubsub": (*PubSub)(nil),
+	"point_to_point": (*PointToPoint)(nil),
+	"pubsub":         (*PubSub)(nil),
 }
