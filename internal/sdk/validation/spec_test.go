@@ -53,6 +53,10 @@ func TestIsInt(t *testing.T) {
 			in:        cty.MustParseNumberVal(strconv.FormatUint(math.MaxInt64+1, 10)),
 			expectErr: true,
 		},
+		"null value": {
+			in:        cty.NullVal(cty.Number),
+			expectErr: false,
+		},
 		"not a number": {
 			in:        cty.False,
 			expectErr: true,

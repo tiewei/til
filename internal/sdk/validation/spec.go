@@ -31,6 +31,9 @@ type ValidateSpecFunc func(cty.Value) hcl.Diagnostics
 func IsInt(v cty.Value) hcl.Diagnostics {
 	var diags hcl.Diagnostics
 
+	if v.IsNull() {
+		return diags
+	}
 	if v.Type() != cty.Number || !isInt64(v.AsBigFloat()) {
 		diags = diags.Append(wrongTypeDiagnostic(v, "integer"))
 	}
