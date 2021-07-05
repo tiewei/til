@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 
-	. "bridgedl/config/file"
-	"bridgedl/fs"
+	. "til/config/file"
+	"til/fs"
 )
 
 // List of available fixture files.

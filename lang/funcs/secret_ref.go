@@ -24,7 +24,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"bridgedl/lang/k8s"
+	"til/lang/k8s"
 )
 
 // SecretRefFunc returns the implementation of the "secret_ref" function.

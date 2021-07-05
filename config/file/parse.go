@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclparse"
 
-	"bridgedl/config"
-	"bridgedl/fs"
+	"til/config"
+	"til/fs"
 )
 
 // Parser can parse Bridge Description Files and decode them into actual Bridge structs.

@@ -1,6 +1,6 @@
 # Software Architecture
 
-This document describes the architecture of the `bridgedl` interpreter, and explains the design choices behind it.
+This document describes the architecture of the `til` interpreter, and explains the design choices behind it.
 
 ## Contents
 
@@ -16,7 +16,7 @@ This document describes the architecture of the `bridgedl` interpreter, and expl
 
 ### The Component Graph
 
-The architecture of `bridgedl` borrows a few ideas from [HashiCorp Terraform][tf-arch]. For instance, we reason about a
+The architecture of `til` borrows a few ideas from [HashiCorp Terraform][tf-arch]. For instance, we reason about a
 Bridge description as a [directed graph][wiki-graph] where each component of a messaging system is a _vertex_ (_"node"_)
 connected to one or more other components by an _edge_ (_"link"_) that represents the flow of events in that system
 (Terraform calls it the ["Resource Graph"][tf-graph]).
@@ -31,7 +31,7 @@ to achieve.
 
 ### Loose Comparisons with Terraform
 
-Like Terraform, `bridgedl`...
+Like Terraform, `til`...
 
 * Interprets configuration files written in a language based on the [HCL syntax][hcl-spec] (the [_Bridge Description
   Language_][bdl-spec]).
@@ -40,7 +40,7 @@ Like Terraform, `bridgedl`...
 * Uses internal schemas ([`hcldec.Spec`][hcldec-spec]) for decoding the contents of HCL blocks into concrete
   types/values.
 
-Unlike Terraform, `bridgedl`...
+Unlike Terraform, `til`...
 
 * Is not concerned about the deployment aspects of the components it interprets. The interpreter generates deployment
   manifests which users are free to deploy using the tool of their choice (kubectl, Helm, Terraform, ...).
@@ -67,7 +67,7 @@ This is achieved by successive transformations performed by implementers of the
 information susceptible to be useful to translators (e.g. a schema to decode the contents of the corresponding HCL
 block, looked up in a map of supported component implementations). The inspiration for this iterative approach comes
 from Terraform's design, and aims at making the process of building the graph more testable, even though the complexity
-of `bridgedl` is not comparable to Terraform's.
+of `til` is not comparable to Terraform's.
 
 In order to avoid leaking the "graph" domain into the "configuration" domain, and having to implement large interfaces
 for each type in the [`config`][pkgconfig] package, we leverage Go's behavioral polymorphism by wrapping `config` types
@@ -121,16 +121,16 @@ is being walked.
 [arch-graph]: .assets/arch-request-flow.svg
 [topo-sort-graph]: .assets/topological-sort.svg
 [bdl-spec]: language-spec.md
-[pkgcore-graphb]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/graph.go#L10-L15
-[pkgcore-grapht]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/graph.go#L52-L55
-[pkgcore-brgtrsl]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/translate.go#L13-L18
-[pkgcore-eval]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/eval_context.go#L12-L27
-[pkgcore]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/doc.go
-[pkgcore-chvrtx]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/vertex_channel.go#L16-L26
-[pkgcore-addrvrtx]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/core/transform_connect_refs.go#L11-L25
-[pkgconfig]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/config/doc.go
+[pkgcore-graphb]: https://github.com/triggermesh/til/blob/bf0d78bd/core/graph.go#L10-L15
+[pkgcore-grapht]: https://github.com/triggermesh/til/blob/bf0d78bd/core/graph.go#L52-L55
+[pkgcore-brgtrsl]: https://github.com/triggermesh/til/blob/bf0d78bd/core/translate.go#L13-L18
+[pkgcore-eval]: https://github.com/triggermesh/til/blob/bf0d78bd/core/eval_context.go#L12-L27
+[pkgcore]: https://github.com/triggermesh/til/blob/bf0d78bd/core/doc.go
+[pkgcore-chvrtx]: https://github.com/triggermesh/til/blob/bf0d78bd/core/vertex_channel.go#L16-L26
+[pkgcore-addrvrtx]: https://github.com/triggermesh/til/blob/bf0d78bd/core/transform_connect_refs.go#L11-L25
+[pkgconfig]: https://github.com/triggermesh/til/blob/bf0d78bd/config/doc.go
 [pkgcomps]: ../internal/components
-[pkgtransl]: https://github.com/triggermesh/bridgedl/blob/bf0d78bd/translation/doc.go
+[pkgtransl]: https://github.com/triggermesh/til/blob/bf0d78bd/translation/doc.go
 
 <!-- HashiCorp links -->
 [tf-arch]: https://github.com/hashicorp/terraform/blob/main/docs/architecture.md

@@ -20,10 +20,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config/globals"
-	"bridgedl/internal/sdk/k8s"
-	"bridgedl/internal/sdk/secrets"
-	"bridgedl/translation"
+	"til/config/globals"
+	"til/internal/sdk/k8s"
+	"til/internal/sdk/secrets"
+	"til/translation"
 )
 
 type Slack struct{}

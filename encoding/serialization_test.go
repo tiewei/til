@@ -16,14 +16,12 @@ limitations under the License.
 
 package encoding_test
 
-import . "bridgedl/encoding"
-
 import (
 	"strings"
 	"testing"
+	. "til/encoding"
 
 	"github.com/google/go-cmp/cmp"
-
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 

@@ -22,10 +22,10 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"bridgedl/config"
-	"bridgedl/config/globals"
-	"bridgedl/fs"
-	"bridgedl/lang"
+	"til/config"
+	"til/config/globals"
+	"til/fs"
+	"til/lang"
 )
 
 // Evaluator can evaluate graph vertices by providing access to variables and

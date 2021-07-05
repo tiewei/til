@@ -19,8 +19,8 @@ package lang
 import (
 	"github.com/zclconf/go-cty/cty/function"
 
-	"bridgedl/fs"
-	"bridgedl/lang/funcs"
+	"til/fs"
+	"til/lang/funcs"
 )
 
 // Functions returns all functions supported by the Bridge Description

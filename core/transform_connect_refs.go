@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config/addr"
-	"bridgedl/graph"
+	"til/config/addr"
+	"til/graph"
 )
 
 // AddressableVertex is implemented by all types used as graph.Vertex that can

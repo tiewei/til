@@ -21,7 +21,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	. "bridgedl/internal/sdk/k8s"
+	. "til/internal/sdk/k8s"
 )
 
 func TestNewObject(t *testing.T) {

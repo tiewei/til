@@ -26,8 +26,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"bridgedl/config/globals"
-	. "bridgedl/internal/sdk/k8s"
+	"til/config/globals"
+	. "til/internal/sdk/k8s"
 )
 
 func TestDecodeDestination(t *testing.T) {

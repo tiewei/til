@@ -22,7 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/zclconf/go-cty/cty"
 
-	. "bridgedl/internal/sdk"
+	. "til/internal/sdk"
 )
 
 func TestDecodeStringSlice(t *testing.T) {

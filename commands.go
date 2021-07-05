@@ -21,10 +21,10 @@ import (
 	"fmt"
 	"io"
 
-	"bridgedl/config/file"
-	"bridgedl/core"
-	"bridgedl/encoding"
-	"bridgedl/graph/dot"
+	"til/config/file"
+	"til/core"
+	"til/encoding"
+	"til/graph/dot"
 )
 
 // CLI subcommands
@@ -36,7 +36,7 @@ const (
 
 // usage is a usageFn for the top level command.
 func usage(cmdName string) string {
-	return "Interpreter for TriggerMesh's Bridge Description Language.\n" +
+	return "Interpreter for TriggerMesh's Integration Language.\n" +
 		"\n" +
 		"USAGE:\n" +
 		"    " + cmdName + " <command>\n" +
@@ -128,7 +128,7 @@ func (c *GenerateCommand) Run(args ...string) error {
 
 	// value to use as the Bridge identifier in case none is defined in the
 	// parsed Bridge description
-	const defaultBridgeIdentifier = "bridgedl_generated"
+	const defaultBridgeIdentifier = "til_generated"
 
 	brg, diags := file.NewParser().LoadBridge(filePath)
 	if diags.HasErrors() {

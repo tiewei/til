@@ -1,11 +1,11 @@
-# Bridge Description Language
+# TriggerMesh Integration Language
 
 Specification and interpreter for TriggerMesh's Bridge Description Language.
 
-The Bridge Description Language is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
+The TriggerMesh Integration Language (TIL) is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
 provide a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
 
-Using the `bridgedl` CLI tool, it is possible to turn Bridge definitions into deployment manifests which can run
+Using the `til` CLI tool, it is possible to turn Bridge definitions into deployment manifests which can run
 complete messaging systems on the TriggerMesh platform.
 
 ## Documentation
@@ -29,17 +29,17 @@ and architecture by executing the following command inside the root of the repos
 $ go build .
 ```
 
-The above command creates an executable called `bridgedl` inside the current directory.
+The above command creates an executable called `til` inside the current directory.
 
 The `-h` or `--help` flag can be appended to any command or subcommand to print some usage instructions about that
 command:
 
 ```console
-$ ./bridgedl --help
+$ ./til --help
 ```
 
 [tm-brg]: https://www.triggermesh.com/integrations
-[wiki]: https://github.com/triggermesh/bridgedl/wiki
+[wiki]: https://github.com/triggermesh/til/wiki
 
 [go]: https://golang.org/
 [go-dl]: https://golang.org/dl/

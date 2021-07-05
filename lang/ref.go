@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
+	"til/config"
+	"til/config/addr"
 )
 
 // BlockReferencesInBody returns all the block references contained in the

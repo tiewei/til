@@ -19,14 +19,14 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
+	"til/config"
+	"til/config/addr"
 
-	"bridgedl/internal/components/channels"
-	"bridgedl/internal/components/routers"
-	"bridgedl/internal/components/sources"
-	"bridgedl/internal/components/targets"
-	"bridgedl/internal/components/transformers"
+	"til/internal/components/channels"
+	"til/internal/components/routers"
+	"til/internal/components/sources"
+	"til/internal/components/targets"
+	"til/internal/components/transformers"
 )
 
 // componentImpls encapsulates the implementation of all known

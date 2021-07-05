@@ -21,7 +21,7 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config/addr"
+	"til/config/addr"
 )
 
 // noComponentImplDiagnostic returns a hcl.Diagnostic which indicates that no
