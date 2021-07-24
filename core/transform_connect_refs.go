@@ -45,7 +45,7 @@ type AddressableVertex interface {
 type ReferenceableVertex interface {
 	Referenceable() addr.Referenceable
 
-	// In the current version of the Bridge Description Language, a
+	// In the current version of the TriggerMesh Integration Language, a
 	// Referenceable vertex must also expose an address and accept events.
 	// This may change in the future.
 	AddressableVertex

@@ -32,7 +32,7 @@ import (
 // functions that are required for decoding HCL configurations.
 //
 // Traversal expressions always represent references to Addressable blocks in
-// the current version of the Bridge Description Language. Therefore, all
+// the current version of the TriggerMesh Integration Language. Therefore, all
 // variables values stored in this Evaluator represent event addresses. This
 // may change in the future.
 type Evaluator struct {

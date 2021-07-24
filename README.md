@@ -1,9 +1,9 @@
 # TriggerMesh Integration Language
 
-Specification and interpreter for TriggerMesh's Bridge Description Language.
+Specification and interpreter for TriggerMesh's Integration Language.
 
-The TriggerMesh Integration Language (TIL) is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
-provide a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
+The TriggerMesh Integration Language (TIL) is a configuration language based on the [HCL syntax][hcl-spec] which purpose
+is to provide a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
 
 Using the `til` CLI tool, it is possible to turn Bridge definitions into deployment manifests which can run
 complete messaging systems on the TriggerMesh platform.

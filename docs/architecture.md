@@ -33,8 +33,8 @@ to achieve.
 
 Like Terraform, `til`...
 
-* Interprets configuration files written in a language based on the [HCL syntax][hcl-spec] (the [_Bridge Description
-  Language_][bdl-spec]).
+* Interprets configuration files written in a language based on the [HCL syntax][hcl-spec] (the [_TriggerMesh
+  Integration Language_][til-spec]).
 * Supports cross-references between HCL configuration blocks using traversal expressions.
 * Represents configuration blocks and the relationships between them as a directed graph.
 * Uses internal schemas ([`hcldec.Spec`][hcldec-spec]) for decoding the contents of HCL blocks into concrete
@@ -120,7 +120,7 @@ is being walked.
 <!-- internal links -->
 [arch-graph]: .assets/arch-request-flow.svg
 [topo-sort-graph]: .assets/topological-sort.svg
-[bdl-spec]: language-spec.md
+[til-spec]: language-spec.md
 [pkgcore-graphb]: https://github.com/triggermesh/til/blob/bf0d78bd/core/graph.go#L10-L15
 [pkgcore-grapht]: https://github.com/triggermesh/til/blob/bf0d78bd/core/graph.go#L52-L55
 [pkgcore-brgtrsl]: https://github.com/triggermesh/til/blob/bf0d78bd/core/translate.go#L13-L18
