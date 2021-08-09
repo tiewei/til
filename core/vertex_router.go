@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
-	"bridgedl/graph"
-	"bridgedl/lang"
-	"bridgedl/lang/k8s"
-	"bridgedl/translation"
+	"til/config"
+	"til/config/addr"
+	"til/graph"
+	"til/lang"
+	"til/lang/k8s"
+	"til/translation"
 )
 
 // RouterVertex is an abstract representation of a Router component within a graph.

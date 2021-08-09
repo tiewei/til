@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config/globals"
+	"til/config/globals"
 )
 
 // Decodable is implemented by component types that embed a HCL configuration

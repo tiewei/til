@@ -21,9 +21,9 @@ import (
 
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config"
-	"bridgedl/fs"
-	"bridgedl/graph"
+	"til/config"
+	"til/fs"
+	"til/graph"
 )
 
 // Context encapsulates everything that is required for performing operations

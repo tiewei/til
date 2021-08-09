@@ -1,5 +1,5 @@
 # Build artifacts
-/bridgedl
+/til
 
 # Sample Bridge Description Files
 /*.brg.hcl
@@ -14,7 +14,7 @@
 /.vscode/
 
 # Software licenses
-/LICENSES/vendor/bridgedl/
+/LICENSES/vendor/til/
 
 # OS artifacts
 .DS_Store

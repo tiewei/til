@@ -19,8 +19,8 @@ package dot_test
 import (
 	"testing"
 
-	"bridgedl/graph"
-	. "bridgedl/graph/dot"
+	"til/graph"
+	. "til/graph/dot"
 )
 
 func TestMarshal(t *testing.T) {

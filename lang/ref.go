@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hcldec"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
+	"til/config"
+	"til/config/addr"
 )
 
 // BlockReferencesInBody returns all the block references contained in the
@@ -32,7 +32,7 @@ import (
 // discovering variables in the body.
 //
 // It is assumed that every hcl.Traversal attribute is a block reference in the
-// Bridge Description Language, therefore error diagnostics are returned
+// TriggerMesh Integration Language, therefore error diagnostics are returned
 // whenever a hcl.Traversal which doesn't match this predicate is encountered.
 func BlockReferencesInBody(b hcl.Body, s hcldec.Spec) ([]*addr.Reference, hcl.Diagnostics) {
 	return blockReferences(hcldec.Variables(b, s))

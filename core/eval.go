@@ -22,17 +22,17 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"bridgedl/config"
-	"bridgedl/config/globals"
-	"bridgedl/fs"
-	"bridgedl/lang"
+	"til/config"
+	"til/config/globals"
+	"til/fs"
+	"til/lang"
 )
 
 // Evaluator can evaluate graph vertices by providing access to variables and
 // functions that are required for decoding HCL configurations.
 //
 // Traversal expressions always represent references to Addressable blocks in
-// the current version of the Bridge Description Language. Therefore, all
+// the current version of the TriggerMesh Integration Language. Therefore, all
 // variables values stored in this Evaluator represent event addresses. This
 // may change in the future.
 type Evaluator struct {

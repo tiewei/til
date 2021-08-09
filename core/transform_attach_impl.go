@@ -19,7 +19,7 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/graph"
+	"til/graph"
 )
 
 // AttachableImplVertex is implemented by all types used as graph.Vertex that

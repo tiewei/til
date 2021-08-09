@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
-	"bridgedl/lang/k8s"
+	"til/config"
+	"til/lang/k8s"
 )
 
 // DecodeSafe attempts to decode the given hcl.Body with the information

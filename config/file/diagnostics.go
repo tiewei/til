@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
+	"til/config"
 )
 
 // badIdentifierDiagnostic returns a hcl.Diagnostic which indicates that the

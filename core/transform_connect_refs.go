@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config/addr"
-	"bridgedl/graph"
+	"til/config/addr"
+	"til/graph"
 )
 
 // AddressableVertex is implemented by all types used as graph.Vertex that can
@@ -45,7 +45,7 @@ type AddressableVertex interface {
 type ReferenceableVertex interface {
 	Referenceable() addr.Referenceable
 
-	// In the current version of the Bridge Description Language, a
+	// In the current version of the TriggerMesh Integration Language, a
 	// Referenceable vertex must also expose an address and accept events.
 	// This may change in the future.
 	AddressableVertex

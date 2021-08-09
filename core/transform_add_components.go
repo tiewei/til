@@ -19,9 +19,9 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
-	"bridgedl/graph"
+	"til/config"
+	"til/config/addr"
+	"til/graph"
 )
 
 // MessagingComponentVertex is implemented by all messaging components of a

@@ -14,6 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package k8s contains elements of the Bridge Description Language which are
-// Kubernetes-specific.
+// Package k8s contains elements of the TriggerMesh Integration Language which
+// are Kubernetes-specific.
 package k8s

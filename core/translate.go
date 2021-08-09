@@ -20,12 +20,12 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
-	"bridgedl/config/globals"
-	"bridgedl/fs"
-	"bridgedl/graph"
-	"bridgedl/lang/k8s"
-	"bridgedl/translation"
+	"til/config"
+	"til/config/globals"
+	"til/fs"
+	"til/graph"
+	"til/lang/k8s"
+	"til/translation"
 )
 
 // BridgeTranslator translates a Bridge into a collection of Kubernetes API

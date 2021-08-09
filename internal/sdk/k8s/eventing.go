@@ -20,8 +20,8 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	"bridgedl/config/globals"
-	"bridgedl/lang/k8s"
+	"til/config/globals"
+	"til/lang/k8s"
 )
 
 const (

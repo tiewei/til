@@ -24,7 +24,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"github.com/zclconf/go-cty/cty/function"
 
-	"bridgedl/fs"
+	"til/fs"
 )
 
 // FileFunc returns the implementation of the "file" function.

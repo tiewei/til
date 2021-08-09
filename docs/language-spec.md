@@ -1,6 +1,6 @@
-# Bridge Description Language Specification
+# TriggerMesh Integration Language Specification
 
-The Bridge Description Language is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
+The TriggerMesh Integration Language is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
 offer a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
 
 ## Contents

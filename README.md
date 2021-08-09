@@ -1,11 +1,11 @@
-# Bridge Description Language
+# TriggerMesh Integration Language
 
-Specification and interpreter for TriggerMesh's Bridge Description Language.
+Specification and interpreter for TriggerMesh's Integration Language.
 
-The Bridge Description Language is a configuration language based on the [HCL syntax][hcl-spec] which purpose is to
-provide a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
+The TriggerMesh Integration Language (TIL) is a configuration language based on the [HCL syntax][hcl-spec] which purpose
+is to provide a user-friendly interface for describing [TriggerMesh Bridges][tm-brg].
 
-Using the `bridgedl` CLI tool, it is possible to turn Bridge definitions into deployment manifests which can run
+Using the `til` CLI tool, it is possible to turn Bridge definitions into deployment manifests which can run
 complete messaging systems on the TriggerMesh platform.
 
 ## Documentation
@@ -29,17 +29,36 @@ and architecture by executing the following command inside the root of the repos
 $ go build .
 ```
 
-The above command creates an executable called `bridgedl` inside the current directory.
+The above command creates an executable called `til` inside the current directory.
 
 The `-h` or `--help` flag can be appended to any command or subcommand to print some usage instructions about that
 command:
 
 ```console
-$ ./bridgedl --help
+$ ./til --help
 ```
 
+## Contributions and support
+
+We would love to hear your feedback. Please don't hesitate to submit bug reports and suggestions by
+[filing issues][gh-issue], or contribute by [submitting pull-requests][gh-pr].
+
+## Commercial Support
+
+TriggerMesh Inc. supports TIL commercially. Email us at <info@triggermesh.com> to get more details.
+
+## Code of Conduct
+
+Although this project is not part of the [CNCF][cncf], we abide by its [code of conduct][cncf-conduct].
+
+[gh-issue]: https://github.com/triggermesh/til/issues
+[gh-pr]: https://github.com/triggermesh/til/pulls
+
+[cncf]: https://www.cncf.io/
+[cncf-conduct]: https://github.com/cncf/foundation/blob/master/code-of-conduct.md
+
 [tm-brg]: https://www.triggermesh.com/integrations
-[wiki]: https://github.com/triggermesh/bridgedl/wiki
+[wiki]: https://github.com/triggermesh/til/wiki
 
 [go]: https://golang.org/
 [go-dl]: https://golang.org/dl/

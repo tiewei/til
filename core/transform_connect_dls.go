@@ -19,10 +19,10 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
-	"bridgedl/graph"
-	"bridgedl/lang"
+	"til/config"
+	"til/config/addr"
+	"til/graph"
+	"til/lang"
 )
 
 // ConnectDeadLetterSinkTransformer is a GraphTransformer that connects
@@ -62,7 +62,7 @@ func (t *ConnectDeadLetterSinkTransformer) Transform(g *graph.DirectedGraph) hcl
 
 	// TODO(antoineco): allow a dead-letter sink to be connected to other nodes,
 	// as long as the subgraph starting at the dead-letter sink is acyclic.
-	// See "Scenario 2" at triggermesh/bridgedl#137
+	// See "Scenario 2" at triggermesh/til#137
 	if _, dlsHasDownEdges := downEdges[dlsV]; dlsHasDownEdges {
 		return diags.Append(&hcl.Diagnostic{
 			Severity: hcl.DiagError,

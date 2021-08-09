@@ -26,10 +26,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config/file"
-	"bridgedl/fs"
-	. "bridgedl/lang"
-	"bridgedl/lang/k8s"
+	"til/config/file"
+	"til/fs"
+	. "til/lang"
+	"til/lang/k8s"
 )
 
 // List of available fixture files.

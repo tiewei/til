@@ -19,7 +19,7 @@ package addr
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config"
+	"til/config"
 )
 
 // Channel is the address of a "channel" block within a Bridge description.
