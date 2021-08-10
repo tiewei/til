@@ -1,4 +1,4 @@
-module bridgedl
+module til
 
 go 1.16
 

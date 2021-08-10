@@ -19,8 +19,8 @@ package core
 import (
 	"github.com/hashicorp/hcl/v2"
 
-	"bridgedl/config"
-	"bridgedl/graph"
+	"til/config"
+	"til/graph"
 )
 
 // GraphBuilder builds a graph by applying a series of sequential

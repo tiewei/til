@@ -24,7 +24,7 @@ import (
 	"sort"
 	"strconv"
 
-	"bridgedl/graph"
+	"til/graph"
 )
 
 const (

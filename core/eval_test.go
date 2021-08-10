@@ -25,9 +25,9 @@ import (
 	"github.com/hashicorp/hcl/v2/hclparse"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
-	. "bridgedl/core"
-	"bridgedl/fs"
+	"til/config"
+	. "til/core"
+	"til/fs"
 )
 
 func TestEvaluator(t *testing.T) {

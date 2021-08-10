@@ -23,7 +23,7 @@ import (
 	"io/fs"
 	"testing"
 
-	. "bridgedl/fs"
+	. "til/fs"
 )
 
 func TestMemFS(t *testing.T) {

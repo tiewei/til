@@ -23,7 +23,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/util/validation"
 
-	. "bridgedl/lang/funcs"
+	. "til/lang/funcs"
 )
 
 func TestSecretNameFunc(t *testing.T) {

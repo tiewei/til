@@ -21,10 +21,10 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
-	"bridgedl/graph"
-	"bridgedl/lang"
+	"til/config"
+	"til/config/addr"
+	"til/graph"
+	"til/lang"
 )
 
 // SourceVertex is an abstract representation of a Source component within a graph.

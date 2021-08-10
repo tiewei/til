@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/hcl/v2/hcldec"
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/graph"
-	"bridgedl/translation"
+	"til/graph"
+	"til/translation"
 )
 
 // AttachableSpecVertex is implemented by all types used as graph.Vertex that

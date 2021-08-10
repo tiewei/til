@@ -22,8 +22,8 @@ import (
 
 	"github.com/zclconf/go-cty/cty"
 
-	"bridgedl/fs"
-	. "bridgedl/lang/funcs"
+	"til/fs"
+	. "til/lang/funcs"
 )
 
 func TestFileFunc(t *testing.T) {

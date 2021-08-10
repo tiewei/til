@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package lang deals with the runtime aspects of the Bridge Description
+// Package lang deals with the runtime aspects of the TriggerMesh Integration
 // Language, such as decoding the remainder of partial contents, or evaluating
 // functions and expressions.
 //

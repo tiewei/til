@@ -16,7 +16,7 @@ limitations under the License.
 
 package k8s
 
-import "bridgedl/lang/k8s"
+import "til/lang/k8s"
 
 // This file contains aliases to variables and functions from the lang/k8s
 // package that are commonly used in component implementations, so that those

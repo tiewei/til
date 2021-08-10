@@ -24,7 +24,7 @@ import (
 	"github.com/zclconf/go-cty/cty"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 
-	. "bridgedl/internal/sdk/k8s"
+	. "til/internal/sdk/k8s"
 )
 
 func TestNewKnService(t *testing.T) {

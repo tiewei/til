@@ -19,7 +19,7 @@ package graph_test
 import (
 	"testing"
 
-	. "bridgedl/graph"
+	. "til/graph"
 )
 
 func TestDirectedGraph_Add_Connect(t *testing.T) {

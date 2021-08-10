@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/hcl/v2"
 	"github.com/hashicorp/hcl/v2/hclsyntax"
 
-	"bridgedl/config"
-	"bridgedl/config/addr"
+	"til/config"
+	"til/config/addr"
 )
 
 // decodeBridge performs a partial decoding of the Body of a Bridge Description
