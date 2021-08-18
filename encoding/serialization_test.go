@@ -19,10 +19,12 @@ package encoding_test
 import (
 	"strings"
 	"testing"
-	. "til/encoding"
 
 	"github.com/google/go-cmp/cmp"
+
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	. "til/encoding"
 )
 
 func TestWriteManifests(t *testing.T) {

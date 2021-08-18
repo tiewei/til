@@ -22,6 +22,7 @@ import (
 
 	"til/config"
 	"til/config/globals"
+	"til/core/diagnostic"
 	"til/fs"
 	"til/graph"
 	"til/lang/k8s"
@@ -78,7 +79,12 @@ func (t *BridgeTranslator) Translate(g *graph.DirectedGraph) ([]interface{}, hcl
 
 // translateComponents translates all components from a list of graph vertices.
 func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Diagnostics) {
-	var diags hcl.Diagnostics
+	// A deduplicating diagnostic accumulator is used in this particular
+	// part of the translation because HCL bodies are decoded twice below,
+	// therefore the same diagnostic could be returned twice:
+	//  - once to determine a component's event address
+	//  - once to generate Kubernetes manifests
+	diags := diagnostic.NewDedupDiagnostics()
 
 	var manifests []interface{}
 	var incompleteDecodeQueue []MessagingComponentVertex
@@ -142,7 +148,7 @@ func translateComponents(e *Evaluator, vs []graph.Vertex) ([]interface{}, hcl.Di
 		manifests = append(manifests, res...)
 	}
 
-	return manifests, diags
+	return manifests, diags.Diagnostics()
 }
 
 // translate invokes the translator of the given component.
