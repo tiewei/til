@@ -17,10 +17,11 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
-	"io"
 
+	"til/cli"
 	"til/config/file"
 	"til/core"
 	"til/encoding"
@@ -35,11 +36,11 @@ const (
 )
 
 // usage is a usageFn for the top level command.
-func usage(cmdName string) string {
+func usage(cliName string) string {
 	return "Interpreter for TriggerMesh's Integration Language.\n" +
 		"\n" +
 		"USAGE:\n" +
-		"    " + cmdName + " <command>\n" +
+		"    " + cliName + " <command>\n" +
 		"\n" +
 		"COMMANDS:\n" +
 		"    " + cmdGenerate + "     Generate Kubernetes manifests for deploying a Bridge.\n" +
@@ -48,12 +49,12 @@ func usage(cmdName string) string {
 }
 
 // usageGenerate is a usageFn for the "generate" subcommand.
-func usageGenerate(cmdName string) string {
+func usageGenerate(cmd string) string {
 	return "Generates the Kubernetes manifests which allow a Bridge to be deployed " +
 		"to TriggerMesh, and writes them to standard output.\n" +
 		"\n" +
 		"USAGE:\n" +
-		"    " + cmdName + " " + cmdGenerate + " FILE [OPTION]...\n" +
+		"    " + cmd + " FILE [OPTION]...\n" +
 		"\n" +
 		"OPTIONS:\n" +
 		"    --bridge     Output a Bridge object instead of a List-manifest.\n" +
@@ -61,25 +62,26 @@ func usageGenerate(cmdName string) string {
 }
 
 // usageValidate is a usageFn for the "validate" subcommand.
-func usageValidate(cmdName string) string {
+func usageValidate(cmd string) string {
 	return "Verifies that a Bridge is syntactically valid and can be generated. " +
 		"Returns with an exit code of 0 in case of success, with an exit code of 1 " +
 		"otherwise.\n" +
 		"\n" +
 		"USAGE:\n" +
-		"    " + cmdName + " " + cmdValidate + " FILE\n"
+		"    " + cmd + " FILE\n"
 }
 
 // usageGraph is a usageFn for the "usage" subcommand.
-func usageGraph(cmdName string) string {
+func usageGraph(cmd string) string {
 	return "Generates a DOT representation of a Bridge and writes it to standard " +
 		"output.\n" +
 		"\n" +
 		"USAGE:\n" +
-		"    " + cmdName + " " + cmdGraph + " FILE\n"
+		"    " + cmd + " FILE\n"
 }
 
-type usageFn func(cmdName string) string
+// usageFn returns the usage text for a program or subcommand.
+type usageFn func(cmd string) string
 
 // setUsageFn uses the given usageFn to set the Usage function of the provided
 // flag.FlagSet.
@@ -89,40 +91,31 @@ func setUsageFn(f *flag.FlagSet, u usageFn) {
 	}
 }
 
-type Command interface {
-	Run(args ...string) error
-}
-
 var (
-	_ Command = (*GenerateCommand)(nil)
-	_ Command = (*ValidateCommand)(nil)
-	_ Command = (*GraphCommand)(nil)
+	_ cli.Command = (*GenerateCommand)(nil)
+	_ cli.Command = (*ValidateCommand)(nil)
+	_ cli.Command = (*GraphCommand)(nil)
 )
 
-type GenericCommand struct {
-	stdout  io.Writer
-	flagSet *flag.FlagSet
-}
-
 type GenerateCommand struct {
-	GenericCommand
-
 	// flags
 	bridge bool
 	yaml   bool
 }
 
-// Run implements Command.
-func (c *GenerateCommand) Run(args ...string) error {
-	setUsageFn(c.flagSet, usageGenerate)
-	c.flagSet.BoolVar(&c.bridge, "bridge", false, "")
-	c.flagSet.BoolVar(&c.yaml, "yaml", false, "")
+// Run implements cli.Command.
+func (c *GenerateCommand) Run(ctx context.Context, args []string) error {
+	flagSet := cli.FlagSetFromContext(ctx)
+	setUsageFn(flagSet, usageGenerate)
+
+	flagSet.BoolVar(&c.bridge, "bridge", false, "")
+	flagSet.BoolVar(&c.yaml, "yaml", false, "")
 
 	pos, flags := splitArgs(1, args)
-	_ = c.flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
+	_ = flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
 
 	if len(pos) != 1 {
-		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageGenerate(c.flagSet.Name()))
+		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageGenerate(flagSet.Name()))
 	}
 	filePath := pos[0]
 
@@ -135,12 +128,12 @@ func (c *GenerateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	ctx, diags := core.NewContext(brg)
+	cctx, diags := core.NewContext(brg)
 	if diags.HasErrors() {
 		return diags
 	}
 
-	manifests, diags := ctx.Generate()
+	manifests, diags := cctx.Generate()
 	if diags.HasErrors() {
 		return diags
 	}
@@ -164,22 +157,22 @@ func (c *GenerateCommand) Run(args ...string) error {
 		w = s.WriteManifestsJSON
 	}
 
-	return w(c.stdout, manifests)
+	stdout := cli.UIFromContext(ctx).StdWriter
+	return w(stdout, manifests)
 }
 
-type ValidateCommand struct {
-	GenericCommand
-}
+type ValidateCommand struct{}
 
 // Run implements Command.
-func (c *ValidateCommand) Run(args ...string) error {
-	setUsageFn(c.flagSet, usageValidate)
+func (c *ValidateCommand) Run(ctx context.Context, args []string) error {
+	flagSet := cli.FlagSetFromContext(ctx)
+	setUsageFn(flagSet, usageValidate)
 
 	pos, flags := splitArgs(1, args)
-	_ = c.flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
+	_ = flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
 
 	if len(pos) != 1 {
-		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageValidate(c.flagSet.Name()))
+		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageValidate(flagSet.Name()))
 	}
 	filePath := pos[0]
 
@@ -188,31 +181,30 @@ func (c *ValidateCommand) Run(args ...string) error {
 		return diags
 	}
 
-	ctx, diags := core.NewContext(brg)
+	cctx, diags := core.NewContext(brg)
 	if diags.HasErrors() {
 		return diags
 	}
 
-	if _, diags := ctx.Generate(); diags.HasErrors() {
+	if _, diags := cctx.Generate(); diags.HasErrors() {
 		return diags
 	}
 
 	return nil
 }
 
-type GraphCommand struct {
-	GenericCommand
-}
+type GraphCommand struct{}
 
 // Run implements Command.
-func (c *GraphCommand) Run(args ...string) error {
-	setUsageFn(c.flagSet, usageGraph)
+func (c *GraphCommand) Run(ctx context.Context, args []string) error {
+	flagSet := cli.FlagSetFromContext(ctx)
+	setUsageFn(flagSet, usageGraph)
 
 	pos, flags := splitArgs(1, args)
-	_ = c.flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
+	_ = flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
 
 	if len(pos) != 1 {
-		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageGraph(c.flagSet.Name()))
+		return fmt.Errorf("unexpected number of positional arguments.\n\n%s", usageGraph(flagSet.Name()))
 	}
 	filePath := pos[0]
 
@@ -221,12 +213,12 @@ func (c *GraphCommand) Run(args ...string) error {
 		return diags
 	}
 
-	ctx, diags := core.NewContext(brg)
+	cctx, diags := core.NewContext(brg)
 	if diags.HasErrors() {
 		return diags
 	}
 
-	g, diags := ctx.Graph()
+	g, diags := cctx.Graph()
 	if diags.HasErrors() {
 		return diags
 	}
@@ -236,7 +228,8 @@ func (c *GraphCommand) Run(args ...string) error {
 		return fmt.Errorf("marshaling graph to DOT: %w", err)
 	}
 
-	if _, err := c.stdout.Write(dg); err != nil {
+	stdout := cli.UIFromContext(ctx).StdWriter
+	if _, err := stdout.Write(dg); err != nil {
 		return fmt.Errorf("writing generated DOT graph: %w", err)
 	}
 

@@ -14,33 +14,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
-
-import (
-	"fmt"
-	"io"
-	"os"
-
-	"til/cli"
-)
-
-func main() {
-	if err := run(os.Args, os.Stdout, os.Stderr); err != nil {
-		fmt.Fprintf(os.Stderr, "Error running command: %s\n", err)
-		os.Exit(1)
-	}
-}
-
-// run executes the command.
-func run(args []string, stdout, stderr io.Writer) error {
-	c := cli.New(args, usage,
-		cli.StdWriter(stdout),
-		cli.ErrWriter(stderr),
-
-		cli.Subcommand(cmdGenerate, new(GenerateCommand)),
-		cli.Subcommand(cmdValidate, new(ValidateCommand)),
-		cli.Subcommand(cmdGraph, new(GraphCommand)),
-	)
-
-	return c.Run()
-}
+// Package cli backs the implementation of CLI commands.
+package cli
