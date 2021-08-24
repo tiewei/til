@@ -18,8 +18,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
+
+	"github.com/hashicorp/hcl/v2"
 
 	"til/cli"
 	"til/config/file"
@@ -123,19 +127,26 @@ func (c *GenerateCommand) Run(ctx context.Context, args []string) error {
 	// parsed Bridge description
 	const defaultBridgeIdentifier = "til_generated"
 
-	brg, diags := file.NewParser().LoadBridge(filePath)
+	ui := cli.UIFromContext(ctx)
+
+	p := file.NewParser()
+	brg, diags := p.LoadBridge(filePath)
+	dw := newDiagnosticTextWriter(ui.ErrWriter, p.Files())
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errLoadBridge
 	}
 
 	cctx, diags := core.NewContext(brg)
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errInitContext
 	}
 
 	manifests, diags := cctx.Generate()
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errGenerate
 	}
 
 	brgID := brg.Identifier
@@ -157,8 +168,7 @@ func (c *GenerateCommand) Run(ctx context.Context, args []string) error {
 		w = s.WriteManifestsJSON
 	}
 
-	stdout := cli.UIFromContext(ctx).StdWriter
-	return w(stdout, manifests)
+	return w(ui.StdWriter, manifests)
 }
 
 type ValidateCommand struct{}
@@ -176,18 +186,25 @@ func (c *ValidateCommand) Run(ctx context.Context, args []string) error {
 	}
 	filePath := pos[0]
 
-	brg, diags := file.NewParser().LoadBridge(filePath)
+	ui := cli.UIFromContext(ctx)
+
+	p := file.NewParser()
+	brg, diags := p.LoadBridge(filePath)
+	dw := newDiagnosticTextWriter(ui.ErrWriter, p.Files())
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errLoadBridge
 	}
 
 	cctx, diags := core.NewContext(brg)
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errInitContext
 	}
 
 	if _, diags := cctx.Generate(); diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errGenerate
 	}
 
 	return nil
@@ -208,19 +225,26 @@ func (c *GraphCommand) Run(ctx context.Context, args []string) error {
 	}
 	filePath := pos[0]
 
-	brg, diags := file.NewParser().LoadBridge(filePath)
+	ui := cli.UIFromContext(ctx)
+
+	p := file.NewParser()
+	brg, diags := p.LoadBridge(filePath)
+	dw := newDiagnosticTextWriter(ui.ErrWriter, p.Files())
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errLoadBridge
 	}
 
 	cctx, diags := core.NewContext(brg)
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errInitContext
 	}
 
 	g, diags := cctx.Graph()
 	if diags.HasErrors() {
-		return diags
+		_ = dw.WriteDiagnostics(diags)
+		return errors.New("failed to build bridge graph. See error diagnostics")
 	}
 
 	dg, err := dot.Marshal(g)
@@ -258,3 +282,18 @@ func splitArgs(n int, args []string) ( /*positional*/ []string /*flags*/, []stri
 
 	return args[:n], args[n:]
 }
+
+// newDiagnosticTextWriter returns a hcl.DiagnosticWriter that writes
+// diagnostics to the given writer as formatted text.
+func newDiagnosticTextWriter(out io.Writer, files map[string]*hcl.File) hcl.DiagnosticWriter {
+	const outputWidth = 0
+	const enableColor = true
+	return hcl.NewDiagnosticTextWriter(out, files, outputWidth, enableColor)
+}
+
+// Errors for common operations performed by commands.
+var (
+	errLoadBridge  = errors.New("failed to load bridge. See error diagnostics")
+	errInitContext = errors.New("failed to initialize command context. See error diagnostics")
+	errGenerate    = errors.New("failed to generate bridge manifests. See error diagnostics")
+)
