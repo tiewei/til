@@ -87,9 +87,9 @@ func undecodableDiagnostic(cmp addr.MessagingComponent) *hcl.Diagnostic {
 	return &hcl.Diagnostic{
 		Severity: hcl.DiagError,
 		Summary:  "Undecodable",
-		Detail: fmt.Sprintf("Attempts to decode the %s %q resulted in errors due to expressions that "+
-			"could not be resolved at runtime. Please ensure the Bridge topology is valid.",
-			cmp.Category, cmp.Type),
+		Detail: fmt.Sprintf("Attempts to decode the %s %q failed due to errors in one or more dependees. "+
+			"Please refer to the other error diagnostics for details.",
+			cmp.Category, cmp.Identifier),
 		Subject: cmp.SourceRange.Ptr(),
 	}
 }
