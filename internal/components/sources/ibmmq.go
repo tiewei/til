@@ -62,7 +62,7 @@ func (*IBMMQ) Spec() hcldec.Spec {
 		},
 		"password": &hcldec.AttrSpec{
 			Name:     "password",
-			Type:     k8s.ObjectReferenceCty,
+			Type:     cty.String,
 			Required: true,
 		},
 	}
@@ -92,7 +92,7 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 	s.SetNestedField(user, "spec", "user")
 
 	password := config.GetAttr("password").AsString()
-	s.SetNestedField(password, "spec", "password")
+	s.SetNestedField(password, "spec", "password", "value")
 
 	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
