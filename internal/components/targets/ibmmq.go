@@ -100,7 +100,7 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
 
-		subscriber := k8s.NewDestination(k8s.APIExt, "IBMMQTarget", name)
+		subscriber := k8s.NewDestination(k8s.APITargets, "IBMMQTarget", name)
 
 		sbOpts := []k8s.SubscriptionOption{k8s.ReplyDest(eventDst)}
 		sbOpts = k8s.AppendDeliverySubscriptionOptions(sbOpts, glb)
@@ -118,7 +118,7 @@ func (*IBMMQ) Address(id string, _, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
 
 	if eventDst.IsNull() {
-		return k8s.NewDestination(k8s.APIExt, "IBMMQTarget", name)
+		return k8s.NewDestination(k8s.APITargets, "IBMMQTarget", name)
 	}
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
 }
