@@ -22,6 +22,7 @@ import (
 
 	"til/config/globals"
 	"til/internal/sdk/k8s"
+	"til/internal/sdk/secrets"
 	"til/translation"
 )
 
@@ -55,14 +56,9 @@ func (*IBMMQ) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"user": &hcldec.AttrSpec{
-			Name:     "user",
-			Type:     cty.String,
-			Required: true,
-		},
-		"password": &hcldec.AttrSpec{
-			Name:     "password",
-			Type:     cty.String,
+		"credentials": &hcldec.AttrSpec{
+			Name:     "credentials",
+			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
 	}
@@ -88,11 +84,10 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 	cName := config.GetAttr("channel_name").AsString()
 	s.SetNestedField(cName, "spec", "channelName")
 
-	user := config.GetAttr("user").AsString()
-	s.SetNestedField(user, "spec", "user")
-
-	password := config.GetAttr("password").AsString()
-	s.SetNestedField(password, "spec", "password", "value")
+	secret := config.GetAttr("credentials").GetAttr("name").AsString()
+	username, password := secrets.SecretKeyRefsBasicAuth(secret)
+	s.SetNestedMap(username, "spec", "credentials", "username", "valueFromSecret")
+	s.SetNestedMap(password, "spec", "credentials", "password", "valueFromSecret")
 
 	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")

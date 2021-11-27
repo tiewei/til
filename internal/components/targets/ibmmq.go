@@ -22,6 +22,7 @@ import (
 
 	"til/config/globals"
 	"til/internal/sdk/k8s"
+	"til/internal/sdk/secrets"
 	"til/translation"
 )
 
@@ -56,14 +57,9 @@ func (*IBMMQ) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"user": &hcldec.AttrSpec{
-			Name:     "user",
-			Type:     cty.String,
-			Required: true,
-		},
-		"password": &hcldec.AttrSpec{
-			Name:     "password",
-			Type:     cty.String,
+		"credentials": &hcldec.AttrSpec{
+			Name:     "credentials",
+			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
 	}
@@ -89,11 +85,10 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 	cName := config.GetAttr("channel_name").AsString()
 	t.SetNestedField(cName, "spec", "channelName")
 
-	user := config.GetAttr("user").AsString()
-	t.SetNestedField(user, "spec", "user")
-
-	password := config.GetAttr("password").AsString()
-	t.SetNestedField(password, "spec", "password", "value")
+	secret := config.GetAttr("credentials").GetAttr("name").AsString()
+	username, password := secrets.SecretKeyRefsBasicAuth(secret)
+	t.SetNestedMap(username, "spec", "credentials", "username", "valueFromSecret")
+	t.SetNestedMap(password, "spec", "credentials", "password", "valueFromSecret")
 
 	manifests = append(manifests, t.Unstructured())
 
