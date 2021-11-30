@@ -107,11 +107,11 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 
 	if v := config.GetAttr("reply_to"); !v.IsNull() {
 		if replyToQMgr := v.GetAttr("manager"); !replyToQMgr.IsNull() {
-			t.SetNestedField(replyToQMgr.AsString(), "spec", "replyTo", "manager")
+			t.SetNestedField(replyToQMgr.AsString(), "spec", "replyTo", "queueManager")
 		}
 
 		if replyToQueue := v.GetAttr("queue"); !replyToQueue.IsNull() {
-			t.SetNestedField(replyToQueue.AsString(), "spec", "replyTo", "queue")
+			t.SetNestedField(replyToQueue.AsString(), "spec", "replyTo", "queueName")
 		}
 	}
 
