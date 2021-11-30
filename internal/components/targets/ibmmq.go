@@ -62,6 +62,26 @@ func (*IBMMQ) Spec() hcldec.Spec {
 			Type:     k8s.ObjectReferenceCty,
 			Required: true,
 		},
+		"discard_ce_context": &hcldec.AttrSpec{
+			Name:     "discard_ce_context",
+			Type:     cty.Bool,
+			Required: false,
+		},
+		"reply_to": &hcldec.BlockSpec{
+			TypeName: "reply_to",
+			Nested: &hcldec.ObjectSpec{
+				"manager": &hcldec.AttrSpec{
+					Name:     "manager",
+					Type:     cty.String,
+					Required: false,
+				},
+				"queue": &hcldec.AttrSpec{
+					Name:     "queue",
+					Type:     cty.String,
+					Required: false,
+				},
+			},
+		},
 	}
 }
 
@@ -84,6 +104,20 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 
 	cName := config.GetAttr("channel_name").AsString()
 	t.SetNestedField(cName, "spec", "channelName")
+
+	if v := config.GetAttr("reply_to"); !v.IsNull() {
+		if replyToQMgr := v.GetAttr("manager"); !replyToQMgr.IsNull() {
+			t.SetNestedField(replyToQMgr.AsString(), "spec", "replyTo", "manager")
+		}
+
+		if replyToQueue := v.GetAttr("queue"); !replyToQueue.IsNull() {
+			t.SetNestedField(replyToQueue.AsString(), "spec", "replyTo", "queue")
+		}
+	}
+
+	if config.GetAttr("discard_ce_context").True() {
+		t.SetNestedField(true, "spec", "discardCloudEventContext")
+	}
 
 	secret := config.GetAttr("credentials").GetAttr("name").AsString()
 	username, password := secrets.SecretKeyRefsBasicAuth(secret)
