@@ -67,6 +67,26 @@ func (*IBMMQ) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"synchronous": &hcldec.BlockSpec{
+			TypeName: "synchronous",
+			Nested: &hcldec.ObjectSpec{
+				"request_key": &hcldec.AttrSpec{
+					Name:     "request_key",
+					Type:     cty.String,
+					Required: true,
+				},
+				"response_correlation_key": &hcldec.AttrSpec{
+					Name:     "response_correlation_key",
+					Type:     cty.String,
+					Required: true,
+				},
+				"response_wait_timeout": &hcldec.AttrSpec{
+					Name:     "response_wait_timeout",
+					Type:     cty.Number,
+					Required: false,
+				},
+			},
+		},
 		"reply_to": &hcldec.BlockSpec{
 			TypeName: "reply_to",
 			Nested: &hcldec.ObjectSpec{
@@ -115,7 +135,7 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 		}
 	}
 
-	if config.GetAttr("discard_ce_context").True() {
+	if config.GetAttr("discard_ce_context").IsNull() {
 		t.SetNestedField(true, "spec", "discardCloudEventContext")
 	}
 
@@ -125,6 +145,12 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 	t.SetNestedMap(password, "spec", "credentials", "password", "valueFromSecret")
 
 	manifests = append(manifests, t.Unstructured())
+
+	if sync := config.GetAttr("synchronous"); !sync.IsNull() {
+		parent := k8s.NewDestination(k8s.APITargets, "IBMMQTarget", name)
+		s := synchronizer(name, sync, parent)
+		manifests = append(manifests, s.Unstructured())
+	}
 
 	if !eventDst.IsNull() {
 		ch := k8s.NewChannel(name)
@@ -143,11 +169,36 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 }
 
 // Address implements translation.Addressable.
-func (*IBMMQ) Address(id string, _, eventDst cty.Value) cty.Value {
+func (m *IBMMQ) Address(id string, config, eventDst cty.Value) cty.Value {
 	name := k8s.RFC1123Name(id)
+
+	if sync := config.GetAttr("synchronous"); !sync.IsNull() {
+		return k8s.NewDestination(k8s.APIFlow, "Synchronizer", name)
+	}
 
 	if eventDst.IsNull() {
 		return k8s.NewDestination(k8s.APITargets, "IBMMQTarget", name)
 	}
 	return k8s.NewDestination(k8s.APIMessaging, "Channel", name)
+}
+
+func synchronizer(name string, config cty.Value, eventDst cty.Value) *k8s.Object {
+	s := k8s.NewObject(k8s.APIFlow, "Synchronizer", name)
+
+	requestKey := config.GetAttr("request_key").AsString()
+	s.SetNestedField(requestKey, "spec", "requestKey")
+
+	responseKey := config.GetAttr("response_correlation_key").AsString()
+	s.SetNestedField(responseKey, "spec", "responseCorrelationKey")
+
+	s.SetNestedField(int64(10), "spec", "responseWaitTimeout")
+	if timeout := config.GetAttr("response_wait_timeout"); !timeout.IsNull() {
+		t, _ := timeout.AsBigFloat().Int64()
+		s.SetNestedField(t, "spec", "responseWaitTimeout")
+	}
+
+	sink := k8s.DecodeDestination(eventDst)
+	s.SetNestedMap(sink, "spec", "sink", "ref")
+
+	return s
 }
