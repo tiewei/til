@@ -185,11 +185,17 @@ func (m *IBMMQ) Address(id string, config, eventDst cty.Value) cty.Value {
 func synchronizer(name string, config cty.Value, eventDst cty.Value) *k8s.Object {
 	s := k8s.NewObject(k8s.APIFlow, "Synchronizer", name)
 
-	requestKey := config.GetAttr("request_key").AsString()
-	s.SetNestedField(requestKey, "spec", "requestKey")
+	requestCorrelationKey := "extensions.correlationid[0:23]"
+	if requestKey := config.GetAttr("request_key"); !requestKey.IsNull() {
+		requestCorrelationKey = requestKey.AsString()
+	}
+	s.SetNestedField(requestCorrelationKey, "spec", "requestKey")
 
-	responseKey := config.GetAttr("response_correlation_key").AsString()
-	s.SetNestedField(responseKey, "spec", "responseCorrelationKey")
+	responseCorrelationKey := "extensions.correlationid"
+	if responseKey := config.GetAttr("response_correlation_key"); !responseKey.IsNull() {
+		responseCorrelationKey = responseKey.AsString()
+	}
+	s.SetNestedField(responseCorrelationKey, "spec", "responseCorrelationKey")
 
 	s.SetNestedField(int64(10), "spec", "responseWaitTimeout")
 	if timeout := config.GetAttr("response_wait_timeout"); !timeout.IsNull() {

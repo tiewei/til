@@ -41,29 +41,51 @@ func (*ContentBased) Spec() hcldec.Spec {
 	// NOTE(antoineco): see the following implementation to get a sense of
 	// how HCL blocks map to hcldec.Specs and cty.Types:
 	// https://pkg.go.dev/github.com/hashicorp/terraform@v0.14.7/configs/configschema#Block.DecoderSpec
-	return &hcldec.BlockSetSpec{
-		TypeName: "route",
-		Nested: &hcldec.ObjectSpec{
-			"attributes": &hcldec.ValidateSpec{
-				Wrapped: &hcldec.AttrSpec{
-					Name:     "attributes",
-					Type:     cty.Map(cty.String),
+	return &hcldec.ObjectSpec{
+		"synchronous": &hcldec.BlockSpec{
+			TypeName: "synchronous",
+			Nested: &hcldec.ObjectSpec{
+				"request_key": &hcldec.AttrSpec{
+					Name:     "request_key",
+					Type:     cty.String,
 					Required: false,
 				},
-				Func: validation.ContainsCEContextAttributes,
-			},
-			"condition": &hcldec.AttrSpec{
-				Name:     "condition",
-				Type:     cty.String,
-				Required: false,
-			},
-			"to": &hcldec.AttrSpec{
-				Name:     "to",
-				Type:     k8s.DestinationCty,
-				Required: true,
+				"response_correlation_key": &hcldec.AttrSpec{
+					Name:     "response_correlation_key",
+					Type:     cty.String,
+					Required: false,
+				},
+				"response_wait_timeout": &hcldec.AttrSpec{
+					Name:     "response_wait_timeout",
+					Type:     cty.Number,
+					Required: false,
+				},
 			},
 		},
-		MinItems: 1,
+		"route": &hcldec.BlockSetSpec{
+			TypeName: "route",
+			Nested: &hcldec.ObjectSpec{
+				"attributes": &hcldec.ValidateSpec{
+					Wrapped: &hcldec.AttrSpec{
+						Name:     "attributes",
+						Type:     cty.Map(cty.String),
+						Required: false,
+					},
+					Func: validation.ContainsCEContextAttributes,
+				},
+				"condition": &hcldec.AttrSpec{
+					Name:     "condition",
+					Type:     cty.String,
+					Required: false,
+				},
+				"to": &hcldec.AttrSpec{
+					Name:     "to",
+					Type:     k8s.DestinationCty,
+					Required: true,
+				},
+			},
+			MinItems: 1,
+		},
 	}
 
 	/*
@@ -114,7 +136,7 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, glb globals.Acces
 	broker := k8s.NewBroker(name)
 	manifests = append(manifests, broker)
 
-	for i, routeIter := 0, config.ElementIterator(); routeIter.Next(); i++ {
+	for i, routeIter := 0, config.GetAttr("route").ElementIterator(); routeIter.Next(); i++ {
 		_, route := routeIter.Element()
 
 		routeName := name + "-r" + strconv.Itoa(i)
@@ -154,12 +176,24 @@ func (*ContentBased) Manifests(id string, config, _ cty.Value, glb globals.Acces
 		manifests = append(manifests, trigger)
 	}
 
+	if sync := config.GetAttr("synchronous"); !sync.IsNull() {
+		parent := k8s.NewDestination(k8s.APIEventing, "Broker", name)
+		s := synchronizer(name, sync, parent)
+		manifests = append(manifests, s.Unstructured())
+	}
+
 	return manifests
 }
 
 // Address implements translation.Addressable.
-func (*ContentBased) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination(k8s.APIEventing, "Broker", k8s.RFC1123Name(id))
+func (*ContentBased) Address(id string, config, _ cty.Value) cty.Value {
+	name := k8s.RFC1123Name(id)
+
+	if sync := config.GetAttr("synchronous"); !sync.IsNull() {
+		return k8s.NewDestination(k8s.APIFlow, "Synchronizer", name)
+	}
+
+	return k8s.NewDestination(k8s.APIEventing, "Broker", name)
 }
 
 func attributesFromRoute(route cty.Value) map[string]interface{} {
@@ -177,4 +211,31 @@ func attributesFromRoute(route cty.Value) map[string]interface{} {
 	}
 
 	return filterAttr
+}
+
+func synchronizer(name string, config cty.Value, eventDst cty.Value) *k8s.Object {
+	s := k8s.NewObject(k8s.APIFlow, "Synchronizer", name)
+
+	requestCorrelationKey := "extensions.correlationid[0:23]"
+	if requestKey := config.GetAttr("request_key"); !requestKey.IsNull() {
+		requestCorrelationKey = requestKey.AsString()
+	}
+	s.SetNestedField(requestCorrelationKey, "spec", "requestKey")
+
+	responseCorrelationKey := "extensions.correlationid"
+	if responseKey := config.GetAttr("response_correlation_key"); !responseKey.IsNull() {
+		responseCorrelationKey = responseKey.AsString()
+	}
+	s.SetNestedField(responseCorrelationKey, "spec", "responseCorrelationKey")
+
+	s.SetNestedField(int64(10), "spec", "responseWaitTimeout")
+	if timeout := config.GetAttr("response_wait_timeout"); !timeout.IsNull() {
+		t, _ := timeout.AsBigFloat().Int64()
+		s.SetNestedField(t, "spec", "responseWaitTimeout")
+	}
+
+	sink := k8s.DecodeDestination(eventDst)
+	s.SetNestedMap(sink, "spec", "sink", "ref")
+
+	return s
 }

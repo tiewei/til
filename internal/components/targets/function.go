@@ -57,6 +57,11 @@ func (*Function) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"response_is_event": &hcldec.AttrSpec{
+			Name:     "response_is_event",
+			Type:     cty.Bool,
+			Required: false,
+		},
 		"ce_context": &hcldec.BlockSpec{
 			TypeName: "ce_context",
 			Nested: &hcldec.ObjectSpec{
@@ -103,6 +108,10 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, glb globals.Ac
 
 	if config.GetAttr("public").True() {
 		f.SetNestedField(true, "spec", "public")
+	}
+
+	if config.GetAttr("response_is_event").True() {
+		f.SetNestedField(true, "spec", "responseIsEvent")
 	}
 
 	if v := config.GetAttr("ce_context"); !v.IsNull() {

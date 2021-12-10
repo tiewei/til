@@ -57,6 +57,11 @@ func (*Function) Spec() hcldec.Spec {
 			Type:     cty.Bool,
 			Required: false,
 		},
+		"response_is_event": &hcldec.AttrSpec{
+			Name:     "response_is_event",
+			Type:     cty.Bool,
+			Required: false,
+		},
 		"ce_context": &hcldec.BlockSpec{
 			TypeName: "ce_context",
 			Nested: &hcldec.ObjectSpec{
@@ -76,7 +81,7 @@ func (*Function) Spec() hcldec.Spec {
 					Required: false,
 				},
 			},
-			Required: true,
+			Required: false,
 		},
 	}
 }
@@ -125,11 +130,23 @@ func (*Function) Manifests(id string, config, eventDst cty.Value, glb globals.Ac
 			f.SetNestedField(true, "spec", "public")
 		}
 
-		ceCtx := sdk.DecodeStringMap(config.GetAttr("ce_context"))
-		f.SetNestedMap(ceCtx, "spec", "ceOverrides", "extensions")
+		responseIsEvent := config.GetAttr("response_is_event")
+		if responseIsEvent.True() {
+			f.SetNestedField(true, "spec", "responseIsEvent")
+		}
+
+		ceContext := config.GetAttr("ce_context")
+		if !ceContext.IsNull() {
+			f.SetNestedMap(sdk.DecodeStringMap(ceContext), "spec", "ceOverrides", "extensions")
+		}
 
 		sink := k8s.DecodeDestination(eventDst)
 		f.SetNestedMap(sink, "spec", "sink", "ref")
+
+		if responseIsEvent.False() && ceContext.IsNull() {
+			// if response is not the event then ceContext Type override
+			// must be provided
+		}
 
 		manifests = append(manifests, f.Unstructured())
 	}
