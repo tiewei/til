@@ -45,19 +45,19 @@ func (*ContentBased) Spec() hcldec.Spec {
 		"synchronous": &hcldec.BlockSpec{
 			TypeName: "synchronous",
 			Nested: &hcldec.ObjectSpec{
-				"request_key": &hcldec.AttrSpec{
-					Name:     "request_key",
+				"correlation_key": &hcldec.AttrSpec{
+					Name:     "correlation_key",
 					Type:     cty.String,
 					Required: false,
 				},
-				"response_correlation_key": &hcldec.AttrSpec{
-					Name:     "response_correlation_key",
-					Type:     cty.String,
-					Required: false,
-				},
-				"response_wait_timeout": &hcldec.AttrSpec{
-					Name:     "response_wait_timeout",
+				"correlation_key_length": &hcldec.AttrSpec{
+					Name:     "correlation_key_length",
 					Type:     cty.Number,
+					Required: false,
+				},
+				"response_timeout": &hcldec.AttrSpec{
+					Name:     "response_timeout",
+					Type:     cty.String,
 					Required: false,
 				},
 			},
@@ -216,22 +216,17 @@ func attributesFromRoute(route cty.Value) map[string]interface{} {
 func synchronizer(name string, config cty.Value, eventDst cty.Value) *k8s.Object {
 	s := k8s.NewObject(k8s.APIFlow, "Synchronizer", name)
 
-	requestCorrelationKey := "extensions.correlationid[0:23]"
-	if requestKey := config.GetAttr("request_key"); !requestKey.IsNull() {
-		requestCorrelationKey = requestKey.AsString()
-	}
-	s.SetNestedField(requestCorrelationKey, "spec", "requestKey")
+	correlationKey := "correlationid"
+	s.SetNestedField(correlationKey, "spec", "correlationKey", "attribute")
 
-	responseCorrelationKey := "extensions.correlationid"
-	if responseKey := config.GetAttr("response_correlation_key"); !responseKey.IsNull() {
-		responseCorrelationKey = responseKey.AsString()
+	if length := config.GetAttr("correlation_key_length"); !length.IsNull() {
+		l, _ := length.AsBigFloat().Int64()
+		s.SetNestedField(l, "spec", "correlationKey", "length")
 	}
-	s.SetNestedField(responseCorrelationKey, "spec", "responseCorrelationKey")
 
-	s.SetNestedField(int64(10), "spec", "responseWaitTimeout")
-	if timeout := config.GetAttr("response_wait_timeout"); !timeout.IsNull() {
-		t, _ := timeout.AsBigFloat().Int64()
-		s.SetNestedField(t, "spec", "responseWaitTimeout")
+	s.SetNestedField("10s", "spec", "response", "timeout")
+	if timeout := config.GetAttr("response_timeout"); !timeout.IsNull() {
+		s.SetNestedField(timeout.AsString(), "spec", "response", "timeout")
 	}
 
 	sink := k8s.DecodeDestination(eventDst)

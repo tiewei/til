@@ -135,7 +135,7 @@ func (*IBMMQ) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 		}
 	}
 
-	if config.GetAttr("discard_ce_context").IsNull() {
+	if config.GetAttr("discard_ce_context").True() {
 		t.SetNestedField(true, "spec", "discardCloudEventContext")
 	}
 
