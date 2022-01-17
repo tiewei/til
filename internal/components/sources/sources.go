@@ -33,6 +33,7 @@ var All = map[string]interface{}{
 	"azure_event_hubs":     (*AzureEventHubs)(nil),
 	"github":               (*GitHub)(nil),
 	"httppoller":           (*HTTPPoller)(nil),
+	"ibmmq":                (*IBMMQ)(nil),
 	"kafka":                (*Kafka)(nil),
 	"ping":                 (*Ping)(nil),
 	"slack":                (*Slack)(nil),

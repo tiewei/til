@@ -28,6 +28,7 @@ var All = map[string]interface{}{
 	"datadog":          (*Datadog)(nil),
 	"event_display":    (*EventDisplay)(nil),
 	"function":         (*Function)(nil),
+	"ibmmq":            (*IBMMQ)(nil),
 	"gcloud_storage":   (*GCloudStorage)(nil),
 	"gcloud_firestore": (*GCloudFirestore)(nil),
 	"kafka":            (*Kafka)(nil),
