@@ -1136,13 +1136,23 @@ upper(
 			0,
 		},
 		{
+			`unkstr[*]`,
+			&hcl.EvalContext{
+				Variables: map[string]cty.Value{
+					"unkstr": cty.UnknownVal(cty.String),
+				},
+			},
+			cty.DynamicVal,
+			0,
+		},
+		{
 			`unkstr.*.name`,
 			&hcl.EvalContext{
 				Variables: map[string]cty.Value{
 					"unkstr": cty.UnknownVal(cty.String),
 				},
 			},
-			cty.UnknownVal(cty.Tuple([]cty.Type{cty.DynamicPseudoType})),
+			cty.DynamicVal,
 			1, // a string has no attribute "name"
 		},
 		{
@@ -1164,9 +1174,19 @@ upper(
 					})),
 				},
 			},
-			cty.TupleVal([]cty.Value{
-				cty.UnknownVal(cty.String),
-			}),
+			cty.DynamicVal,
+			0,
+		},
+		{
+			`unkobj.*.names`,
+			&hcl.EvalContext{
+				Variables: map[string]cty.Value{
+					"unkobj": cty.UnknownVal(cty.Object(map[string]cty.Type{
+						"names": cty.List(cty.String),
+					})),
+				},
+			},
+			cty.DynamicVal,
 			0,
 		},
 		{
