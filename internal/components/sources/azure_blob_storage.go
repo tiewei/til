@@ -42,10 +42,15 @@ func (*AzureBlobStorage) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
-		"event_hub_id": &hcldec.AttrSpec{
-			Name:     "event_hub_id",
+		"event_hubs_namespace_id": &hcldec.AttrSpec{
+			Name:     "event_hubs_namespace_id",
 			Type:     cty.String,
 			Required: true,
+		},
+		"event_hubs_instance_name": &hcldec.AttrSpec{
+			Name:     "event_hubs_instance_name",
+			Type:     cty.String,
+			Required: false,
 		},
 		"event_types": &hcldec.AttrSpec{
 			Name:     "event_types",
@@ -73,8 +78,13 @@ func (*AzureBlobStorage) Manifests(id string, config, eventDst cty.Value, glb gl
 	storAccID := config.GetAttr("storage_account_id").AsString()
 	s.SetNestedField(storAccID, "spec", "storageAccountID")
 
-	eventHubID := config.GetAttr("event_hub_id").AsString()
-	s.SetNestedField(eventHubID, "spec", "eventHubID")
+	eventHubsNamespaceID := config.GetAttr("event_hubs_namespace_id").AsString()
+	s.SetNestedField(eventHubsNamespaceID, "spec", "endpoint", "eventHubs", "namespaceID")
+
+	if v := config.GetAttr("event_hubs_instance_name"); !v.IsNull() {
+		eventHubsInstanceName := v.AsString()
+		s.SetNestedField(eventHubsInstanceName, "spec", "endpoint", "eventHubs", "hubName")
+	}
 
 	if v := config.GetAttr("event_types"); !v.IsNull() {
 		eventTypes := sdk.DecodeStringSlice(v)

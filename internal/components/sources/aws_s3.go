@@ -78,13 +78,13 @@ func (*AWSS3) Manifests(id string, config, eventDst cty.Value, glb globals.Acces
 
 	if !config.GetAttr("queue_arn").IsNull() {
 		queueARN := config.GetAttr("queue_arn").AsString()
-		s.SetNestedField(queueARN, "spec", "queueARN")
+		s.SetNestedField(queueARN, "spec", "destination", "sqs", "queueARN")
 	}
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
-	s.SetNestedMap(accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
-	s.SetNestedMap(secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
+	s.SetNestedMap(accKeySecretRef, "spec", "auth", "credentials", "accessKeyID", "valueFromSecret")
+	s.SetNestedMap(secrKeySecretRef, "spec", "auth", "credentials", "secretAccessKey", "valueFromSecret")
 
 	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")

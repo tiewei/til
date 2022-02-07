@@ -37,10 +37,20 @@ var (
 // Spec implements translation.Decodable.
 func (*AzureActivityLogs) Spec() hcldec.Spec {
 	return &hcldec.ObjectSpec{
-		"event_hub_id": &hcldec.AttrSpec{
-			Name:     "event_hub_id",
+		"subscription_id": &hcldec.AttrSpec{
+			Name:     "subscription_id",
 			Type:     cty.String,
 			Required: true,
+		},
+		"event_hubs_namespace_id": &hcldec.AttrSpec{
+			Name:     "event_hubs_namespace_id",
+			Type:     cty.String,
+			Required: true,
+		},
+		"event_hubs_instance_name": &hcldec.AttrSpec{
+			Name:     "event_hubs_instance_name",
+			Type:     cty.String,
+			Required: false,
 		},
 		"event_hubs_sas_policy": &hcldec.AttrSpec{
 			Name:     "event_hubs_sas_policy",
@@ -70,12 +80,20 @@ func (*AzureActivityLogs) Manifests(id string, config, eventDst cty.Value, glb g
 
 	s := k8s.NewObject(k8s.APISources, "AzureActivityLogsSource", name)
 
-	eventHubID := config.GetAttr("event_hub_id").AsString()
-	s.SetNestedField(eventHubID, "spec", "eventHubID")
+	subscriptionID := config.GetAttr("subscription_id").AsString()
+	s.SetNestedField(subscriptionID, "spec", "subscriptionID")
+
+	eventHubsNamespaceID := config.GetAttr("event_hubs_namespace_id").AsString()
+	s.SetNestedField(eventHubsNamespaceID, "spec", "destination", "eventHubs", "namespaceID")
+
+	if v := config.GetAttr("event_hubs_instance_name"); !v.IsNull() {
+		eventHubsInstanceName := v.AsString()
+		s.SetNestedField(eventHubsInstanceName, "spec", "destination", "eventHubs", "hubName")
+	}
 
 	if v := config.GetAttr("event_hubs_sas_policy"); !v.IsNull() {
 		eventHubsSASPolicy := v.AsString()
-		s.SetNestedField(eventHubsSASPolicy, "spec", "eventHubsSASPolicy")
+		s.SetNestedField(eventHubsSASPolicy, "spec", "destination", "eventHubs", "sasPolicy")
 	}
 
 	if v := config.GetAttr("categories"); !v.IsNull() {

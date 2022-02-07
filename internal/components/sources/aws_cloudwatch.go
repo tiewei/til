@@ -242,8 +242,8 @@ func (*AWSCloudWatch) Manifests(id string, config, eventDst cty.Value, glb globa
 
 	credsSecretName := config.GetAttr("credentials").GetAttr("name").AsString()
 	accKeySecretRef, secrKeySecretRef := secrets.SecretKeyRefsAWS(credsSecretName)
-	s.SetNestedMap(accKeySecretRef, "spec", "credentials", "accessKeyID", "valueFromSecret")
-	s.SetNestedMap(secrKeySecretRef, "spec", "credentials", "secretAccessKey", "valueFromSecret")
+	s.SetNestedMap(accKeySecretRef, "spec", "auth", "credentials", "accessKeyID", "valueFromSecret")
+	s.SetNestedMap(secrKeySecretRef, "spec", "auth", "credentials", "secretAccessKey", "valueFromSecret")
 
 	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
