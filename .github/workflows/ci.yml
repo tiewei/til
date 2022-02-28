@@ -23,7 +23,7 @@ jobs:
     # This action takes care of caching/restoring pkg and build caches.
     # It needs to be the first step executed after the Go setup.
     - name: Lint
-      uses: golangci/golangci-lint-action@v2
+      uses: golangci/golangci-lint-action@v3
       with:
         skip-go-installation: true
 
