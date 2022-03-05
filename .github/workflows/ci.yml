@@ -24,8 +24,6 @@ jobs:
     # It needs to be the first step executed after the Go setup.
     - name: Lint
       uses: golangci/golangci-lint-action@v3
-      with:
-        skip-go-installation: true
 
     - name: Build
       run: go build -v ./...
