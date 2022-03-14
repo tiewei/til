@@ -72,7 +72,10 @@ func usageValidate(cmd string) string {
 		"otherwise.\n" +
 		"\n" +
 		"USAGE:\n" +
-		"    " + cmd + " FILE\n"
+		"    " + cmd + " FILE\n" +
+		"\n" +
+		"OPTIONS:\n" +
+		"    --quiet     Suppress non-error output.\n"
 }
 
 // usageGraph is a usageFn for the "usage" subcommand.
@@ -171,12 +174,17 @@ func (c *GenerateCommand) Run(ctx context.Context, args []string) error {
 	return w(ui.StdWriter, manifests)
 }
 
-type ValidateCommand struct{}
+type ValidateCommand struct {
+	// flags
+	quiet bool
+}
 
 // Run implements Command.
 func (c *ValidateCommand) Run(ctx context.Context, args []string) error {
 	flagSet := cli.FlagSetFromContext(ctx)
 	setUsageFn(flagSet, usageValidate)
+
+	flagSet.BoolVar(&c.quiet, "quiet", false, "")
 
 	pos, flags := splitArgs(1, args)
 	_ = flagSet.Parse(flags) // ignore err; the FlagSet uses ExitOnError
@@ -205,6 +213,10 @@ func (c *ValidateCommand) Run(ctx context.Context, args []string) error {
 	if _, diags := cctx.Generate(); diags.HasErrors() {
 		_ = dw.WriteDiagnostics(diags)
 		return errGenerate
+	}
+
+	if !c.quiet {
+		fmt.Fprintln(ui.StdWriter, "OK")
 	}
 
 	return nil
