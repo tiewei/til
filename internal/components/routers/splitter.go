@@ -84,7 +84,7 @@ func (*Splitter) Manifests(id string, config, _ cty.Value, glb globals.Accessor)
 	eventDst := config.GetAttr("to")
 	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
 
-	s := k8s.NewObject(k8s.APIFlow, "Splitter", name)
+	s := k8s.NewObject(k8s.APIRouting, "Splitter", name)
 
 	path := config.GetAttr("path").AsString()
 	s.SetNestedField(path, "spec", "path")
@@ -108,5 +108,5 @@ func (*Splitter) Manifests(id string, config, _ cty.Value, glb globals.Accessor)
 
 // Address implements translation.Addressable.
 func (*Splitter) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination(k8s.APIFlow, "Splitter", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIRouting, "Splitter", k8s.RFC1123Name(id))
 }
