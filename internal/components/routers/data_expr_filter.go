@@ -58,7 +58,7 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value, glb globals.Acc
 	eventDst := config.GetAttr("to")
 	manifests, eventDst = k8s.MaybeAppendChannel(name, manifests, eventDst, glb)
 
-	f := k8s.NewObject(k8s.APIFlow, "Filter", name)
+	f := k8s.NewObject(k8s.APIRouting, "Filter", name)
 
 	expr := config.GetAttr("condition").AsString()
 	f.SetNestedField(expr, "spec", "expression")
@@ -71,5 +71,5 @@ func (*DataExprFilter) Manifests(id string, config, _ cty.Value, glb globals.Acc
 
 // Address implements translation.Addressable.
 func (*DataExprFilter) Address(id string, _, _ cty.Value) cty.Value {
-	return k8s.NewDestination(k8s.APIFlow, "Filter", k8s.RFC1123Name(id))
+	return k8s.NewDestination(k8s.APIRouting, "Filter", k8s.RFC1123Name(id))
 }
