@@ -21,7 +21,9 @@ import (
 	"github.com/zclconf/go-cty/cty"
 
 	"til/config/globals"
+	"til/internal/sdk"
 	"til/internal/sdk/k8s"
+	"til/internal/sdk/secrets"
 	"til/translation"
 )
 
@@ -60,6 +62,31 @@ func (*HTTPPoller) Spec() hcldec.Spec {
 			Type:     cty.String,
 			Required: true,
 		},
+		"skip_verify": &hcldec.AttrSpec{
+			Name:     "skip_verify",
+			Type:     cty.Bool,
+			Required: false,
+		},
+		"ca_certificate": &hcldec.AttrSpec{
+			Name:     "ca_certificate",
+			Type:     cty.String,
+			Required: false,
+		},
+		"basic_auth_username": &hcldec.AttrSpec{
+			Name:     "basic_auth_username",
+			Type:     cty.String,
+			Required: false,
+		},
+		"basic_auth_password": &hcldec.AttrSpec{
+			Name:     "basic_auth_password",
+			Type:     k8s.ObjectReferenceCty,
+			Required: false,
+		},
+		"headers": &hcldec.AttrSpec{
+			Name:     "headers",
+			Type:     cty.Map(cty.String),
+			Required: false,
+		},
 	}
 }
 
@@ -89,6 +116,29 @@ func (*HTTPPoller) Manifests(id string, config, eventDst cty.Value, glb globals.
 
 	interval := config.GetAttr("interval").AsString()
 	s.SetNestedField(interval, "spec", "interval")
+
+	if v := config.GetAttr("skip_verify"); !v.IsNull() {
+		s.SetNestedField(v.True(), "spec", "skipVerify")
+	}
+
+	if v := config.GetAttr("ca_certificate"); !v.IsNull() {
+		s.SetNestedField(v.AsString(), "spec", "caCertificate")
+	}
+
+	if v := config.GetAttr("basic_auth_username"); !v.IsNull() {
+		s.SetNestedField(v.AsString(), "spec", "basicAuthUsername")
+	}
+
+	if v := config.GetAttr("basic_auth_password"); !v.IsNull() {
+		secretName := v.GetAttr("name").AsString()
+		_, secretKey := secrets.SecretKeyRefsBasicAuth(secretName)
+		s.SetNestedMap(secretKey, "spec", "basicAuthPassword", "valueFromSecret")
+	}
+
+	if v := config.GetAttr("headers"); !v.IsNull() {
+		headers := sdk.DecodeStringMap(v)
+		s.SetNestedMap(headers, "spec", "headers")
+	}
 
 	sink := k8s.DecodeDestination(eventDst)
 	s.SetNestedMap(sink, "spec", "sink", "ref")
