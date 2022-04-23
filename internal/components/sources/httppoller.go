@@ -117,7 +117,7 @@ func (*HTTPPoller) Manifests(id string, config, eventDst cty.Value, glb globals.
 	interval := config.GetAttr("interval").AsString()
 	s.SetNestedField(interval, "spec", "interval")
 
-	if v := config.GetAttr("skip_verify"); !v.IsNull() && v.True() {
+	if config.GetAttr("skip_verify").True() {
 		s.SetNestedField(true, "spec", "skipVerify")
 	}
 
